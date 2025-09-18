@@ -1,0 +1,43 @@
+# Node modules (ทุก app/service)
+**/node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files (เก็บ local เท่านั้น ห้าม push)
+*.env
+*.env.local
+*.env.development
+*.env.test
+*.env.production
+
+# Prisma
+**/prisma/dev.db
+**/prisma/dev.db-journal
+
+# Build outputs
+dist/
+build/
+.cache/
+.expo/
+
+# Expo specific
+.expo-shared/
+
+# TypeScript build (ถ้ามี)
+*.tsbuildinfo
+
+# Coverage
+coverage/
+
+# Docker
+infra/compose/pgdata/

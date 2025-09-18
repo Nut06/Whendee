@@ -1,0 +1,45 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+
+  identity-service:
+    build: ../../services/identity-service
+    command: pnpm dev
+    volumes:
+      - ../../services/identity-service:/app
+    ports:
+      - "5001:3000"
+    depends_on:
+      - postgres
+
+  event-service:
+    build: ../../services/event-service
+    command: pnpm dev
+    volumes:
+      - ../../services/event-service:/app
+    ports:
+      - "5002:3000"
+    depends_on:
+      - postgres
+
+  comm-service:
+    build: ../../services/comm-service
+    command: pnpm dev
+    volumes:
+      - ../../services/comm-service:/app
+    ports:
+      - "5003:3000"
+    depends_on:
+      - postgres
+
+
+
+volumes:
+  pgdata:
