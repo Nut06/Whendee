@@ -67,13 +67,13 @@ cd ../../
 1. เข้าโฟลเดอร์ frontend:
 
    ```bash
-   cd apps/mobile-app
+   cd apps/frontend
    ```
 
 2. ติดตั้ง dependencies:
 
    ```bash
-   pnpm install
+   npm install
    ```
 
 3. สร้างไฟล์ `.env` ที่ `apps/mobile-app/.env`
@@ -82,7 +82,12 @@ cd ../../
 4. รันแอป:
 
    ```bash
-   pnpm start
+   npx expo start
+   ```
+
+   (option สำหรับรันเพื่อ clear Expo cache)
+   ```bash
+   npx expo start -c
    ```
 
 ---
@@ -112,14 +117,14 @@ cd services/identity-service
 ### 3. Prisma migrate & generate
 
 ```bash
-pnpm prisma migrate dev --name init
-pnpm prisma generate
+npm prisma migrate dev --name init
+npm prisma generate
 ```
 
 ### 4. รัน service
 
 ```bash
-pnpm dev
+npm dev
 ```
 
 ---
@@ -137,13 +142,13 @@ pnpm dev
 * **Prisma error: “client not initialized”**
 
   ```bash
-  pnpm prisma generate
+  npm prisma generate
   ```
 
 * **Mismatch schema**
 
   ```bash
-  pnpm prisma migrate dev
+  npm prisma migrate dev
   ```
 
   → รันทุกครั้งหลัง `git pull` เพื่อ sync schema
