@@ -90,6 +90,42 @@ cd ../../
    npx expo start -c
    ```
 
+### 🌐 วิธีการรันแอปโดยไม่ต้องใช้มือถือสแกน QR Code
+
+มีหลายวิธีในการรันและทดสอบแอปโดยไม่ต้องใช้มือถือสแกน QR Code:
+
+#### 1. **รันแอปบน Web Browser (แนะนำ)**
+
+   ```bash
+   npx expo start --web
+   ```
+   หรือ
+   ```bash
+   npm run web
+   ```
+
+   แอปจะเปิดใน browser ของคุณที่ `http://localhost:8081` (หรือพอร์ตอื่นที่ระบบกำหนด)
+
+#### 2. **รันแอปผ่าน Tunnel (สำหรับการเข้าถึงจากที่ไหนก็ได้)**
+
+   ```bash
+   npx expo start --tunnel
+   ```
+   หรือ
+   ```bash
+   npm run tunnel
+   ```
+
+   Expo จะสร้าง URL สาธารณะ (เช่น `https://xxx.tunnel.expo.dev`) ที่สามารถเข้าถึงได้จากทุกที่
+   - เหมาะสำหรับการทดสอบจากหลายอุปกรณ์
+   - เหมาะสำหรับการ demo ให้คนอื่นดู
+   - ต้องการ Expo account (ฟรี)
+
+#### 3. **รันแอปบน Emulator/Simulator**
+   
+   - **Android Emulator**: กด `a` ใน terminal หลังจากรัน `npx expo start`
+   - **iOS Simulator** (เฉพาะ macOS): กด `i` ใน terminal หลังจากรัน `npx expo start`
+
 ---
 
 ## 😈🌐 สำหรับทีม Backend (นัท, น้องเหนือ, ปูน)

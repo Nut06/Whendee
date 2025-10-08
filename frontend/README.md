@@ -25,6 +25,55 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## Running without a physical device
+
+There are several ways to run and test the app without needing to scan a QR code on your phone:
+
+### 1. Web Browser (Recommended for quick testing)
+
+Run the app in your web browser:
+
+```bash
+npm run web
+```
+
+or
+
+```bash
+npx expo start --web
+```
+
+This will open the app in your default browser at `http://localhost:8081` (or another port).
+
+### 2. Tunnel Mode (Access from anywhere)
+
+Use Expo's tunnel feature to create a public URL:
+
+```bash
+npm run tunnel
+```
+
+or
+
+```bash
+npx expo start --tunnel
+```
+
+This creates a public URL (e.g., `https://xxx.tunnel.expo.dev`) that can be accessed from anywhere:
+- Perfect for testing on multiple devices
+- Great for demos and sharing with team members
+- Requires a free Expo account
+- Ideal for GitHub Student Pack users who want to leverage cloud services
+
+**Note**: The first time you use tunnel mode, you'll be prompted to log in to your Expo account. If you don't have one, you can create a free account at [expo.dev](https://expo.dev).
+
+### 3. Emulator/Simulator
+
+- **Android Emulator**: Press `a` in the terminal after running `npx expo start`
+- **iOS Simulator** (macOS only): Press `i` in the terminal after running `npx expo start`
+
+Make sure you have Android Studio (for Android) or Xcode (for iOS on macOS) installed first.
+
 ## Get a fresh project
 
 When you're ready, run:
