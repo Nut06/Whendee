@@ -32,7 +32,7 @@ export default function Onboarding() {
     if (index < slides.length - 1) {
       scrollRef.current?.scrollTo({ x: (index + 1) * width, animated: true });
     } else {
-      router.replace('/login');
+      router.replace('/(auth)/login');
     }
   }
 
@@ -73,7 +73,7 @@ export default function Onboarding() {
         </View>
 
         <View className="flex-row justify-between items-center">
-          <TouchableOpacity onPress={() => router.replace('/login')} className="py-2 px-3">
+          <TouchableOpacity onPress={() => router.replace('/(auth)/login')} className="py-2 px-3">
             <Text className="text-base">Skip</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={goNext} className="bg-gray-900 py-2 px-4 rounded-md">

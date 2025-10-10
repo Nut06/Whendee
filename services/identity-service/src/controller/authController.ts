@@ -1,103 +1,155 @@
-import { BAD_REQUEST, INTERNAL_SERVER_ERROR, OK } from '@/types/http.js';
-import { Token, UserAuthInput } from '@/types/user.js';
+import { BAD_REQUEST, INTERNAL_SERVER_ERROR, OK } from '@/types/http';
+import { Otp, AuthToken, RequestOTP, OTPSession, ResponseLogin, User } from '@/types/user';
 import type { Request, Response } from "express";
 import Bcrypt from '@/utils/bcrypt';
-import passport from 'passport';
+import passport, { session } from 'passport';
 import { AppError } from '@/types/appError';
-import authService from '@/service/authService';
+import authService from '../service/authService';
+import { ResponseOTP } from '../types/user';
 
 const isProd = process.env.NODE_ENV === 'production';
 
-export const register = async (req: Request, res: Response) => {
-  const {email, password, fullname, phonenumber}:UserAuthInput = req.body;
-  
-  if(!email || !password || !fullname || !phonenumber){
+export const requestOtp = async (req: Request, res: Response) => {
+  const {email, password, fullname, phone}:RequestOTP = req.body;
+  const ip = req.ip;
+  const userAgent = req.get('User-Agent');
+
+  if(!email || !password || !fullname || !phone || !userAgent || !ip){
     return res.status(BAD_REQUEST).json({message:"All fields are required"});
   }
+
   try {
-    await authService.registerUser({email, password, fullname, phonenumber});
+    const session: string = await authService.sendingOtp({phone, ip, userAgent});
+    await authService.storePendingUser({email, password, fullname, phone: phone});
+    const response: ResponseOTP = {
+      success: true,
+      message:"Already Sending OTP",
+      data:{
+        sessionToken:session,
+        expiresIn:300
+      }
+    }
+    return res.status(OK).json( response );
   } catch (err) {
     throw new AppError('Registration failed', BAD_REQUEST, 'REGISTRATION_FAILED');
   }
-  return res.status(OK).json({ success:true });
 
 }
 
-export const loginlocal = async (req: Request, res: Response) => passport.authenticate('local', { session: false }, (err:any, token:Token, info?:any) => {
-  if (err) {
-    return res.status(BAD_REQUEST).json({ message: err.message || 'Login failed' });
-  }
-  if (!token) {
-    return res.status(BAD_REQUEST).json({ message: 'Invalid credentials' });
-  }
-  res.cookie('accessToken', token.accessToken, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
-    maxAge: 60 * 60 * 1000 // 15 minutes
-  })
-  .cookie('refreshToken', token.refreshToken, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-  })
-  .status(OK);
+const genLoginResponse = (token:AuthToken, message='Login successful'):ResponseLogin => {
+  const oneHour = 3600000;
+  return {
+    success: true,
+    message: message,
+    data: {
+      accessToken: token.accessToken,
+      refreshToken: token.refreshToken,
+      expiresIn: oneHour
+    }
+  };
+}
+
+export const loginlocal = async (req: Request, res: Response) => passport.authenticate('local', { session: false }, (err:any, token:AuthToken, info?:any) => {
+    if (err) {
+      return res.status(BAD_REQUEST).json({ message: err.message || 'Login failed' });
+    }
+    if (!token) {
+      return res.status(BAD_REQUEST).json({ message: 'Invalid credentials' });
+    }
+
+    const resdata:ResponseLogin = genLoginResponse(token);
+    return res.json(resdata).status(OK);
   })(req, res);
 
-export const createUser = async (req:Request, res:Response) => {
-  const {fullname, email, phonenumber, password}:UserAuthInput = req.body;
-  if(!email || !password || !fullname || !phonenumber){
-    return res.status(BAD_REQUEST).json({message:"All fields are required"});
+export const verifyOtp = async (req: Request, res: Response):Promise<Response> => {
+  const { sesssion: session, otp } = req.body;
+  if (!session) {
+    return res.status(BAD_REQUEST).json({ message: 'Session token is required' });
   }
   try {
-    const tokens = await authService.createUser({fullname, email, phonenumber, password});
-    return res.cookie('accessToken', tokens.accessToken, 
-      {
-        httpOnly: true,
-        secure: isProd
-      })
-    .cookie('refreshToken', tokens.refreshToken,
-      {
-        httpOnly: true,
-        secure: isProd
-      })
-    .status(OK)
-    .json({success:true});
-  }
-  catch (error) {
-    if (error instanceof AppError) {
-      return res.status(INTERNAL_SERVER_ERROR).json({ message: error.message });
-    }
-}
-}
-
-export const verifyOtp = async (req: Request, res: Response) => {
-  const { phone, otp } = req.query;
-  if (!phone || !otp) {
-    return res.status(BAD_REQUEST).json({ message: 'User ID and OTP are required' });
-  }
-  try {
-    const isVerified = await authService.verifyOtp(phone as string, otp as string);
-    if (!isVerified) {
-      return res.status(BAD_REQUEST).json({ success: false });
-    }
-    return res.status(OK).json({ success: true });
+      const isVerified = await authService.verifyOtp(session, otp);
+      if (!isVerified) {
+        return res.status(BAD_REQUEST).json({ success: false });
+      }
+      const user = await authService.getPendingUser(session);
+      const {newUser, accessToken, refreshToken } = await authService.createUser(user);
+      const resdata:ResponseLogin = genLoginResponse({ accessToken, refreshToken }, 'OTP verified and user registered successfully');
+      return res.json(resdata);
   } catch (error) {
-    return res.status(BAD_REQUEST).json({ message: 'OTP verification failed' });
+      return res.status(BAD_REQUEST).json({ message: 'OTP verification failed' });
   }
 }
 
 export const resendOtp = async (req: Request, res: Response) => {
-  const { phone } = req.query;
-  if (!phone) {
+  const { session, phone } = req.query;
+  const ip = req.ip;
+  const userAgent = req.get('User-Agent');
+  if (!phone || typeof phone !== 'string' || typeof session !== 'string' || !ip || !userAgent) {
     return res.status(BAD_REQUEST).json({ message: 'Phone number is required' });
   }
+
   try {
-    const user = { phonenumber: phone as string, email: '' }; // Dummy email, adjust as needed
-    await authService.sendingOtp(user);
-    return res.status(OK).json({ success: true });
+      const token = await authService.resendOtp({session, phone, ip, userAgent});
+      const response: ResponseOTP = {
+      success: true,
+      message:"Already Sending OTP",
+      data:{
+        sessionToken:token,
+        expiresIn:300
+      }
+    }
+    return res.status(OK).json({ response });
   } catch (error) {
-    return res.status(BAD_REQUEST).json({ message: 'Resend OTP failed' });
+      return res.status(BAD_REQUEST).json({ message: 'Resend OTP failed' });
+  }
+}
+
+export const lineLogin = async (req: Request, res: Response) => {
+  return passport.authenticate('line', { session: false })(req, res);
+}
+
+export const lineCallback = async (req: Request, res: Response) => {
+  return await passport.authenticate('line', { session: false }, (err:any, token:AuthToken, info?:any) => {
+    if (err) {
+      return res.status(BAD_REQUEST).json({ message: err.message || 'Line login failed' });
+    }
+    if (!token) {
+      return res.status(BAD_REQUEST).json({ message: 'Invalid credentials' });
+    }
+    return res.status(OK).json(genLoginResponse(token, 'Line login successful'));
+  })(req, res);
+}
+
+export const googleLogin = async (req: Request, res: Response) => {
+  return passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res);
+}
+
+export const googleCallback = async (req: Request, res: Response) => {
+  return passport.authenticate('google', { session: false }, (err:any, token:AuthToken, info?:any) => {
+    if (err) {
+      return res.status(BAD_REQUEST).json({ message: err.message || 'Google login failed' });
+    }
+    if (!token) {
+      return res.status(BAD_REQUEST).json({ message: 'Invalid credentials' });
+    }
+    return res.json(genLoginResponse(token, 'Google login successful'));
+  })(req, res);
+}
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    // Since you're using stateless JWT authentication (session: false),
+    // logout is handled client-side by removing tokens
+    // Optionally, you could blacklist the token here if needed
+    
+    return res.status(OK).json({
+      success: true, 
+      message: 'Logout successful' 
+    });
+  } catch (error) {
+    return res.status(INTERNAL_SERVER_ERROR).json({ 
+      success: false,
+      message: 'Logout failed' 
+    });
   }
 }

@@ -1,150 +1,135 @@
-import { Stack, router } from "expo-router";
-import { useRef, useState } from "react";
-import { Animated, Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-const { width } = Dimensions.get("window");
-
-const slides = [
-  {
-    key: 's1',
-    title: 'Welcome to WhenDee',
-    subtitle: 'Plan and enjoy hangouts with friends',
-    image: require('../../assets/images/Group.png'),
-  },
-//   {
-//     key: 's2',
-//     title: 'Create Events',
-//     subtitle: 'Quickly create meetups and invite friends',
-//     image: require('../../../assets/images/partial-react-logo.png'),
-//   },
-//   {
-//     key: 's3',
-//     title: 'Stay Notified',
-//     subtitle: 'Get reminders so you never miss out',
-//     image: require('../../../assets/images/splash-icon.png'),
-//   }
-];
+import { View, Image, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
+import { useState } from 'react'
+import { useRouter } from 'expo-router'
+import { Feather } from '@expo/vector-icons'
+import { PrimaryButton } from '@/components/Buttons';
+import InputField from '@/components/input';
+import { LoginRequest } from '@/types/user.types';
 
 export default function Login() {
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const scrollRef = useRef<ScrollView | null>(null);
-  const [index, setIndex] = useState(0);
-
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-    { useNativeDriver: false }
-  );
-
-  const onMomentumScrollEnd = (e: any) => {
-    const newIndex = Math.round(e.nativeEvent.contentOffset.x / width);
-    setIndex(newIndex);
+  
+  const router = useRouter();
+  const [userInput, setUserInput] = useState<LoginRequest>({ email: '', password: '' });
+  
+  const handleLogin = () => {
+    try {
+      
+    } catch (err) {
+      
+    } finally {
+      
+    }
+    // simulate login success
+    router.replace('/(tab)/home');
   };
 
-  function goNext() {
-    if (index < slides.length - 1) {
-      scrollRef.current?.scrollTo({ x: (index + 1) * width, animated: true });
-    } else {
-      router.replace('/login');
-    }
-  }
+  const [loading, setIsLoading] = useState<boolean>(false);
 
   return (
-    <View className="flex-1 bg-white">
-      <Stack.Screen options={{ headerShown: false }} />
-
-      <Animated.ScrollView
-        ref={scrollRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
-        onMomentumScrollEnd={onMomentumScrollEnd}
-      >
-        {slides.map((s) => (
-          <View key={s.key} style={[styles.slide, { width }] }>
-            <Image source={s.image} style={styles.image} resizeMode="contain" />
-            <View style={styles.textWrap}>
-              <Text className="text-h1 text-center">{s.title}</Text>
-              <Text className="text-xxl text-center mt-2">{s.subtitle}</Text>
+        <View className="flex-1">
+        <View className="mx-5 mt-6 overflow-hidden bg-white shadow-lg rounded-3xl">
+          {/* Header */}
+          <View className="relative mb-2">
+            <View className="flex-row items-center justify-center py-5 border-b border-gray-100">
+              <View style={{ width: 40 }} />
+              <Text className="flex-1 text-lg font-semibold text-center text-gray-900">Log In</Text>
+              <TouchableOpacity onPress={() => router.back()} className='w-10' accessibilityLabel="Close">
+                <Feather name="x" size={24} color="#9CA3AF" />
+              </TouchableOpacity>
             </View>
           </View>
-        ))}
-      </Animated.ScrollView>
 
-      <View style={styles.footer}>
-        <View style={styles.dots}>
-          {slides.map((_, i) => {
-            const opacity = scrollX.interpolate({
-              inputRange: [(i - 1) * width, i * width, (i + 1) * width],
-              outputRange: [0.3, 1, 0.3],
-              extrapolate: 'clamp'
-            });
-            return (
-              <Animated.View key={i} style={[styles.dot, { opacity }]} />
-            );
-          })}
-        </View>
 
-        <View style={styles.buttons}>
-          <TouchableOpacity onPress={() => router.replace('/login')} style={styles.skip}>
-            <Text className="text-base">Skip</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={goNext} style={styles.next}>
-            <Text className="text-base text-white">{index === slides.length - 1 ? 'Get Started' : 'Next'}</Text>
-          </TouchableOpacity>
+          {/* Content */}
+          <View className="px-5 py-6">
+            {/* Input Fields */}
+            <View className="items-stretch gap-3">
+              <InputField
+                placeholder="Email address"
+                onChangeText={(text) => setUserInput({ ...userInput, email: text })}
+                keyboardType="email-address"
+              />
+              <InputField
+                placeholder="Password"
+                onChangeText={(text) => setUserInput({ ...userInput, password: text })}
+                isSecure={true}
+              />
+            </View>
+
+            {/* Terms Agreement */}
+            <View className="flex-row justify-end mt-4 mb-5">
+                <TouchableOpacity 
+                onPress={handleLogin}
+                className="self-end mt-4 mb-5"
+                accessibilityLabel="Forgot password"
+                >
+                <Text className="text-md text-primary-500 font-lato">
+                  Forgot Password?
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Log In Button */}
+            <PrimaryButton
+                title="Log In"
+                onPress={handleLogin}
+                loading={loading}
+              />
+
+            {/* Divider */}
+            <View className="flex-row items-center my-6">
+              <View className="flex-1 h-px bg-gray-200" />
+              <Text className="mx-4 text-xs text-gray-400">OR</Text>
+              <View className="flex-1 h-px bg-gray-200" />
+            </View>
+
+            {/* Social Buttons */}
+            <View className="gap-3">
+              <TouchableOpacity 
+                className="w-full justify-center gap-x-3 flex-row bg-white border border-gray-200 rounded-xl py-3.5 items-center"
+                activeOpacity={0.7}
+              >
+                <Image 
+                  source={require('../../assets/images/auth/google.png')} 
+                  className='h-5'
+                  resizeMode="contain" 
+                />
+                <Text className="text-base font-medium text-gray-800">Sign up with Google</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                className="w-full flex-row bg-white border border-gray-200 rounded-xl py-3.5 items-center justify-center gap-x-3"
+                activeOpacity={0.7}
+              >
+                <Image 
+                  source={require('../../assets/images/auth/line.png')} 
+                  style={{ width: 20, height: 20, marginRight: 12 }} 
+                  resizeMode="contain" 
+                />
+                <Text className="text-base font-medium text-gray-800">Sign up with Line</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
-  slide: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
+  input: {
+    borderRadius: 12,
+    fontSize: 16,
   },
-  image: {
-    width: 200,
-    height: 200,
-    marginBottom: 20,
+  button: {
+    borderRadius: 12,
+    shadowColor: '#006FEE',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  textWrap: {
-    paddingHorizontal: 10,
+  socialButton: {
+    borderRadius: 12,
+    borderWidth: 1,
   },
-  footer: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    backgroundColor: '#fff'
-  },
-  dots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#333',
-    marginHorizontal: 6,
-  },
-  buttons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  skip: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  next: {
-    backgroundColor: '#111827',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  }
 });
