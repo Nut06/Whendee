@@ -5,25 +5,86 @@ const KEYS = {
   OTP_SESSION_EXPIRES: 'otp_session_expires',
   VERIFICATION_TOKEN: 'verification_token',
   USER_TEMP_DATA: 'user_temp_data',
+  ACCESS_TOKEN:'access_token',
+  REFRESH_TOKEN:'refresh_token',
 };
 
 export class SecureStorage {
-  
+
+  // ==================== Access Token ====================
+  // บันทึก Access Token
+  static async saveAccessToken(token: string): Promise<void> {
+    try {
+      await SecureStore.setItemAsync(KEYS.ACCESS_TOKEN, token);
+    } catch (error) {
+      console.error('Error saving access token:', error);
+    }
+  }
+
+  // ดึง Access Token
+  static async getAccessToken(): Promise<string | null> {
+    try {
+      return await SecureStore.getItemAsync(KEYS.ACCESS_TOKEN);
+    } catch (error) {
+      console.error('Error getting access token:', error);
+      return null;
+    }
+  }
+
+  // ลบ Access Token
+  static async clearAccessToken() {
+    try {
+      await SecureStore.deleteItemAsync(KEYS.ACCESS_TOKEN);
+      return true;
+    } catch (error) {
+      console.error('Error clearing access token:', error);
+      return false;
+    }
+  }
+
+  // ==================== Refresh Token ====================
+  // บันทึก Refresh Token
+  static async saveRefreshToken(token: string): Promise<void> {
+    try {
+      await SecureStore.setItemAsync(KEYS.REFRESH_TOKEN, token);
+    } catch (error) {
+      console.error('Error saving refresh token:', error);
+    }
+  }
+
+  // ดึง Refresh Token
+  static async getRefreshToken(): Promise<string | null> {
+    try {
+      return await SecureStore.getItemAsync(KEYS.REFRESH_TOKEN);
+    } catch (error) {
+      console.error('Error getting refresh token:', error);
+      return null;
+    }
+  }
+
+  // ลบ Refresh Token
+  static async clearRefreshToken() {
+    try {
+      await SecureStore.deleteItemAsync(KEYS.REFRESH_TOKEN);
+      return true;
+    } catch (error) {
+      console.error('Error clearing refresh token:', error);
+      return false;
+    }
+  }
+
+  // ==================== OTP Session Token ====================
   // บันทึก OTP Session Token
-  static async saveOTPSession(token: string, expiresIn: number) {
+  static async saveOTPSession(token: string, expiresIn: number):Promise<void> {
     try {
       const expiresAt = Date.now() + expiresIn * 1000;
-      
       await SecureStore.setItemAsync(KEYS.OTP_SESSION_TOKEN, token);
       await SecureStore.setItemAsync(
         KEYS.OTP_SESSION_EXPIRES,
         expiresAt.toString()
       );
-      
-      return true;
     } catch (error) {
       console.error('Error saving OTP session:', error);
-      return false;
     }
   }
 

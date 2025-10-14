@@ -1,5 +1,5 @@
 import Bcrypt from "@/utils/bcrypt"
-import { OTPSession, RequestOTP, User } from "@/types/user"
+import { OTPSession, OTPRequest, User, AuthToken } from "@/types/user"
 import UserRepo from "@/repo/userRepo";
 import { AppError } from "@/types/appError";
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "@/types/http";
@@ -7,8 +7,7 @@ import { createAccessToken } from "@/utils/jwt";
 import { createRefreshToken } from '@/utils/jwt';
 import { sendOTPSMS } from "@/utils/twilio";
 import { redisClient, setAsync } from "@/utils/redis";
-import { v4 as uuid } from 'uuid';
-import express from 'express';
+import crypto from 'crypto';
 
 const otpKeyGen = (session: string) => `otp:${session}`;
 const pendingKeyGen = (phone: string) => `pending_user:${phone}`;
@@ -19,7 +18,7 @@ const pendingUserExpiry = 5 * 60; // 5 minutes in seconds
 const authService = {
     sendingOtp: async ({phone, ip, userAgent}: {phone: string, ip: string, userAgent: string}): Promise<string> => {
         try {
-            const sessionToken = uuid();
+            const sessionToken = crypto.randomUUID();
             const otp = genOTP();
             const now = Date.now();
             const expiresAt = now + otpExpiry * 1000;
@@ -41,17 +40,18 @@ const authService = {
             throw new AppError('User registration failed', INTERNAL_SERVER_ERROR, 'USER_REGISTRATION_FAILED');
         }
     },
-    getPendingUser: async (phone: string): Promise<RequestOTP> => {
+    
+    getPendingUser: async (phone: string): Promise<OTPRequest> => {
         const key = pendingKeyGen(phone);
         let user = await redisClient.get(key);
         if (!user) {
             throw new AppError('No pending user found', BAD_REQUEST, 'NO_PENDING_USER');
         }
         user = JSON.parse(user);
-        return user as unknown as RequestOTP;
+        return user as unknown as OTPRequest;
     },
 
-    storePendingUser: async (user: RequestOTP): Promise<void> => {
+    storePendingUser: async (user: OTPRequest): Promise<void> => {
         const key = pendingKeyGen(user.phone);
         const data = JSON.stringify(user);
         try {
@@ -60,6 +60,7 @@ const authService = {
             throw new AppError('Storing pending user failed', INTERNAL_SERVER_ERROR, 'PENDING_USER_FAILED');
         }
     },
+
     verifyOtp: async (session: string, otp: string): Promise<boolean> => {
         const key = otpKeyGen(session);
         let otpData = await redisClient.get(key);
@@ -73,7 +74,8 @@ const authService = {
         await redisClient.del(key);
         return true;
     },
-    createUser: async (user: RequestOTP): Promise<{newUser:User, accessToken:string, refreshToken:string}> => {
+
+    createUser: async (user: OTPRequest): Promise<{newUser:User, accessToken:string, refreshToken:string}> => {
         const {email} = user;
         const existingUser = await UserRepo.findUserbyEmail(email);
         if(existingUser){
@@ -84,18 +86,20 @@ const authService = {
         const hashedPassword = await Bcrypt.hash(user.password || '');
         newUser = await UserRepo.createUser({
             ...user,
-            password: hashedPassword
+            password: hashedPassword,
         }) as User;
+        const accessToken = createAccessToken({ id: newUser.id });
+        const refreshToken = createRefreshToken({ id: newUser.id });
+        await UserRepo.updatedRefreshToken(newUser.id, refreshToken);
+
         if (!newUser) {
             throw new AppError('User creation failed', INTERNAL_SERVER_ERROR, 'USER_CREATION_FAILED');
         }
 
-        const accessToken = createAccessToken({ id: newUser.id });
-        const refreshToken = createRefreshToken({ id: newUser.id });
         return { newUser, accessToken, refreshToken };
     },
 
-    registerUser: async (user: RequestOTP): Promise<void> => {
+    registerUser: async (user: OTPRequest): Promise<void> => {
         try{
             const existingUser = await UserRepo.findUserbyEmail(user.email);
             if(existingUser){
@@ -108,20 +112,62 @@ const authService = {
         }
     },
     
-    loginUser: async (email: string, password: string): Promise<{ accessToken: string, refreshToken: string }> => {
+    loginUser: async (email: string, password?: string): Promise<{ accessToken: string, refreshToken: string }> => {
         const user = await UserRepo.findUserbyEmail(email);
         if (!user) {
             throw new AppError('Incorrect email or password', BAD_REQUEST, 'INCORRECT_CREDENTIALS');
         }
-        
-        const isPasswordValid = await Bcrypt.compare(password, user.password || '');
-        if (!isPasswordValid) {
-            throw new AppError('Incorrect email or password', BAD_REQUEST, 'INCORRECT_CREDENTIALS');
+
+        if(password){
+            const isPasswordValid = await Bcrypt.compare(password, user.password || '');
+            if (!isPasswordValid) {
+                throw new AppError('Incorrect email or password', BAD_REQUEST, 'INCORRECT_CREDENTIALS');
+            }
         }
         
         const accessToken: string = createAccessToken({ id: user.id });
         const refreshToken: string = createRefreshToken({ id: user.id });
         return { accessToken, refreshToken };
+    },
+
+    loginWithGoogle: async (profile: any): Promise<AuthToken> => {
+        const email = profile.emails[0].value;
+        let user = await UserRepo.findUserbyEmail(email);
+        if (!user) {
+            user = await UserRepo.createUser({
+                email,
+                fullname: profile.displayName,
+                password: crypto.randomBytes(16).toString('hex'), // Random password
+                phone: '',
+            }) as User;
+        }
+        if (!user) {
+            throw new AppError('Google login failed', INTERNAL_SERVER_ERROR, 'GOOGLE_LOGIN_FAILED');
+        }
+        const accessToken = createAccessToken({ id: user.id });
+        const refreshToken = createRefreshToken({ id: user.id });
+        await UserRepo.updatedRefreshToken(user.id, refreshToken);
+        return { accessToken, refreshToken } as AuthToken;
+    },
+
+    loginWithLine: async (profile: any): Promise<AuthToken> => {
+        const email = profile.emails[0].value;
+        let user = await UserRepo.findUserbyEmail(email);
+        if (!user) {
+            user = await UserRepo.createUser({
+                email,
+                fullname: profile.displayName,
+                password: crypto.randomBytes(16).toString('hex'), // Random password
+                phone: '',
+            }) as User;
+        }
+        if (!user) {
+            throw new AppError('LINE login failed', INTERNAL_SERVER_ERROR, 'LINE_LOGIN_FAILED');
+        }
+        const accessToken = createAccessToken({ id: user.id });
+        const refreshToken = createRefreshToken({ id: user.id });
+        await UserRepo.updatedRefreshToken(user.id, refreshToken);
+        return { accessToken, refreshToken } as AuthToken;
     },
 
     resendOtp: async({phone, session, ip, userAgent}
@@ -134,6 +180,12 @@ const authService = {
         await redisClient.del(key);
         const token = await authService.sendingOtp({phone, ip, userAgent});
         return token;
+    },
+    
+    refreshToken: async (userId: string): Promise<AuthToken> => {
+        const accessToken = createAccessToken({ id: userId });
+        const refreshToken = createRefreshToken({ id: userId });
+        return { accessToken, refreshToken } as AuthToken;
     },
 };
 export default authService;

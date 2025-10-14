@@ -1,11 +1,13 @@
 // ใช้ types ที่คุณมีอยู่แล้ว + เพิ่มเติมสำหรับ Zustand/React Query
 
 export interface User {
-  id?: string;
-  fname?: string;
-  lname?: string;
-  email?: string;
-  phone?: string;
+  id: string;
+  name:string;
+  email: string,
+  password:string,
+  phone: string,
+  createdAt?: Date,
+  updatedAt?: Date,
 }
 
 export interface LoginRequest {
@@ -13,10 +15,18 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
-  user: User;
-  token: string;
-  refreshToken: string;
+export interface LoginResponse{
+    success: boolean;
+    message: string;
+    data:{
+        accessToken:string;
+        refreshToken:string;
+        expiresIn:number;
+    };
+}
+
+export interface VerifyOtpRequest {
+  otp: string;
 }
 
 export interface RegisterRequest {
@@ -26,9 +36,15 @@ export interface RegisterRequest {
   password: string;
 }
 
-export interface VerifyOtp {
-  sessionToken: string;
-  otp: string;
+export interface VerifyOtpRespone {
+  success: true,
+  message: "OTP verified successfully",
+  data: {
+    user: User,
+    accessToken: string,
+    refreshToken: string,
+    expiresIn: string
+  }
 }
 
 export interface ResponseOtp {
@@ -52,7 +68,7 @@ export interface RefreshTokenResponse {
   success: boolean;
   data: {
     accessToken: string;
-    refreshToken?: string;
+    refreshToken: string;
   };
 }
 

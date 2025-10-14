@@ -5,21 +5,25 @@ export type User = {
     id: string;
     fullname?: string;
     email?: string;
+    phoneNumber?: string;
+    password?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
-export type RequestOTP = {
-    fullname:string;
+export type OTPRequest = {
+    fullname: string;
     email: string;
-    phone:string;
+    phone: string;
     password?: string;
 }
 
-export interface verifyOTP {
+export interface OTPverify {
     phone:string;
     otp:string
 }
 
-export interface resendOTP{
+export interface OTPresend{
     phone:string;
 }
 
@@ -34,7 +38,7 @@ export interface OTPSession{
     userAgent:string;
 }
 
-export interface ResponseOTP{
+export interface OTPResponse{
     success: boolean;
     message: string;
     data:{
@@ -43,7 +47,7 @@ export interface ResponseOTP{
     };
 }
 
-export interface ResponseLogin{
+export interface LoginResponse{
     success: boolean;
     message: string;
     data:{

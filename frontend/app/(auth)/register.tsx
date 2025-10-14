@@ -4,62 +4,49 @@ import { Feather } from '@expo/vector-icons'
 import { useState } from 'react'
 import { useRouter } from 'expo-router'
 import InputField from '@/components/input'
-import { UserAuthInput } from '@/types/user.types'
-import { useRegistration } from '@/contexts/RegistrationContext'
-import { useRequestOTP } from '@/hooks/useOTP'
-import { requestOtp } from '../../../services/identity-service/src/controller/authController';
-import { useAuth } from '@/hooks/useAuth'
+import { RegisterRequest } from '@/types/user.types'
+import { useAuthStore } from '@/stores/authStore'
+import { useOtpStore } from '@/stores/otpStore'
 
 export default function Register() {
   const router = useRouter()
   const [agree, setAgree] = useState(false);
-  const { requestOTP, isRequestOTPLoading, requestOTPError} = useAuth();
-  const [errors, setErrors] = useState<Partial<Record<keyof UserAuthInput, boolean>>>({});
+  const {user, setUser, setAuth, loginLine, loginGoogle} = useAuthStore();
+  const { requestOtp  } = useOtpStore();
+  const [errors, setErrors] = useState({
+    name: false,
+    email: false,
+    phone: false,
+    password: false,
+  });
+  const validateErrors = {
+    name: !user?.name || user.name.trim() === '',
+    email: !user?.email || user.email.trim() === '',
+    phone: !user?.phone || user.phone.trim() === '',
+    password: !user?.password || user.password.trim() === '',
+  }
+
+  const handleGoogle = async () => {
+    await loginGoogle();
+  }
+
+  const handleLine = async () => {
+    await loginLine();
+  }
   
-  const [input, setInput] = useState<UserAuthInput>({
-    fname: '',
-    lname: '',
-    email: '',
-    password: '',
-    phone: '',
-  })
-
-  const handleregister = () => {
-    // ตรวจสอบว่ามีช่องไหนว่างบ้าง
-    const newErrors: Partial<Record<keyof UserAuthInput, boolean>> = {};
-    let hasError = false;
-    let errorMessage = '';
-
-    if (!input.fname?.trim()) {
-      newErrors.fname = true;
-      hasError = true;
-      errorMessage = 'กรุณากรอกชื่อ';
-    }
-    if (!input.email?.trim()) {
-      newErrors.email = true;
-      hasError = true;
-      errorMessage = errorMessage || 'กรุณากรอกอีเมล';
-    }
-    if (!input.phone?.trim()) {
-      newErrors.phone = true;
-      hasError = true;
-      errorMessage = errorMessage || 'กรุณากรอกเบอร์โทรศัพท์';
-    }
-    if (!input.password?.trim()) {
-      newErrors.password = true;
-      hasError = true;
-      errorMessage = errorMessage || 'กรุณากรอกรหัสผ่าน';
-    }
-
-    setErrors(newErrors);
-
-    if (hasError) {
-      Alert.alert('ข้อมูลไม่ครบถ้วน', errorMessage);
+  const handleRegister = async () =>{
+    setErrors(validateErrors);
+    const hasErrors = Object.values(validateErrors).some(value => value);
+    if (!user || hasErrors) {
       return;
     }
-
-    // ดำเนินการลงทะเบียนต่อ
-    // requestOTP(input);
+    await requestOtp({
+      name:user.name,
+      email:user.email,
+      phone:user.phone,
+      password:user.password
+    });
+    router.push('/(auth)/otp-verify');
   }
   
   return (
@@ -83,41 +70,35 @@ export default function Register() {
               <InputField
                 placeholder="Full name"
                 onChangeText={(text) => {
-                  setInput({ ...input, fname: text });
-                  if (errors.fname) setErrors({ ...errors, fname: false });
+                  setUser('name', text);
                 }}
-                value={input.fname}
-                error={errors.fname}
+                error={errors.name}
+                value={user?.name}
               />
               <InputField
                 placeholder="Email address"
                 onChangeText={(text) => {
-                  setInput({ ...input, email: text });
-                  if (errors.email) setErrors({ ...errors, email: false });
+                  setUser('email', text);
                 }}
-                value={input.email}
-                keyboardType="email-address"
                 error={errors.email}
+                value={user?.email}
+                keyboardType="email-address"
               />
               <InputField
                 placeholder="+66 | Telephone Number"
                 onChangeText={(text) => {
-                  setInput({ ...input, phone: text });
-                  if (errors.phone) setErrors({ ...errors, phone: false });
+                  setUser('phone', text);
                 }}
-                value={input.phone}
+                value={user?.phone}
                 keyboardType="phone-pad"
-                error={errors.phone}
               />
               <InputField
                 placeholder="Password"
                 onChangeText={(text) => {
-                  setInput({ ...input, password: text });
-                  if (errors.password) setErrors({ ...errors, password: false });
+                  setUser('password', text);
                 }}
-                value={input.password}
+                value={user?.password}
                 isSecure={true}
-                error={errors.password}
               />
             </View>
 
@@ -151,7 +132,7 @@ export default function Register() {
                 agree ? 'bg-blue-400' : 'bg-blue-200'
               }`}
               activeOpacity={0.8}
-              onPress={handleregister}
+              onPress={handleRegister}
             >
               <Text className="text-base font-semibold text-white">Get Verification</Text>
             </TouchableOpacity>
@@ -168,6 +149,7 @@ export default function Register() {
               <TouchableOpacity 
                 className="w-full justify-center gap-x-3 flex-row bg-white border border-gray-200 rounded-xl py-3.5 items-center"
                 activeOpacity={0.7}
+                onPress={handleGoogle}
               >
                 <Image 
                   source={require('../../assets/images/auth/google.png')} 
@@ -180,6 +162,7 @@ export default function Register() {
               <TouchableOpacity 
                 className="w-full flex-row bg-white border border-gray-200 rounded-xl py-3.5 items-center justify-center gap-x-3"
                 activeOpacity={0.7}
+                onPress={handleLine}
               >
                 <Image 
                   source={require('../../assets/images/auth/line.png')} 

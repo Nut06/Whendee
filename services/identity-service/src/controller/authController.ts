@@ -1,16 +1,16 @@
+import { redisClient } from './../utils/redis';
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR, OK } from '@/types/http';
-import { Otp, AuthToken, RequestOTP, OTPSession, ResponseLogin, User } from '@/types/user';
+import { Otp, AuthToken, OTPRequest, OTPResponse, OTPSession, LoginResponse, User } from '@/types/user';
 import type { Request, Response } from "express";
 import Bcrypt from '@/utils/bcrypt';
 import passport, { session } from 'passport';
 import { AppError } from '@/types/appError';
-import authService from '../service/authService';
-import { ResponseOTP } from '../types/user';
+import authService from '@/service/authService';
 
 const isProd = process.env.NODE_ENV === 'production';
 
 export const requestOtp = async (req: Request, res: Response) => {
-  const {email, password, fullname, phone}:RequestOTP = req.body;
+  const {email, password, fullname, phone}:OTPRequest = req.body;
   const ip = req.ip;
   const userAgent = req.get('User-Agent');
 
@@ -21,7 +21,7 @@ export const requestOtp = async (req: Request, res: Response) => {
   try {
     const session: string = await authService.sendingOtp({phone, ip, userAgent});
     await authService.storePendingUser({email, password, fullname, phone: phone});
-    const response: ResponseOTP = {
+    const response: OTPResponse = {
       success: true,
       message:"Already Sending OTP",
       data:{
@@ -36,8 +36,8 @@ export const requestOtp = async (req: Request, res: Response) => {
 
 }
 
-const genLoginResponse = (token:AuthToken, message='Login successful'):ResponseLogin => {
-  const oneHour = 3600000;
+const oneHour = 3600000;
+const genLoginResponse = (token:AuthToken, message='Login successful'):LoginResponse => {
   return {
     success: true,
     message: message,
@@ -57,24 +57,33 @@ export const loginlocal = async (req: Request, res: Response) => passport.authen
       return res.status(BAD_REQUEST).json({ message: 'Invalid credentials' });
     }
 
-    const resdata:ResponseLogin = genLoginResponse(token);
+    const resdata:LoginResponse = genLoginResponse(token);
     return res.json(resdata).status(OK);
   })(req, res);
 
 export const verifyOtp = async (req: Request, res: Response):Promise<Response> => {
-  const { sesssion: session, otp } = req.body;
+  const { session, otp } = req.body;
   if (!session) {
     return res.status(BAD_REQUEST).json({ message: 'Session token is required' });
   }
   try {
-      const isVerified = await authService.verifyOtp(session, otp);
-      if (!isVerified) {
-        return res.status(BAD_REQUEST).json({ success: false });
-      }
-      const user = await authService.getPendingUser(session);
-      const {newUser, accessToken, refreshToken } = await authService.createUser(user);
-      const resdata:ResponseLogin = genLoginResponse({ accessToken, refreshToken }, 'OTP verified and user registered successfully');
-      return res.json(resdata);
+        const isVerified = await authService.verifyOtp(session, otp);
+        if (!isVerified) {
+          return res.status(BAD_REQUEST).json({ success: false });
+        }
+        const user = await authService.getPendingUser(session);
+        const {newUser, accessToken, refreshToken } = await authService.createUser(user);
+        const resdata = {
+          success: true,
+          message: "OTP verified successfully",
+          data: {
+            user: newUser,
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            expiresIn: oneHour
+        }
+      };
+        return res.json(resdata);
   } catch (error) {
       return res.status(BAD_REQUEST).json({ message: 'OTP verification failed' });
   }
@@ -90,7 +99,7 @@ export const resendOtp = async (req: Request, res: Response) => {
 
   try {
       const token = await authService.resendOtp({session, phone, ip, userAgent});
-      const response: ResponseOTP = {
+      const response: OTPResponse = {
       success: true,
       message:"Already Sending OTP",
       data:{
@@ -103,6 +112,20 @@ export const resendOtp = async (req: Request, res: Response) => {
       return res.status(BAD_REQUEST).json({ message: 'Resend OTP failed' });
   }
 }
+
+export const refreshToken = async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) {
+    return res.status(BAD_REQUEST).json({ message: 'Refresh token is required' });
+  }
+  try {
+    const newTokens = await authService.refreshToken(refreshToken);
+    return res.status(OK).json(genLoginResponse(newTokens, 'Token refreshed successfully'));
+  } catch (error) {
+    return res.status(BAD_REQUEST).json({ message: 'Refresh token failed' });
+  }
+}
+
 
 export const lineLogin = async (req: Request, res: Response) => {
   return passport.authenticate('line', { session: false })(req, res);
