@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Node modules (ทุก app/service)
 **/node_modules/
 **/.pnpm-store/
@@ -50,4 +51,3 @@ terraform/
 terraform.tfvars
 *.tfvars
 !terraform.tfvars.example
-
