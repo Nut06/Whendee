@@ -1,15 +1,19 @@
-import express from 'express';
-import type { Response, Request } from 'express';
+import 'dotenv/config';
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-app.use(express.json());
+import { env } from './config/env.js';
+import { createApp } from './server/app.js';
 
-app.listen(PORT, () => {
-  console.log(`Communication Service is running on port ${PORT}`);
-});
+async function bootstrap() {
+  try {
+    const app = await createApp();
 
-app.get('/', (req: Request, res: Response) => {
-  res.status(200).json({message:"Communication Service is running"});
+    app.listen(env.PORT, () => {
+      console.log(`Communication Service is running on port ${env.PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start Communication Service', error);
+    process.exit(1);
+  }
 }
-);
+
+void bootstrap();
