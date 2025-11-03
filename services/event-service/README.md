@@ -47,6 +47,37 @@ Content-Type: application/json
 
 ### Poll endpoints (UC-6)
 
+#### Create poll for event
+
+```
+POST /events/:eventId/poll
+Content-Type: application/json
+
+{
+  "organizerId": "user_123",
+  "closesAt": "2025-06-02T12:00:00.000Z",
+  "options": [
+    { "label": "Option A" },
+    { "label": "Option B" },
+    { "label": "Option C", "order": 5 }
+  ]
+}
+```
+
+- `201 Created` → returns the full poll with options
+- Requires at least 2 options; organiser must be active (user validation)
+
+#### Add option to existing poll
+
+```
+POST /events/:eventId/poll/options
+Content-Type: application/json
+
+{ "label": "Late Option", "order": 99 }
+```
+
+Adds an option while the poll is still open. `order` is optional (auto-increments).
+
 #### Get poll by event
 
 ```

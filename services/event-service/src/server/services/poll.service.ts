@@ -22,8 +22,76 @@ const db = prisma as unknown as {
   poll: any;
   pollVote: any;
   pollOption: any;
+  event: any;
   $transaction: typeof prisma.$transaction;
 };
+
+interface CreatePollOptionInput {
+  label: string;
+  order?: number;
+}
+
+export async function createPoll(params: {
+  eventId: string;
+  organizerId: string;
+  options: CreatePollOptionInput[];
+  closesAt?: Date;
+}) {
+  const event = await db.event.findUnique({
+    where: { id: params.eventId },
+    select: { id: true },
+  });
+
+  if (!event) {
+    throw new HttpError(404, `Event ${params.eventId} not found`);
+  }
+
+  const existingPoll = await db.poll.findUnique({
+    where: { eventId: params.eventId },
+    select: { id: true },
+  });
+
+  if (existingPoll) {
+    throw new HttpError(409, 'Poll already exists for this event', {
+      pollId: existingPoll.id,
+    });
+  }
+
+  if (params.options.length < 2) {
+    throw new HttpError(400, 'Poll requires at least two options');
+  }
+
+  const poll = await prisma.$transaction(async (tx) => {
+    const created = await tx.poll.create({
+      data: {
+        eventId: params.eventId,
+        closesAt: params.closesAt ?? null,
+        status: 'OPEN',
+      },
+    });
+
+    const optionPayload = params.options.map((option, index) => ({
+      pollId: created.id,
+      label: option.label,
+      order: option.order ?? index,
+    }));
+
+    await tx.pollOption.createMany({
+      data: optionPayload,
+    });
+
+    return tx.poll.findUnique({
+      where: { id: created.id },
+      include: {
+        options: {
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+  });
+
+  return mapPoll(poll as PollWithOptions);
+}
 
 export async function getPollForEvent(eventId: string) {
   const poll = (await db.poll.findUnique({
@@ -117,6 +185,49 @@ export async function submitVote(params: {
     pollId: poll.id,
     tallies: updatedOptions,
   };
+}
+
+export async function addPollOption(params: {
+  eventId: string;
+  label: string;
+  order?: number;
+}) {
+  const poll = (await db.poll.findUnique({
+    where: { eventId: params.eventId },
+    include: {
+      options: true,
+    },
+  })) as PollWithOptions | null;
+
+  if (!poll) {
+    throw new HttpError(404, `Poll for event ${params.eventId} not found`);
+  }
+
+  if (poll.status !== 'OPEN') {
+    throw new HttpError(400, 'Cannot add option to a closed poll');
+  }
+
+  const nextOrder =
+    params.order ??
+    (poll.options.length
+      ? Math.max(...poll.options.map((option) => option.order)) + 1
+      : 0);
+
+  const created = await db.pollOption.create({
+    data: {
+      pollId: poll.id,
+      label: params.label,
+      order: nextOrder,
+    },
+    select: {
+      id: true,
+      label: true,
+      order: true,
+      tally: true,
+    },
+  });
+
+  return created;
 }
 
 export async function closePoll(params: {

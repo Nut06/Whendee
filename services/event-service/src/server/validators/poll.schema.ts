@@ -30,3 +30,38 @@ export const closePollBodySchema = z
 
 export type SubmitVoteBody = z.infer<typeof submitVoteBodySchema>;
 export type ClosePollBody = z.infer<typeof closePollBodySchema>;
+
+export const pollOptionSchema = z.object({
+  label: z
+    .string()
+    .trim()
+    .min(1, 'option label is required')
+    .max(120),
+  order: z
+    .number()
+    .int()
+    .min(0)
+    .optional(),
+});
+
+export const createPollBodySchema = z.object({
+  organizerId: z.string().trim().min(1, 'organizerId is required'),
+  closesAt: z
+    .string()
+    .optional()
+    .transform((value) => (value ? new Date(value) : undefined))
+    .refine(
+      (value) => !value || !Number.isNaN(value.getTime()),
+      'closesAt must be an ISO date string',
+    ),
+  options: z
+    .array(pollOptionSchema)
+    .min(2, 'Poll must have at least two options'),
+});
+
+export const addOptionBodySchema = pollOptionSchema.extend({
+  pollId: z.string().trim().min(1, 'pollId is required').optional(),
+});
+
+export type CreatePollBody = z.infer<typeof createPollBodySchema>;
+export type AddOptionBody = z.infer<typeof addOptionBodySchema>;
