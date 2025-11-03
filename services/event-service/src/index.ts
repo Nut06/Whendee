@@ -1,15 +1,19 @@
-import express from 'express';
-import type { Response,  Express, Request } from 'express';
+import 'dotenv/config';
 
-const app:Express = express();
+import { env } from './config/env.js';
+import { createApp } from './server/app.js';
 
-app.use(express.json());
-const PORT = process.env.PORT || 3001;
+async function bootstrap() {
+  try {
+    const app = await createApp();
 
-app.listen(PORT, () => {
-  console.log(`Event Service is running on port ${PORT}`);
-});
+    app.listen(env.PORT, () => {
+      console.log(`Event Service is running on port ${env.PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start Event Service', error);
+    process.exit(1);
+  }
+}
 
-app.get('/', (req: Request, res: Response) => {
-  res.status(200).json({message:"Event Service is running"});
-});
+void bootstrap();
