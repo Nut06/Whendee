@@ -1,8 +1,10 @@
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
+import { userService } from '@/services/accountService'
+import { useAuthStore } from '@/stores/authStore'
 
 // Preference options matching Figma design - WhenDee activities
 const PREFERENCES = [
@@ -14,11 +16,21 @@ const PREFERENCES = [
   { id: 'travel', label: 'Travel', icon: 'beach' },
   { id: 'gaming', label: 'Gaming', icon: 'controller' },
   { id: 'book-club', label: 'Book Club', icon: 'book-open-page-variant' },
+  { id: 'art', label: 'Art & Craft', icon: 'palette' },
+  { id: 'coffee', label: 'Coffee Chat', icon: 'coffee-outline' },
+  { id: 'outdoor', label: 'Outdoor Walk', icon: 'pine-tree' },
+  { id: 'music', label: 'Live Music', icon: 'music-circle-outline' },
+  { id: 'photography', label: 'Photography', icon: 'camera' },
+  { id: 'cooking', label: 'Cooking Class', icon: 'chef-hat' },
+  { id: 'language', label: 'Language Exchange', icon: 'translate' },
+  { id: 'volunteering', label: 'Volunteering', icon: 'hand-heart' },
 ] as const;
 
 export default function ChoosePreference() {
   const router = useRouter()
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const updateUser = useAuthStore((state) => state.updateUser)
 
   const togglePreference = (id: string) => {
     setSelectedPreferences(prev => 
@@ -29,13 +41,36 @@ export default function ChoosePreference() {
   }
 
   const handleSkip = () => {
+    if (selectedPreferences.length === 0) {
+      Alert.alert('No Preferences Selected', 'Please select at least one preference before skipping.');
+    }
     router.replace('/(tab)/home')
   }
 
-  const handleNext = () => {
-    if (selectedPreferences.length >= 5) {
-      // TODO: Save preferences to backend
+  const handleNext = async () => {
+    if (selectedPreferences.length < 5 || isSubmitting) {
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const payload = selectedPreferences.map((id) => {
+        const meta = PREFERENCES.find((pref) => pref.id === id)
+        return {
+          key: id,
+          label: meta?.label,
+          icon: meta?.icon ?? null,
+        }
+      })
+
+      const updatedUser = await userService.setUserPreference(payload)
+      await updateUser(updatedUser)
       router.replace('/(tab)/home')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to save your preferences right now.'
+      Alert.alert('Save failed', message)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -54,11 +89,11 @@ export default function ChoosePreference() {
         >
           <View className="flex-1">
             {/* Header */}
-            <View className="flex-1 w-full mb-4 text-black bg-white">
-              <Text className="text-3xl font-bold font-lato">
+            <View className="w-full bg-white px-6 pt-14 pb-6 rounded-b-[32px]">
+              <Text className="mt-6 text-3xl font-bold text-gray-900 font-lato">
                 Welcome to WhenDee
               </Text>
-              <Text className="mt-2 font-lato">
+              <Text className="mt-2 mb-4 text-base text-gray-500 font-lato">
                 Pick 5 or more of your favorite activities
               </Text>
             </View>
@@ -66,10 +101,13 @@ export default function ChoosePreference() {
           <View className='flex flex-row justify-end'>
               <TouchableOpacity
                 onPress={handleSkip}
-                className="px-5 py-2 rounded-full bg-white/30"
+                className="px-5 py-2 mt-6 rounded-full bg-white/30"
                 activeOpacity={0.7}
               >
-                <Text className="text-base font-semibold text-white">Skip</Text>
+                <Text className="text-base font-semibold text-white">{
+                  selectedPreferences.length >= 5 ? 'Send Selections' : 'Skip'
+                }
+                </Text>
               </TouchableOpacity>
           </View>
 
@@ -125,8 +163,11 @@ export default function ChoosePreference() {
                   onPress={handleNext}
                   className="px-8 py-3 bg-white rounded-full"
                   activeOpacity={0.8}
+                  disabled={isSubmitting}
                 >
-                  <Text className="text-base font-semibold text-purple-600">Continue</Text>
+                  <Text className="text-base font-semibold text-purple-600">
+                    {isSubmitting ? 'Saving...' : 'Continue'}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>

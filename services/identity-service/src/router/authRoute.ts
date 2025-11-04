@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requestOtp, loginlocal, verifyOtp, resendOtp, lineLogin, googleLogin, lineCallback, googleCallback, logout, refreshToken } from "@/controller/authController";
+import { requestOtp, loginlocal, verifyOtp, resendOtp, lineLogin, googleLogin, lineCallback, googleCallback, refreshToken, getUser } from "@/controller/authController";
 
 export const authRouter = Router();
 
@@ -11,7 +11,7 @@ authRouter.post('/verify-otp', verifyOtp);
 
 authRouter.post('/resend-otp', resendOtp);
 
-authRouter.get('/refresh', refreshToken);
+authRouter.post('/refresh', refreshToken);
 
 authRouter.get('/google', googleLogin);
 
@@ -21,4 +21,4 @@ authRouter.post('/line', lineCallback);
 
 authRouter.get('/line/callback', lineCallback);
 
-authRouter.post('/logout', logout);
+authRouter.get('/me', getUser);

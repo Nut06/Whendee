@@ -1,29 +1,57 @@
-import { View, Image, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
+import { View, Image, Text, TouchableOpacity, Alert } from 'react-native'
 import { useState } from 'react'
 import { useRouter } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
 import { PrimaryButton } from '@/components/Buttons';
 import InputField from '@/components/input';
 import { LoginRequest } from '@/types/user.types';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function Login() {
   
   const router = useRouter();
   const [userInput, setUserInput] = useState<LoginRequest>({ email: '', password: '' });
+  const { loginWithCredentials, loginGoogle, loginLine } = useAuthStore();
   
-  const handleLogin = () => {
+  const [loading, setIsLoading] = useState<boolean>(false);
+  const handleLogin = async () => {
     try {
-      
-    } catch (err) {
-      
+      setIsLoading(true);
+      await loginWithCredentials(userInput);
+      router.replace('/(tab)/home');
+    } catch (err: any) {
+      const message = typeof err?.message === 'string' ? err.message : 'Unable to log in. Please try again.';
+      Alert.alert('Login failed', message);
     } finally {
-      
+      setIsLoading(false);
     }
-    // simulate login success
-    router.replace('/(tab)/home');
   };
 
-  const [loading, setIsLoading] = useState<boolean>(false);
+  const handleGoogle = async () => {
+    try {
+      setIsLoading(true);
+      await loginGoogle();
+      router.replace('/(tab)/choose-preference');
+    } catch (err: any) {
+      const message = typeof err?.message === 'string' ? err.message : 'Google login failed.';
+      Alert.alert('Login failed', message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLine = async () => {
+    try {
+      setIsLoading(true);
+      await loginLine();
+      router.replace('/(tab)/home');
+    } catch (err: any) {
+      const message = typeof err?.message === 'string' ? err.message : 'LINE login failed.';
+      Alert.alert('Login failed', message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
         <View className="flex-1">
@@ -88,6 +116,7 @@ export default function Login() {
               <TouchableOpacity 
                 className="w-full justify-center gap-x-3 flex-row bg-white border border-gray-200 rounded-xl py-3.5 items-center"
                 activeOpacity={0.7}
+                onPress={handleGoogle}
               >
                 <Image 
                   source={require('../../assets/images/auth/google.png')} 
@@ -100,6 +129,7 @@ export default function Login() {
               <TouchableOpacity 
                 className="w-full flex-row bg-white border border-gray-200 rounded-xl py-3.5 items-center justify-center gap-x-3"
                 activeOpacity={0.7}
+                onPress={handleLine}
               >
                 <Image 
                   source={require('../../assets/images/auth/line.png')} 
@@ -114,22 +144,3 @@ export default function Login() {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  input: {
-    borderRadius: 12,
-    fontSize: 16,
-  },
-  button: {
-    borderRadius: 12,
-    shadowColor: '#006FEE',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  socialButton: {
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-});

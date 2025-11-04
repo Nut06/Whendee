@@ -1,24 +1,23 @@
-import { getUser, loginGoogle, loginLine } from './../services/authService';
+import { getUser, loginGoogle, loginLine, loginLocal } from './../services/authService';
 // TO DO ปรับปรุงให้เข้ากับ code
 import { create } from 'zustand';
 import { SecureStorage } from '@/services/secureStorage';
-import { User } from '../types/user.types';
-
-const TOKEN_KEY = 'auth_token';
-const REFRESH_TOKEN_KEY = 'auth_refresh_token';
-const USER_KEY = 'auth_user';
+import { AuthTokens, User } from '../types/user.types';
 
 interface AuthState {
   user: User | null;
   accessToken: string | null;
   refreshToken: string | null;
+  accessTokenExpiresAt: string | null;
+  refreshTokenExpiresAt: string | null;
   isAuthenticated: boolean;
   isInitialized: boolean;
   // Actions
   setUser: (key: keyof User, value: any) => void;
-  setAuth: () => Promise<void>;
+  setAuth: (tokens?: AuthTokens) => Promise<void>;
   loginGoogle: () => Promise<void>;
   loginLine: () => Promise<void>;
+  loginWithCredentials: (payload: { email: string; password: string }) => Promise<void>;
   clearAuth: () => Promise<void>;
   updateUser: (user: User) => Promise<void>;
   initializeAuth: () => Promise<void>;
@@ -28,20 +27,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   accessToken: null,
   refreshToken: null,
+  accessTokenExpiresAt: null,
+  refreshTokenExpiresAt: null,
   isAuthenticated: false,
   isInitialized: false,
   loginGoogle: async () => {
     try {
-      await loginGoogle();
-      await get().setAuth();
+      const tokens = await loginGoogle();
+      await get().setAuth(tokens);
     } catch (error) {
       throw error;
     }
   },
   loginLine: async () => {
     try {
-      await loginLine();
-      await get().setAuth();
+      const tokens = await loginLine();
+      await get().setAuth(tokens);
+    } catch (error) {
+      throw error;
+    }
+  },
+  loginWithCredentials: async ({ email, password }) => {
+    try {
+      const tokens = await loginLocal({ email, password });
+      await get().setAuth(tokens);
     } catch (error) {
       throw error;
     }
@@ -50,20 +59,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   // ==================== SET AUTH ====================
   // บันทึก user และ tokens ทั้งหมด
-  setAuth: async () => {
+  setAuth: async (tokens) => {
     try {
-          const accessToken = await SecureStorage.getAccessToken();
-          if(!accessToken){
-            throw new Error("None of AccessToken");
-          }
-          const user = await getUser(accessToken);
+      const accessToken = tokens?.accessToken ?? await SecureStorage.getAccessToken();
+      if(!accessToken){
+        throw new Error("None of AccessToken");
+      }
+      const user = await getUser(accessToken);
+      const refreshToken = tokens?.refreshToken ?? await SecureStorage.getRefreshToken();
+      await SecureStorage.saveTempUserData(user);
 
-          set({
-            user,
-            accessToken,
-            isAuthenticated: true,
-            isInitialized: true,
-          });
+      set({
+        user,
+        accessToken,
+        refreshToken: refreshToken ?? null,
+        accessTokenExpiresAt: tokens?.accessTokenExpiresAt ?? null,
+        refreshTokenExpiresAt: tokens?.refreshTokenExpiresAt ?? null,
+        isAuthenticated: true,
+        isInitialized: true,
+      });
     } catch (error) {
       console.error('Error saving auth to SecureStore:', error);
       throw error;
@@ -77,15 +91,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await SecureStorage.clearAll();
     } catch (error) {
       console.error('Error clearing auth from SecureStore:', error);
-      // ยังคง clear state แม้จะเกิด error
-      set({
-        user: null,
-        accessToken: null,
-        refreshToken: null,
-        isAuthenticated: false,
-        isInitialized: true,
-      });
     }
+    set({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+      accessTokenExpiresAt: null,
+      refreshTokenExpiresAt: null,
+      isAuthenticated: false,
+      isInitialized: true,
+    });
   },
 
   // ==================== UPDATE USER ====================
@@ -116,6 +131,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           user,
           accessToken,
           refreshToken: refreshToken || null,
+          accessTokenExpiresAt: null,
+          refreshTokenExpiresAt: null,
           isAuthenticated: true,
           isInitialized: true,
         });
@@ -124,6 +141,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           user: null,
           accessToken: null,
           refreshToken: null,
+          accessTokenExpiresAt: null,
+          refreshTokenExpiresAt: null,
           isAuthenticated: false,
           isInitialized: true,
         });
@@ -134,6 +153,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user: null,
         accessToken: null,
         refreshToken: null,
+        accessTokenExpiresAt: null,
+        refreshTokenExpiresAt: null,
         isAuthenticated: false,
         isInitialized: true,
       });

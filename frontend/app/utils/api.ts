@@ -1,133 +1,68 @@
-import axios, { AxiosError, AxiosResponse, isAxiosError } from 'axios';
+import axios, { AxiosError, AxiosHeaders, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig, isAxiosError } from 'axios';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // ติดตั้งถ้ายังไม่มี
+import { SecureStorage } from '@/services/secureStorage';
 
 // =============================================
 // API Configuration
 // =============================================
 
 // กำหนด Base URL ตาม environment
+const SERVICE_BASES = {
+  identity: process.env.IDENTITY_SERVICE_URL || `http://localhost:${process.env.IDENTITY_SERVICE_PORT || 3002}`,
+  communication: process.env.COMMUNICATION_SERVICE_URL || `http://localhost:${process.env.COMMUNICATION_SERVICE_PORT || 3003}`,
+  event: process.env.EVENT_SERVICE_URL || `http://localhost:${process.env.EVENT_SERVICE_PORT || 3004}`,
+}
 
-const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.IDENTITY_SERVICE_PORT || 3002}`; // เปลี่ยนเป็น URL ของ API server
 
 // =============================================
 // Create Axios Instance
 // =============================================
 
-export const api = axios.create({
-  baseURL: BASE_URL,
+const createApi = (baseUrl:string) => {
+  const instance = axios.create({
+  baseURL: baseUrl,
   timeout: 15000, // 15 seconds
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
 });
+  return instance;
+}
+
+export const identityApi = createApi(SERVICE_BASES.identity);
+export const communicationApi = createApi(SERVICE_BASES.communication);
+export const eventApi = createApi(SERVICE_BASES.event);
 
 // =============================================
 // Request Interceptor (สำหรับแนบ token)
 // =============================================
+const apiEndpoints: AxiosInstance[] = [identityApi, communicationApi, eventApi];
 
-api.interceptors.request.use(
-  async (config) => {
-    try {
-      const token = await AsyncStorage.getItem('access_token');
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-
-      // Log request (development only)
-      if (__DEV__) {
-        console.log('📤 API Request:', {
-          method: config.method?.toUpperCase(),
-          url: config.url,
-          baseURL: config.baseURL,
-          data: config.data,
-        });
-      }
-
-      return config;
-    } catch (error) {
-      return Promise.reject(error);
-    }
-  },
-  (error) => {
-    return Promise.reject(error);
+const withAccessToken = async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
+  const token = await SecureStorage.getAccessToken();
+  if (token) {
+    const headers = AxiosHeaders.from(config.headers || {});
+    headers.set('Authorization', `Bearer ${token}`);
+    config.headers = headers;
   }
-);
+  return config;
+};
 
-// Response Interceptor (สำหรับจัดการ error)
-// =============================================
-
-api.interceptors.response.use(
-  (response: AxiosResponse) => {
-    // Log response (development only)
-    if (__DEV__) {
-      console.log('📥 API Response:', {
-        status: response.status,
-        url: response.config.url,
-        data: response.data,
-      });
-    }
-    return response;
-  },
-  async (error: AxiosError) => {
-    if (__DEV__) {
-      console.error('❌ API Error:', {
-        status: error.response?.status,
-        url: error.config?.url,
-        message: error.message,
-        data: error.response?.data,
-      });
-    }
-
-    // จัดการ error ตาม status code
-    if (error.response) {
-      const { status } = error.response;
-
-      switch (status) {
-        case 401:
-          // Unauthorized - Token หมดอายุ
-          await AsyncStorage.removeItem('access_token');
-          // ให้ redirect ไป login (ใช้ navigation service)
-
-          console.log('🔒 Unauthorized - Token expired');
-          break;
-
-        case 403:
-          // Forbidden
-          console.log('🚫 Forbidden - No permission');
-          break;
-
-        case 404:
-          // Not Found
-          console.log('🔍 Not Found');
-          break;
-
-        case 500:
-        case 502:
-        case 503:
-          // Server Error
-          console.log('🔥 Server Error');
-          break;
-
-        default:
-          console.log(`⚠️ Error ${status}`);
-      }
-    } else if (error.request) {
-      // Request ส่งไปแล้วแต่ไม่ได้รับ response
-      console.log('📡 Network Error - No response from server');
-    } else {
-      // Error อื่นๆ
-      console.log('❓ Unknown Error:', error.message);
-    }
-
-    return Promise.reject(error);
+const handleUnauthorized = async (error: AxiosError) => {
+  if (error.response?.status === 401) {
+    await AsyncStorage.removeItem('access_token');
   }
-);
+  return Promise.reject(error);
+};
 
-// =============================================
-// API Response Types
-// =============================================
+const applyInterceptors = (client: typeof identityApi) => {
+  client.interceptors.request.use(withAccessToken);
+  client.interceptors.response.use(undefined, handleUnauthorized);
+};
+
+apiEndpoints.forEach(applyInterceptors);
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -162,9 +97,3 @@ export const getErrorMessage = (error: unknown): string => {
 export const isNetworkError = (error: unknown): boolean => {
   return isAxiosError(error) && !error.response;
 };
-
-// =============================================
-// Export default
-// =============================================
-
-export default api;

@@ -17,19 +17,20 @@ datasource db {
 }
 
 model User {
-  id            String           @id @default(uuid())
-  name          String?
-  email         String?          @unique
-  phoneNumber   String?          @unique
-  password      String?          @unique
-  avatarUrl     String?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  accounts      Account[]
-  preferences   UserPreference[]
-  friends       UserFriend[]     @relation("UserToFriends")
-  friendOf      UserFriend[]     @relation("FriendToUsers")
-  refreshTokens RefreshToken[]
+  id                String           @id @default(uuid())
+  name              String?
+  email             String?          @unique
+  phoneNumber       String?          @unique
+  password          String?          @unique
+  avatarUrl         String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  accessToken       String?
+  accessTokenExpiry DateTime?
+  preferences       UserPreference[]
+  friends           UserFriend[]     @relation("UserToFriends")
+  friendOf          UserFriend[]     @relation("FriendToUsers")
+  refreshTokens     RefreshToken[]
 }
 
 model RefreshToken {
@@ -40,20 +41,6 @@ model RefreshToken {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id])
-}
-
-model Account {
-  id                String  @id @default(uuid())
-  userId            String
-  provider          String // e.g., "google", "line", "credentials"
-  providerAccountId String // ID from OAuth provider
-  email             String? // optional, may not exist (e.g. LINE)
-  accessToken       String? // optional
-  refreshToken      String? // optional
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@unique([provider, providerAccountId])
 }
 
 model PreferenceCategory {

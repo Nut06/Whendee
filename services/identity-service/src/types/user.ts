@@ -1,18 +1,31 @@
-import { PrismaClient } from "@prisma/client";
-import prisma from "@/utils/prisma";
-
 export type User = {
     id: string;
-    fullname?: string;
+    name?: string;
     email?: string;
     phoneNumber?: string;
     password?: string;
+    avatarUrl?: string;
     createdAt?: Date;
     updatedAt?: Date;
-}
+    preferences?: UserPreference[];
+};
+
+export type PreferenceCategory = {
+    id: string;
+    key: string;
+    label: string;
+    icon?: string | null;
+};
+
+export type UserPreference = {
+    id: string;
+    score: number;
+    category: PreferenceCategory;
+};
 
 export type OTPRequest = {
-    fullname: string;
+    name?: string;
+    fullname?: string;
     email: string;
     phone: string;
     password?: string;
@@ -53,7 +66,8 @@ export interface LoginResponse{
     data:{
         accessToken:string;
         refreshToken:string;
-        expiresIn:number;
+                accessTokenExpiresAt: Date | null;
+                refreshTokenExpiresAt: Date | null;
     };
 }
 
@@ -64,12 +78,16 @@ export interface VerifyOTPResponse {
     user: User;
     accessToken: string;
     refreshToken: string;
+        accessTokenExpiresAt: Date | null;
+        refreshTokenExpiresAt: Date | null;
   };
 }
 
 export type AuthToken = {
     accessToken: string;
     refreshToken: string;
+    accessTokenExpiresAt: Date | null;
+    refreshTokenExpiresAt: Date | null;
 }
 
 export type Otp = {

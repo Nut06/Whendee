@@ -49,17 +49,17 @@ export default function Onboarding() {
         onMomentumScrollEnd={onMomentumScrollEnd}
       >
         {slides.map((s) => (
-          <View key={s.key} style={{ width }} className="flex-1 items-center justify-center px-5">
-            <Image source={s.image} className="w-48 h-48 mb-5" resizeMode="contain" />
+          <View key={s.key} style={{ width }} className="items-center justify-center flex-1 px-5">
+            <Image source={s.image} className="w-48 h-48 mt-5 mb-5" resizeMode="contain" />
             <View className="px-3">
-              <Text className="text-h1 text-center">{s.title}</Text>
-              <Text className="text-xxl text-center mt-2">{s.subtitle}</Text>
+              <Text className="text-center text-h1">{s.title}</Text>
+              <Text className="mt-2 text-center text-xxl">{s.subtitle}</Text>
             </View>
           </View>
         ))}
       </Animated.ScrollView>
-      <View className="p-5 border-t border-gray-200 bg-white">
-        <View className="flex-row justify-center items-center mb-3">
+      <View className="p-5 bg-white border-t border-gray-200">
+        <View className="flex-row items-center justify-center mb-3">
           {slides.map((_, i) => {
             const opacity = scrollX.interpolate({
               inputRange: [(i - 1) * width, i * width, (i + 1) * width],
@@ -72,11 +72,11 @@ export default function Onboarding() {
           })}
         </View>
 
-        <View className="flex-row justify-between items-center">
-          <TouchableOpacity onPress={() => router.replace('/(auth)/login')} className="py-2 px-3">
+        <View className="flex-row items-center justify-between">
+          <TouchableOpacity onPress={() => router.replace('/(auth)/login')} className="px-3 py-2">
             <Text className="text-base">Skip</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={goNext} className="bg-gray-900 py-2 px-4 rounded-md">
+          <TouchableOpacity onPress={goNext} className="px-4 py-2 bg-gray-900 rounded-md">
             <Text className="text-base text-white">{index === slides.length - 1 ? 'Get Started' : 'Next'}</Text>
           </TouchableOpacity>
         </View>

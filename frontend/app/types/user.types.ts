@@ -1,13 +1,36 @@
 // ใช้ types ที่คุณมีอยู่แล้ว + เพิ่มเติมสำหรับ Zustand/React Query
 
+export interface PreferenceCategory {
+  id: string;
+  key: string;
+  label: string;
+  icon?: string | null;
+}
+
+export interface UserPreference {
+  id: string;
+  score: number;
+  category: PreferenceCategory;
+}
+
 export interface User {
   id: string;
-  name:string;
-  email: string,
-  password:string,
-  phone: string,
-  createdAt?: Date,
-  updatedAt?: Date,
+  name?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+  phoneNumber?: string;
+  avatarUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  preferences?: UserPreference[];
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresAt: string | null;
+  refreshTokenExpiresAt: string | null;
 }
 
 export interface LoginRequest {
@@ -19,9 +42,10 @@ export interface LoginResponse{
     success: boolean;
     message: string;
     data:{
-        accessToken:string;
-        refreshToken:string;
-        expiresIn:number;
+    accessToken: string;
+    refreshToken: string;
+    accessTokenExpiresAt: string | null;
+    refreshTokenExpiresAt: string | null;
     };
 }
 
@@ -43,7 +67,8 @@ export interface VerifyOtpRespone {
     user: User,
     accessToken: string,
     refreshToken: string,
-    expiresIn: string
+    accessTokenExpiresAt: string | null,
+    refreshTokenExpiresAt: string | null,
   }
 }
 
@@ -69,6 +94,8 @@ export interface RefreshTokenResponse {
   data: {
     accessToken: string;
     refreshToken: string;
+    accessTokenExpiresAt: string | null;
+    refreshTokenExpiresAt: string | null;
   };
 }
 
@@ -104,5 +131,7 @@ export interface VerifyOTPResponse {
   data: {
     accessToken: string;
     refreshToken: string;
+    accessTokenExpiresAt: string | null;
+    refreshTokenExpiresAt: string | null;
   };
 }

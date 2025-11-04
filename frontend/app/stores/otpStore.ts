@@ -47,7 +47,7 @@ export const useOtpStore = create<OtpState>((set,get) => ({
     },
 
     requestOtp: async (payload:RegisterRequest) => {
-        const {canResend, attempts} = get();
+        const { canResend, attempts } = get();
         if(!canResend && attempts >= 3){
             set((state) => ({canResend:true, attempts:state.attempts + 1}));
             return;

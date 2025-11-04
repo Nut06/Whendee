@@ -219,6 +219,8 @@ export class SecureStorage {
       await this.clearOTPSession();
       await this.clearVerificationToken();
       await this.clearTempUserData();
+      await this.clearAccessToken();
+      await this.clearRefreshToken();
       return true;
     } catch (error) {
       console.error('Error clearing all data:', error);

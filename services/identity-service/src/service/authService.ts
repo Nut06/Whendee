@@ -1,19 +1,38 @@
-import Bcrypt from "@/utils/bcrypt"
-import { OTPSession, OTPRequest, User, AuthToken } from "@/types/user"
+import Bcrypt from "@/utils/bcrypt";
+import { OTPSession, OTPRequest, User, AuthToken } from "@/types/user";
 import UserRepo from "@/repo/userRepo";
 import { AppError } from "@/types/appError";
-import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "@/types/http";
-import { createAccessToken } from "@/utils/jwt";
-import { createRefreshToken } from '@/utils/jwt';
+import { BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, UNAUTHORIZED } from "@/types/http";
+import { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken } from "@/utils/jwt";
 import { sendOTPSMS } from "@/utils/twilio";
-import { redisClient, setAsync } from "@/utils/redis";
-import crypto from 'crypto';
+import { redisClient } from "@/utils/redis";
+import crypto from "crypto";
 
 const otpKeyGen = (session: string) => `otp:${session}`;
 const pendingKeyGen = (phone: string) => `pending_user:${phone}`;
 const genOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 const otpExpiry = 5 * 60; // 5 minutes in seconds
 const pendingUserExpiry = 5 * 60; // 5 minutes in seconds
+
+const sanitizeUser = (user: User): User => {
+    const { password, ...rest } = user;
+    return { ...rest } as User;
+};
+
+const buildSessionForUser = async (userId: string): Promise<AuthToken> => {
+    const access = generateAccessToken({ id: userId });
+    const refresh = generateRefreshToken({ id: userId });
+
+    await UserRepo.upsertAccessToken(userId, access.token, access.expiresAt ?? null);
+    await UserRepo.replaceRefreshToken(userId, refresh.token, refresh.expiresAt ?? null);
+
+    return {
+        accessToken: access.token,
+        refreshToken: refresh.token,
+        accessTokenExpiresAt: access.expiresAt ?? null,
+        refreshTokenExpiresAt: refresh.expiresAt ?? null,
+    };
+};
 
 const authService = {
     sendingOtp: async ({phone, ip, userAgent}: {phone: string, ip: string, userAgent: string}): Promise<string> => {
@@ -61,42 +80,41 @@ const authService = {
         }
     },
 
-    verifyOtp: async (session: string, otp: string): Promise<boolean> => {
+    verifyOtp: async (session: string, otp: string): Promise<OTPSession | null> => {
         const key = otpKeyGen(session);
         let otpData = await redisClient.get(key);
         if (!otpData) {
-            return false;
+            return null;
         }
         const parsedData: OTPSession = JSON.parse(otpData);
         if (parsedData.otp !== otp) {
-            return false;
+            return null;
         }
         await redisClient.del(key);
-        return true;
+        return parsedData;
     },
 
-    createUser: async (user: OTPRequest): Promise<{newUser:User, accessToken:string, refreshToken:string}> => {
-        const {email} = user;
+    createUser: async (user: OTPRequest): Promise<{ user: User; tokens: AuthToken }> => {
+        const { email } = user;
         const existingUser = await UserRepo.findUserbyEmail(email);
         if(existingUser){
             throw new AppError('User already exists', BAD_REQUEST, 'USER_ALREADY_EXISTS');
         }
 
-        let newUser;
-        const hashedPassword = await Bcrypt.hash(user.password || '');
-        newUser = await UserRepo.createUser({
-            ...user,
-            password: hashedPassword,
-        }) as User;
-        const accessToken = createAccessToken({ id: newUser.id });
-        const refreshToken = createRefreshToken({ id: newUser.id });
-        await UserRepo.updatedRefreshToken(newUser.id, refreshToken);
+        const hashedPassword = user.password ? await Bcrypt.hash(user.password) : undefined;
+        const createdUser = await UserRepo.createUser({
+            name: user.name ?? user.fullname ?? undefined,
+            email,
+            phoneNumber: user.phone,
+            password: hashedPassword ?? null,
+        });
 
-        if (!newUser) {
+        if (!createdUser) {
             throw new AppError('User creation failed', INTERNAL_SERVER_ERROR, 'USER_CREATION_FAILED');
         }
 
-        return { newUser, accessToken, refreshToken };
+        const tokens = await buildSessionForUser(createdUser.id);
+        return { user: sanitizeUser(createdUser), tokens };
     },
 
     registerUser: async (user: OTPRequest): Promise<void> => {
@@ -112,62 +130,81 @@ const authService = {
         }
     },
     
-    loginUser: async (email: string, password?: string): Promise<{ accessToken: string, refreshToken: string }> => {
+    loginUser: async (email: string, password?: string): Promise<AuthToken> => {
         const user = await UserRepo.findUserbyEmail(email);
         if (!user) {
             throw new AppError('Incorrect email or password', BAD_REQUEST, 'INCORRECT_CREDENTIALS');
         }
 
         if(password){
-            const isPasswordValid = await Bcrypt.compare(password, user.password || '');
+            if (!user.password) {
+                throw new AppError('Incorrect email or password', BAD_REQUEST, 'INCORRECT_CREDENTIALS');
+            }
+            const isPasswordValid = await Bcrypt.compare(password, user.password);
             if (!isPasswordValid) {
                 throw new AppError('Incorrect email or password', BAD_REQUEST, 'INCORRECT_CREDENTIALS');
             }
         }
-        
-        const accessToken: string = createAccessToken({ id: user.id });
-        const refreshToken: string = createRefreshToken({ id: user.id });
-        return { accessToken, refreshToken };
+
+        return buildSessionForUser(user.id);
     },
 
     loginWithGoogle: async (profile: any): Promise<AuthToken> => {
-        const email = profile.emails[0].value;
+        const email = profile?.emails?.[0]?.value;
+        if (!email) {
+            throw new AppError('Email not provided by Google', BAD_REQUEST, 'GOOGLE_LOGIN_FAILED');
+        }
+
+        const displayName = profile.displayName || profile?.name?.givenName || profile?.name?.familyName || undefined;
+        const avatarUrl = profile?.photos?.[0]?.value || undefined;
+
         let user = await UserRepo.findUserbyEmail(email);
+
         if (!user) {
+            const randomPassword = crypto.randomBytes(16).toString('hex');
             user = await UserRepo.createUser({
                 email,
-                fullname: profile.displayName,
-                password: crypto.randomBytes(16).toString('hex'), // Random password
-                phone: '',
-            }) as User;
+                name: displayName,
+                password: await Bcrypt.hash(randomPassword),
+                avatarUrl,
+            });
+        } else {
+            await UserRepo.updateUser(user.id, {
+                name: user.name ?? displayName ?? null,
+                avatarUrl: avatarUrl ?? user.avatarUrl ?? null,
+            });
         }
+
         if (!user) {
             throw new AppError('Google login failed', INTERNAL_SERVER_ERROR, 'GOOGLE_LOGIN_FAILED');
         }
-        const accessToken = createAccessToken({ id: user.id });
-        const refreshToken = createRefreshToken({ id: user.id });
-        await UserRepo.updatedRefreshToken(user.id, refreshToken);
-        return { accessToken, refreshToken } as AuthToken;
+
+        return buildSessionForUser(user.id);
     },
 
     loginWithLine: async (profile: any): Promise<AuthToken> => {
-        const email = profile.emails[0].value;
+        const email = profile?.emails?.[0]?.value;
+        if (!email) {
+            throw new AppError('Email not provided by LINE', BAD_REQUEST, 'LINE_LOGIN_FAILED');
+        }
+
+        const displayName = profile.displayName || undefined;
         let user = await UserRepo.findUserbyEmail(email);
+
         if (!user) {
+            const randomPassword = crypto.randomBytes(16).toString('hex');
             user = await UserRepo.createUser({
                 email,
-                fullname: profile.displayName,
-                password: crypto.randomBytes(16).toString('hex'), // Random password
-                phone: '',
-            }) as User;
+                name: displayName,
+                password: await Bcrypt.hash(randomPassword),
+            });
         }
+
         if (!user) {
             throw new AppError('LINE login failed', INTERNAL_SERVER_ERROR, 'LINE_LOGIN_FAILED');
         }
-        const accessToken = createAccessToken({ id: user.id });
-        const refreshToken = createRefreshToken({ id: user.id });
-        await UserRepo.updatedRefreshToken(user.id, refreshToken);
-        return { accessToken, refreshToken } as AuthToken;
+
+        return buildSessionForUser(user.id);
     },
 
     resendOtp: async({phone, session, ip, userAgent}
@@ -182,10 +219,49 @@ const authService = {
         return token;
     },
     
-    refreshToken: async (userId: string): Promise<AuthToken> => {
-        const accessToken = createAccessToken({ id: userId });
-        const refreshToken = createRefreshToken({ id: userId });
-        return { accessToken, refreshToken } as AuthToken;
+    refreshToken: async (refreshToken: string): Promise<AuthToken> => {
+        if (!refreshToken) {
+            throw new AppError('Refresh token is required', BAD_REQUEST, 'REFRESH_TOKEN_REQUIRED');
+        }
+
+        let payload: { id: string };
+        try {
+            payload = verifyRefreshToken(refreshToken);
+        } catch (error) {
+            throw new AppError('Invalid refresh token', UNAUTHORIZED, 'INVALID_REFRESH_TOKEN');
+        }
+
+        const storedToken = await UserRepo.findRefreshToken(refreshToken);
+        if (!storedToken) {
+            throw new AppError('Refresh token not found', UNAUTHORIZED, 'INVALID_REFRESH_TOKEN');
+        }
+
+        if (storedToken.expiresAt && storedToken.expiresAt.getTime() < Date.now()) {
+            await UserRepo.deleteRefreshToken(refreshToken);
+            throw new AppError('Refresh token expired', UNAUTHORIZED, 'REFRESH_TOKEN_EXPIRED');
+        }
+
+        if (storedToken.userId !== payload.id) {
+            throw new AppError('Refresh token mismatch', UNAUTHORIZED, 'INVALID_REFRESH_TOKEN');
+        }
+
+        return buildSessionForUser(storedToken.userId);
     },
+
+    getUserFromToken: async (accessToken: string): Promise<User> => {
+        let payload: { id: string };
+        try {
+            payload = verifyAccessToken(accessToken);
+        } catch (error) {
+            throw new AppError('Invalid access token', UNAUTHORIZED, 'INVALID_ACCESS_TOKEN');
+        }
+
+        const user = await UserRepo.findUserById(payload.id);
+        if (!user) {
+            throw new AppError('User not found', NOT_FOUND, 'USER_NOT_FOUND');
+        }
+
+        return sanitizeUser(user);
+    }
 };
 export default authService;

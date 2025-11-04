@@ -1,13 +1,10 @@
-import { redisClient } from './../utils/redis';
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR, OK } from '@/types/http';
-import { Otp, AuthToken, OTPRequest, OTPResponse, OTPSession, LoginResponse, User } from '@/types/user';
-import type { Request, Response } from "express";
-import Bcrypt from '@/utils/bcrypt';
-import passport, { session } from 'passport';
+import { AuthToken, OTPRequest, OTPResponse, LoginResponse, VerifyOTPResponse } from '@/types/user';
+import type { NextFunction, Request, Response } from "express";
+import passport from 'passport';
+import '@/utils/passport';
 import { AppError } from '@/types/appError';
 import authService from '@/service/authService';
-
-const isProd = process.env.NODE_ENV === 'production';
 
 export const requestOtp = async (req: Request, res: Response) => {
   const {email, password, fullname, phone}:OTPRequest = req.body;
@@ -36,7 +33,75 @@ export const requestOtp = async (req: Request, res: Response) => {
 
 }
 
-const oneHour = 3600000;
+const allowedRedirectSchemes = (process.env.GOOGLE_OAUTH_ALLOWED_SCHEMES || 'frontend,exp,http,https')
+  .split(',')
+  .map((scheme) => scheme.trim().replace(/:$/, ''))
+  .filter(Boolean);
+
+const fallbackRedirectTarget = (() => {
+  const fallback = process.env.GOOGLE_OAUTH_FALLBACK ?? process.env.FRONT_END_URL ?? 'http://localhost:3000';
+  try {
+    // Throws if invalid URL; allow plain scheme prefixes like exp://...
+    const parsed = new URL(fallback);
+    const protocol = parsed.protocol.replace(':', '');
+    if (!allowedRedirectSchemes.includes(protocol)) {
+      allowedRedirectSchemes.push(protocol);
+    }
+    return parsed.toString();
+  } catch {
+    // As a last resort, default to localhost
+    return 'http://localhost:3000';
+  }
+})();
+
+const isAllowedRedirect = (target?: string): target is string => {
+  if (!target) return false;
+  try {
+    const parsed = new URL(target);
+    const protocol = parsed.protocol.replace(':', '');
+    return allowedRedirectSchemes.includes(protocol);
+  } catch (err) {
+    return false;
+  }
+};
+
+const parseRedirectTarget = (raw: unknown): string | null => {
+  if (typeof raw !== 'string' || !raw.length) {
+    return null;
+  }
+  const decoded = decodeURIComponent(raw);
+  return isAllowedRedirect(decoded) ? decoded : null;
+};
+
+const encodeState = (redirectUri: string): string => {
+  const payload = { redirectUri };
+  const json = JSON.stringify(payload);
+  return Buffer.from(json, 'utf8').toString('base64url');
+};
+
+const decodeState = (raw: unknown): string | null => {
+  if (typeof raw !== 'string' || !raw.length) {
+    return null;
+  }
+  try {
+    const json = Buffer.from(raw, 'base64url').toString('utf8');
+    const parsed = JSON.parse(json) as { redirectUri?: string };
+    if (typeof parsed.redirectUri === 'string' && isAllowedRedirect(parsed.redirectUri)) {
+      return parsed.redirectUri;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+const buildRedirectWithParams = (base: string, params: Record<string, string>): string => {
+  const url = new URL(base);
+  Object.entries(params).forEach(([key, value]) => {
+    url.searchParams.set(key, value);
+  });
+  return url.toString();
+};
 const genLoginResponse = (token:AuthToken, message='Login successful'):LoginResponse => {
   return {
     success: true,
@@ -44,7 +109,8 @@ const genLoginResponse = (token:AuthToken, message='Login successful'):LoginResp
     data: {
       accessToken: token.accessToken,
       refreshToken: token.refreshToken,
-      expiresIn: oneHour
+      accessTokenExpiresAt: token.accessTokenExpiresAt,
+      refreshTokenExpiresAt: token.refreshTokenExpiresAt,
     }
   };
 }
@@ -67,20 +133,21 @@ export const verifyOtp = async (req: Request, res: Response):Promise<Response> =
     return res.status(BAD_REQUEST).json({ message: 'Session token is required' });
   }
   try {
-        const isVerified = await authService.verifyOtp(session, otp);
-        if (!isVerified) {
+        const sessionData = await authService.verifyOtp(session, otp);
+        if (!sessionData) {
           return res.status(BAD_REQUEST).json({ success: false });
         }
-        const user = await authService.getPendingUser(session);
-        const {newUser, accessToken, refreshToken } = await authService.createUser(user);
-        const resdata = {
+        const user = await authService.getPendingUser(sessionData.phone);
+        const { user: newUser, tokens } = await authService.createUser(user);
+        const resdata: VerifyOTPResponse = {
           success: true,
           message: "OTP verified successfully",
           data: {
             user: newUser,
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-            expiresIn: oneHour
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            accessTokenExpiresAt: tokens.accessTokenExpiresAt,
+            refreshTokenExpiresAt: tokens.refreshTokenExpiresAt,
         }
       };
         return res.json(resdata);
@@ -143,36 +210,67 @@ export const lineCallback = async (req: Request, res: Response) => {
   })(req, res);
 }
 
-export const googleLogin = async (req: Request, res: Response) => {
-  return passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res);
+export const googleLogin = async (req: Request, res: Response, next: NextFunction) => {
+  const redirectTarget = parseRedirectTarget(req.query.redirectUri) ?? fallbackRedirectTarget;
+
+  return passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    session: false,
+    prompt: 'consent',
+    state: encodeState(redirectTarget),
+  })(req, res, next);
 }
 
-export const googleCallback = async (req: Request, res: Response) => {
+export const googleCallback = async (req: Request, res: Response, next: NextFunction) => {
+  const redirectUri = decodeState(req.query.state) ?? fallbackRedirectTarget;
+
+  const sendRedirect = (params: Record<string, string>) => {
+    const location = buildRedirectWithParams(redirectUri, params);
+    return res.redirect(location);
+  };
+
   return passport.authenticate('google', { session: false }, (err:any, token:AuthToken, info?:any) => {
     if (err) {
-      return res.status(BAD_REQUEST).json({ message: err.message || 'Google login failed' });
+      return sendRedirect({
+        success: 'false',
+        error: err.message || 'Google login failed',
+      });
     }
     if (!token) {
-      return res.status(BAD_REQUEST).json({ message: 'Invalid credentials' });
+      return sendRedirect({
+        success: 'false',
+        error: 'Invalid credentials',
+      });
     }
-    return res.json(genLoginResponse(token, 'Google login successful'));
-  })(req, res);
-}
 
-export const logout = async (req: Request, res: Response) => {
+    const params: Record<string, string> = {
+      success: 'true',
+      access: token.accessToken,
+      refresh: token.refreshToken,
+    };
+
+    if (token.accessTokenExpiresAt) {
+      params.access_expires = token.accessTokenExpiresAt.toISOString();
+    }
+    if (token.refreshTokenExpiresAt) {
+      params.refresh_expires = token.refreshTokenExpiresAt.toISOString();
+    }
+
+    return sendRedirect(params);
+  })(req, res, next);
+};
+
+export const getUser = async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(BAD_REQUEST).json({ message: 'Access token is required' });
+  }
   try {
-    // Since you're using stateless JWT authentication (session: false),
-    // logout is handled client-side by removing tokens
-    // Optionally, you could blacklist the token here if needed
-    
-    return res.status(OK).json({
-      success: true, 
-      message: 'Logout successful' 
-    });
+    const user = await authService.getUserFromToken(token);
+    return res.status(OK).json({ success: true, data: { user } });
   } catch (error) {
-    return res.status(INTERNAL_SERVER_ERROR).json({ 
-      success: false,
-      message: 'Logout failed' 
-    });
+    return res.status(BAD_REQUEST).json({ message: 'Get user failed' });
   }
 }

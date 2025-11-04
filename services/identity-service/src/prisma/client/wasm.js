@@ -130,7 +130,9 @@ exports.Prisma.UserScalarFieldEnum = {
   password: 'password',
   avatarUrl: 'avatarUrl',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  accessToken: 'accessToken',
+  accessTokenExpiry: 'accessTokenExpiry'
 };
 
 exports.Prisma.RefreshTokenScalarFieldEnum = {
@@ -140,16 +142,6 @@ exports.Prisma.RefreshTokenScalarFieldEnum = {
   expiresAt: 'expiresAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
-};
-
-exports.Prisma.AccountScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  provider: 'provider',
-  providerAccountId: 'providerAccountId',
-  email: 'email',
-  accessToken: 'accessToken',
-  refreshToken: 'refreshToken'
 };
 
 exports.Prisma.PreferenceCategoryScalarFieldEnum = {
@@ -191,7 +183,6 @@ exports.Prisma.NullsOrder = {
 exports.Prisma.ModelName = {
   User: 'User',
   RefreshToken: 'RefreshToken',
-  Account: 'Account',
   PreferenceCategory: 'PreferenceCategory',
   UserPreference: 'UserPreference',
   UserFriend: 'UserFriend'

@@ -7,18 +7,26 @@ import InputField from '@/components/input'
 import { RegisterRequest } from '@/types/user.types'
 import { useAuthStore } from '@/stores/authStore'
 import { useOtpStore } from '@/stores/otpStore'
+import { refreshAccessToken } from '@/services/authService'
 
 export default function Register() {
   const router = useRouter()
   const [agree, setAgree] = useState(false);
-  const {user, setUser, setAuth, loginLine, loginGoogle} = useAuthStore();
-  const { requestOtp  } = useOtpStore();
+  const {user, setUser, setAuth, loginLine, loginGoogle, refreshToken} = useAuthStore();
+  const { requestOtp } = useOtpStore();
   const [errors, setErrors] = useState({
     name: false,
     email: false,
     phone: false,
     password: false,
   });
+  
+  const move = () => {
+    if (user?.preferences === null) {
+        router.replace('/(tab)/choose-preference');
+      }
+      router.replace('/(tab)/home');
+  }
   const validateErrors = {
     name: !user?.name || user.name.trim() === '',
     email: !user?.email || user.email.trim() === '',
@@ -27,17 +35,30 @@ export default function Register() {
   }
 
   const handleGoogle = async () => {
-    await loginGoogle();
-  }
+    try {
+      await loginGoogle();
+      // move();
+      router.replace('/(tab)/choose-preference');
+    } catch (error: any) {
+      const message = typeof error?.message === 'string' ? error.message : 'Google login failed.';
+      Alert.alert('Login failed', message);
+    }
+  };
 
   const handleLine = async () => {
-    await loginLine();
-  }
+    try {
+      await loginLine();
+      move();
+    } catch (error: any) {
+      const message = typeof error?.message === 'string' ? error.message : 'LINE login failed.';
+      Alert.alert('Login failed', message);
+    }
+  };
   
   const handleRegister = async () =>{
     setErrors(validateErrors);
     const hasErrors = Object.values(validateErrors).some(value => value);
-    if (!user || hasErrors) {
+    if (!user?.name || !user?.email || !user?.phone || !user?.password || hasErrors) {
       return;
     }
     await requestOtp({
