@@ -1,11 +1,9 @@
-import { useEffect } from "react";
 import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import planStore from "../lib/planStore";
 
-function HeaderCard({ meetingId }: { meetingId?: string }) {
+function HeaderCard({ meetingId, title }: { meetingId?: string; title?: string }) {
   return (
     <View
       style={{
@@ -60,7 +58,7 @@ function HeaderCard({ meetingId }: { meetingId?: string }) {
 
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#111827" }}>New Year trip</Text>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#111827" }}>{title ?? "Event"}</Text>
             <Ionicons name="ellipsis-horizontal" size={18} color="#9ca3af" />
           </View>
           <Text style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
@@ -75,15 +73,8 @@ function HeaderCard({ meetingId }: { meetingId?: string }) {
 
 export default function VoteSuccessScreen() {
   const insets = useSafeAreaInsets();
-  const { name, meetingId } = useLocalSearchParams<{ name?: string; meetingId?: string }>();
+  const { name, eventId, title } = useLocalSearchParams<{ name?: string; eventId?: string; title?: string }>();
   const placeName = name && name.length > 0 ? name : "Selected location";
-
-  // ✅ อัปเดต store ทันทีที่เข้าหน้านี้ เพื่อให้หน้า Plan แสดง location ชนะทันที
-  useEffect(() => {
-    if (meetingId && placeName) {
-      planStore.setLocation(meetingId, placeName);
-    }
-  }, [meetingId, placeName]);
 
   return (
     <View
@@ -95,7 +86,7 @@ export default function VoteSuccessScreen() {
         paddingBottom: insets.bottom + 110,
       }}
     >
-      <HeaderCard meetingId={meetingId} />
+      <HeaderCard meetingId={eventId} title={title} />
 
       <View style={{ marginTop: 28, alignItems: "center", justifyContent: "center", paddingHorizontal: 20 }}>
         <View

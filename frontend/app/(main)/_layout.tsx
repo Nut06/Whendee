@@ -145,7 +145,6 @@ export default function MainTabs() {
 
       {/* ซ่อนเส้นทางที่ไม่ใช่แท็บ */}
       <Tabs.Screen name="index" options={{ href: null }} />
-      <Tabs.Screen name="plan-detail/[meetingId]" options={{ href: null }} />
       <Tabs.Screen name="create" options={{ href: null }} /> {/* ปลายทางของปุ่ม + */}
     </Tabs>
   );

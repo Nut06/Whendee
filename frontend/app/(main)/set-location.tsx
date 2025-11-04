@@ -1,11 +1,11 @@
 // app/(main)/set-location.tsx
-import React, { useMemo, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from "react-native";
 import MapView, { Marker, MapPressEvent, Region } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import planStore from "../lib/planStore";
+import { eventApi } from "../lib/api";
 
 // ------ UI helpers (เล็ก ๆ ให้เหมือนดีไซน์) ------
 function PillInfo({ text }: { text: string }) {
@@ -26,7 +26,7 @@ function DateBadge() {
   );
 }
 
-function MeetingCard({ meetingId }: { meetingId: string }) {
+function MeetingCard({ meetingId, title }: { meetingId: string; title: string }) {
   return (
     <View style={styles.card}>
       <PillInfo text="No location selected yet" />
@@ -35,7 +35,7 @@ function MeetingCard({ meetingId }: { meetingId: string }) {
         <DateBadge />
         <View style={{ flex: 1, marginLeft: 12 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text style={styles.meetingTitle}>New Year trip</Text>
+            <Text style={styles.meetingTitle}>{title || "Event"}</Text>
             <Ionicons name="ellipsis-horizontal" size={18} color="#9ca3af" />
           </View>
           <Text style={styles.meetingSub}>
@@ -53,7 +53,10 @@ function MeetingCard({ meetingId }: { meetingId: string }) {
 export default function SetLocationScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { meetingId = "" } = useLocalSearchParams<{ meetingId?: string }>();
+  const { eventId = "", title } = useLocalSearchParams<{ eventId?: string; title?: string }>();
+  const [eventTitle, setEventTitle] = useState<string>(title ?? "");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
 
   // NYC – Barclays Center เป็นค่าเริ่มต้นเพื่อให้เห็นแมพ
   const initialRegion: Region = useMemo(
@@ -70,28 +73,59 @@ export default function SetLocationScreen() {
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
   const [query, setQuery] = useState("");
 
+  useEffect(() => {
+    let isMounted = true;
+    async function load() {
+      if (!eventId) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const response = await eventApi.getEvent(eventId);
+        if (!isMounted) return;
+        setEventTitle(response.data?.title ?? "");
+      } catch (error) {
+        console.error(error);
+        if (isMounted) {
+          Alert.alert("Error", "Unable to load event details");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+    void load();
+    return () => {
+      isMounted = false;
+    };
+  }, [eventId]);
+
   // กดที่แมพเพื่อปักหมุด
   const handleMapPress = (e: MapPressEvent) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
     setPin({ lat: latitude, lng: longitude });
   };
 
-  const handleSave = () => {
-  if (!pin) return;
+  const handleSave = async () => {
+    if (!pin || !eventId) return;
 
-  const displayName =
-    query?.trim().length > 0
-      ? query.trim()
-      : `Pinned @ ${pin.lat.toFixed(4)}, ${pin.lng.toFixed(4)}`;
+    const displayName =
+      query?.trim().length > 0
+        ? query.trim()
+        : `Pinned @ ${pin.lat.toFixed(4)}, ${pin.lng.toFixed(4)}`;
 
-  // ✅ addCandidate(meetingId: string, name: string)
-  planStore.addCandidate(meetingId.toString(), displayName);
-
-  router.push({
-    pathname: "/(main)/vote-location",
-    params: { meetingId: meetingId.toString() },
-  });
-};
+    try {
+      setSaving(true);
+      await eventApi.addPollOption(eventId, { label: displayName });
+      router.push({ pathname: "/(main)/vote-location", params: { eventId } });
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Unable to save location");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f6f7fb", paddingTop: insets.top + 8 }}>
@@ -106,7 +140,13 @@ export default function SetLocationScreen() {
         </View>
 
         {/* Meeting card */}
-        <MeetingCard meetingId={String(meetingId)} />
+        <MeetingCard meetingId={String(eventId)} title={eventTitle} />
+
+        {loading && (
+          <View style={{ marginVertical: 24, alignItems: "center" }}>
+            <ActivityIndicator size="small" color="#2b7cff" />
+          </View>
+        )}
 
         {/* Search box */}
         <View style={styles.searchWrap}>
@@ -145,8 +185,13 @@ export default function SetLocationScreen() {
 
         {/* Save button (แสดงเฉพาะเมื่อมีหมุด) */}
         {pin && (
-          <TouchableOpacity style={styles.saveBtn} activeOpacity={0.9} onPress={handleSave}>
-            <Text style={styles.saveTxt}>Save</Text>
+          <TouchableOpacity
+            style={styles.saveBtn}
+            activeOpacity={0.9}
+            onPress={() => void handleSave()}
+            disabled={saving}
+          >
+            <Text style={styles.saveTxt}>{saving ? "Saving..." : "Save"}</Text>
           </TouchableOpacity>
         )}
 

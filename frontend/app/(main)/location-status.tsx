@@ -41,7 +41,7 @@ function PersonRow({ p, last }: { p: Person; last: boolean }) {
 }
 
 export default function LocationStatusScreen() {
-  const { meetingId } = useLocalSearchParams<{ meetingId?: string }>();
+  const { eventId } = useLocalSearchParams<{ eventId?: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -116,7 +116,7 @@ export default function LocationStatusScreen() {
               <Ionicons name="ellipsis-horizontal" size={18} color="#9ca3af" />
             </View>
             <Text style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-              Meeting ID: {meetingId ?? "—"}
+              Event ID: {eventId ?? "—"}
             </Text>
 
             <View
@@ -172,7 +172,7 @@ export default function LocationStatusScreen() {
 
         <TouchableOpacity
           onPress={() =>
-            (router as any).push({ pathname: "/vote-location", params: { meetingId } })
+            (router as any).push({ pathname: "/vote-location", params: { eventId } })
           }
           activeOpacity={0.85}
           style={{
