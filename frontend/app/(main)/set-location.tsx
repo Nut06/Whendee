@@ -1,4 +1,3 @@
-// app/(main)/set-location.tsx
 import React, { useMemo, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput } from "react-native";
 import MapView, { Marker, MapPressEvent, Region } from "react-native-maps";
@@ -7,7 +6,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import planStore from "../lib/planStore";
 
-// ------ UI helpers (เล็ก ๆ ให้เหมือนดีไซน์) ------
 function PillInfo({ text }: { text: string }) {
   return (
     <View style={styles.pillWrap}>
@@ -49,17 +47,15 @@ function MeetingCard({ meetingId }: { meetingId: string }) {
   );
 }
 
-// ----------------- หน้าตั้งค่าตำแหน่ง -----------------
 export default function SetLocationScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { meetingId = "" } = useLocalSearchParams<{ meetingId?: string }>();
 
-  // NYC – Barclays Center เป็นค่าเริ่มต้นเพื่อให้เห็นแมพ
   const initialRegion: Region = useMemo(
     () => ({
       latitude: 40.68265,
-      longitude: -73.97540,
+      longitude: -73.9754,
       latitudeDelta: 0.03,
       longitudeDelta: 0.03,
     }),
@@ -70,32 +66,30 @@ export default function SetLocationScreen() {
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
   const [query, setQuery] = useState("");
 
-  // กดที่แมพเพื่อปักหมุด
   const handleMapPress = (e: MapPressEvent) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
     setPin({ lat: latitude, lng: longitude });
   };
 
   const handleSave = () => {
-  if (!pin) return;
+    if (!pin) return;
 
-  const displayName =
-    query?.trim().length > 0
-      ? query.trim()
-      : `Pinned @ ${pin.lat.toFixed(4)}, ${pin.lng.toFixed(4)}`;
+    const displayName =
+      query?.trim().length > 0
+        ? query.trim()
+        : `Pinned @ ${pin.lat.toFixed(4)}, ${pin.lng.toFixed(4)}`;
 
-  // ✅ addCandidate(meetingId: string, name: string)
-  planStore.addCandidate(meetingId.toString(), displayName);
+    planStore.addCandidate(meetingId.toString(), displayName);
 
-  router.push({
-    pathname: "/(main)/vote-location",
-    params: { meetingId: meetingId.toString() },
-  });
-};
+    router.push({
+      pathname: "/(main)/vote-location",
+      params: { meetingId: meetingId.toString() },
+    });
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f6f7fb", paddingTop: insets.top + 8 }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}>
         {/* Header */}
         <View style={styles.headerRow}>
           <View>
@@ -121,7 +115,7 @@ export default function SetLocationScreen() {
           />
         </View>
 
-        {/* Map with dashed purple border */}
+        {/* Map */}
         <View style={styles.mapOuter}>
           <View style={styles.mapDashed}>
             <MapView
@@ -143,7 +137,7 @@ export default function SetLocationScreen() {
           </View>
         </View>
 
-        {/* Save button (แสดงเฉพาะเมื่อมีหมุด) */}
+        {/* Save button (เฉพาะเมื่อมีหมุด) */}
         {pin && (
           <TouchableOpacity style={styles.saveBtn} activeOpacity={0.9} onPress={handleSave}>
             <Text style={styles.saveTxt}>Save</Text>
@@ -156,7 +150,6 @@ export default function SetLocationScreen() {
   );
 }
 
-// ----------------- Styles -----------------
 const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
