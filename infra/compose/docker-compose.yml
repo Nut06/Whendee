@@ -15,41 +15,41 @@ services:
   identity-service:
     image: node:20
     working_dir: /app
-    command: bash -lc "corepack enable && pnpm install --frozen-lockfile=false && pnpm dev"
+    command: bash -lc "corepack enable && pnpm install && pnpm dev"
     volumes:
       - ../../services/identity-service:/app
     ports:
       - "5001:3002"
+    environment:
+      DATABASE_URL: postgresql://dev:dev@postgres:5432/appdb?schema=identity
     depends_on:
       - postgres
-    environment:
-      DATABASE_URL: postgresql://dev:dev@postgres:5432/appdb?schema=public
 
   event-service:
     image: node:20
     working_dir: /app
-    command: bash -lc "corepack enable && pnpm install --frozen-lockfile=false && pnpm dev"
+    command: bash -lc "corepack enable && pnpm install && pnpm dev"
     volumes:
       - ../../services/event-service:/app
     ports:
       - "5002:3001"
+    environment:
+      DATABASE_URL: postgresql://dev:dev@postgres:5432/appdb?schema=event
     depends_on:
       - postgres
-    environment:
-      DATABASE_URL: postgresql://dev:dev@postgres:5432/appdb?schema=public
 
   comm-service:
     image: node:20
     working_dir: /app
-    command: bash -lc "corepack enable && pnpm install --frozen-lockfile=false && pnpm dev"
+    command: bash -lc "corepack enable && pnpm install && pnpm dev"
     volumes:
       - ../../services/comm-service:/app
     ports:
       - "5003:3000"
+    environment:
+      DATABASE_URL: postgresql://dev:dev@postgres:5432/appdb?schema=comm
     depends_on:
       - postgres
-    environment:
-      DATABASE_URL: postgresql://dev:dev@postgres:5432/appdb?schema=public
 
 volumes:
   pgdata:
