@@ -1,5 +1,6 @@
 # Node modules (ทุก app/service)
 **/node_modules/
+**/.pnpm-store/
 
 # Logs
 logs
@@ -40,4 +41,13 @@ build/
 coverage/
 
 # Docker
-infra/compose/pgdata/
+# Terraform
+terraform/
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+terraform.tfvars
+*.tfvars
+!terraform.tfvars.example
+
