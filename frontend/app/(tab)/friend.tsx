@@ -1,12 +1,10 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
 
-const Friend = () => {
-  return (
-    <View>
-      <Text>friend</Text>
-    </View>
-  )
+export default function RedirectFriendTab() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/(main)/friends');
+  }, [router]);
+  return null;
 }
-
-export default Friend

@@ -1,50 +1,8 @@
-const EVENT_API_URL = process.env.EXPO_PUBLIC_EVENT_API_URL ?? 'http://localhost:3001';
-const COMM_API_URL = process.env.EXPO_PUBLIC_COMM_API_URL ?? 'http://localhost:3000';
+import { eventApi as axiosEventApi, communicationApi as axiosCommApi } from "@/utils/api";
 
-interface RequestOptions extends RequestInit {
-  base?: 'event' | 'comm';
-}
-
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const base = options.base ?? 'event';
-  const baseUrl = base === 'event' ? EVENT_API_URL : COMM_API_URL;
-  const url = new URL(path, baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`).toString();
-
-  const fetchOptions: RequestInit = {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      ...(options.headers ?? {}),
-    },
-  };
-
-  const response = await fetch(url, fetchOptions);
-
-  if (!response.ok) {
-    let detail: unknown = null;
-    try {
-      detail = await response.json();
-    } catch {
-      // ignore parse errors
-    }
-    const error = new Error(
-      `Request failed with status ${response.status}: ${response.statusText}`,
-    );
-    (error as any).detail = detail;
-    throw error;
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return (await response.json()) as T;
-}
-
-// Event service wrappers
+// Event service wrappers delegating to axios instances
 export const eventApi = {
-  createEvent(payload: {
+  async createEvent(payload: {
     organizerId: string;
     title: string;
     description: string;
@@ -53,13 +11,11 @@ export const eventApi = {
     endsAt: string;
     capacity?: number;
   }) {
-    return request<{ data: { eventId: string } }>('/events', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    const res = await axiosEventApi.post("/events", payload);
+    return { data: res.data } as { data: { eventId: string } };
   },
 
-  createPoll(
+  async createPoll(
     eventId: string,
     payload: {
       organizerId: string;
@@ -67,94 +23,69 @@ export const eventApi = {
       options: { label: string; order?: number }[];
     },
   ) {
-    return request<{ message: string; data: unknown }>(`/events/${eventId}/poll`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    const res = await axiosEventApi.post(`/events/${eventId}/poll`, payload);
+    return { message: res.data?.message ?? "", data: res.data?.data } as { message: string; data: unknown };
   },
 
-  addPollOption(eventId: string, payload: { label: string; order?: number }) {
-    return request<{ message: string; data: { id: string; label: string; order: number; tally: number } }>(
-      `/events/${eventId}/poll/options`,
-      {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      },
-    );
+  async addPollOption(eventId: string, payload: { label: string; order?: number }) {
+    const res = await axiosEventApi.post(`/events/${eventId}/poll/options`, payload);
+    return { message: res.data?.message ?? "", data: res.data?.data } as { message: string; data: { id: string; label: string; order: number; tally: number } };
   },
 
-  getEvents() {
-    return request<{ data: any[] }>('/events');
+  async getEvents() {
+    const res = await axiosEventApi.get(`/events`);
+    return { data: res.data?.data ?? [] } as { data: any[] };
   },
 
-  getEvent(eventId: string) {
-    return request<{ data: any }>(`/events/${eventId}`);
+  async getEvent(eventId: string) {
+    const res = await axiosEventApi.get(`/events/${eventId}`);
+    return { data: res.data?.data } as { data: any };
   },
 
-  getPoll(eventId: string) {
-    return request<{ data: any }>(`/events/${eventId}/poll`);
+  async getPoll(eventId: string) {
+    const res = await axiosEventApi.get(`/events/${eventId}/poll`);
+    return { data: res.data?.data } as { data: any };
   },
 
-  submitVote(eventId: string, payload: { optionId: string; voterId: string }) {
-    return request<{ message: string; data: unknown }>(`/events/${eventId}/poll/votes`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+  async submitVote(eventId: string, payload: { optionId: string; voterId: string }) {
+    const res = await axiosEventApi.post(`/events/${eventId}/poll/votes`, payload);
+    return { message: res.data?.message ?? "", data: res.data?.data } as { message: string; data: unknown };
   },
 
-  closePoll(eventId: string, payload: { finalOptionId?: string } = {}) {
-    return request<{ message: string; data: unknown }>(`/events/${eventId}/poll/close`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+  async closePoll(eventId: string, payload: { finalOptionId?: string } = {}) {
+    const res = await axiosEventApi.post(`/events/${eventId}/poll/close`, payload);
+    return { message: res.data?.message ?? "", data: res.data?.data } as { message: string; data: unknown };
   },
 };
 
-// Communication service wrappers
+// Communication service wrappers delegating to axios instances
 export const commApi = {
-  listInviteTargets(groupId: string) {
-    return request<{ data: any[] }>(`/groups/${groupId}/invite-targets`, {
-      base: 'comm',
-    });
+  async listInviteTargets(groupId: string) {
+    const res = await axiosCommApi.get(`/groups/${groupId}/invite-targets`);
+    return { data: res.data?.data ?? [] } as { data: any[] };
   },
 
-  createInvitation(groupId: string, payload: {
+  async createInvitation(groupId: string, payload: {
     inviterId: string;
     inviteeId: string;
     expiresInMinutes?: number;
   }) {
-    return request<{ message: string; data: { inviteCode: string; inviteLink: string; expiresAt: string } }>(
-      `/groups/${groupId}/invitations`,
-      {
-        base: 'comm',
-        method: 'POST',
-        body: JSON.stringify(payload),
-      },
-    );
+    const res = await axiosCommApi.post(`/groups/${groupId}/invitations`, payload);
+    return { message: res.data?.message ?? "", data: res.data?.data } as { message: string; data: { inviteCode: string; inviteLink: string; expiresAt: string } };
   },
 
-  getInvitation(inviteCode: string) {
-    return request<{ data: any }>(`/invitations/${inviteCode}`, {
-      base: 'comm',
-    });
+  async getInvitation(inviteCode: string) {
+    const res = await axiosCommApi.get(`/invitations/${inviteCode}`);
+    return { data: res.data?.data } as { data: any };
   },
 
-  acceptInvitation(inviteCode: string, payload: { inviteeId?: string } = {}) {
-    return request<{ message: string; data: { groupId: string; inviteeId: string } }>(
-      `/invitations/${inviteCode}/accept`,
-      {
-        base: 'comm',
-        method: 'POST',
-        body: JSON.stringify(payload),
-      },
-    );
+  async acceptInvitation(inviteCode: string, payload: { inviteeId?: string } = {}) {
+    const res = await axiosCommApi.post(`/invitations/${inviteCode}/accept`, payload);
+    return { message: res.data?.message ?? "", data: res.data?.data } as { message: string; data: { groupId: string; inviteeId: string } };
   },
 
-  declineInvitation(inviteCode: string, payload: { inviteeId?: string } = {}) {
-    return request<{ message: string }>(`/invitations/${inviteCode}/decline`, {
-      base: 'comm',
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+  async declineInvitation(inviteCode: string, payload: { inviteeId?: string } = {}) {
+    const res = await axiosCommApi.post(`/invitations/${inviteCode}/decline`, payload);
+    return { message: res.data?.message ?? "" } as { message: string };
   },
 };

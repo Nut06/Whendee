@@ -1,8 +1,10 @@
-import { View, Text } from "react-native";
-export default function Screen() {
-  return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text>Friends Screen</Text>
-    </View>
-  );
+import { useEffect } from "react";
+import { useRouter } from "expo-router";
+
+export default function Redirect() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/(main)/calendar");
+  }, [router]);
+  return null;
 }

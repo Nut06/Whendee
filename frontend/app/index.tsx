@@ -19,8 +19,8 @@ export default function Index() {
     if (isAuthenticated) {
       const hasPreference = !!(user?.preferences && user.preferences.length > 0);
       if (hasPreference) {
-        debugAuth('Index: redirect -> /(tab)/home');
-        router.replace('/(tab)/home');
+  debugAuth('Index: redirect -> /(main)/home');
+  router.replace('/(main)/home');
       } else {
         // ผู้ใช้ล็อกอินแล้ว แต่ยังไม่มี preference ให้พาไปตั้งค่าก่อน
         debugAuth('Index: redirect -> /(onboarding)/choose-preference');

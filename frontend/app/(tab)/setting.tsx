@@ -1,12 +1,10 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
 
-const setting = () => {
-  return (
-    <View>
-      <Text>setting</Text>
-    </View>
-  )
+export default function RedirectSettingTab() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/(main)/settings');
+  }, [router]);
+  return null;
 }
-
-export default setting

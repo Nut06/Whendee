@@ -1,10 +1,10 @@
-// app/(main)/select-date.tsx
+// app/(main)/calendar/select-date.tsx
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import planStore from "../stores/planStore";
+import planStore from "../../stores/planStore";
 
 function Chip({ onPress }: { onPress?: () => void }) {
   return (
@@ -101,7 +101,7 @@ export default function SelectDateScreen() {
               {Array.from({ length: 5 }).map((_, i) => (
                 <Image
                   key={i}
-                  source={require("../../assets/images/react-logo.png")}
+                  source={require("../../../assets/images/react-logo.png")}
                   style={{
                     width: 20,
                     height: 20,
@@ -134,9 +134,9 @@ export default function SelectDateScreen() {
               <Text style={{ fontSize: 14, color: "#111827", fontWeight: "600" }}>
                 {plan?.locationName ?? "No location"}
               </Text>
-              {!!plan?.locationAddress && (
+              {!!(plan as any)?.locationAddress && (
                 <Text style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-                  {plan.locationAddress}
+                  {(plan as any).locationAddress}
                 </Text>
               )}
             </View>

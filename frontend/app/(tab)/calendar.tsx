@@ -1,12 +1,10 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
 
-const Calendar = () => {
-  return (
-    <View>
-      <Text>calendar</Text>
-    </View>
-  )
+export default function RedirectCalendarTab() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/(main)/calendar');
+  }, [router]);
+  return null;
 }
-
-export default Calendar
