@@ -145,6 +145,7 @@ export default function MainTabs() {
       <Tabs.Screen name="vote-location-map" options={{ href: null }} />
       <Tabs.Screen name="vote-success" options={{ href: null }} />
       <Tabs.Screen name="location-status" options={{ href: null }} />
+      <Tabs.Screen name="free-date-picker" options={{ href: null }} />
     </Tabs>
   );
 }

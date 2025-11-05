@@ -1,9 +1,8 @@
-// app/(main)/plan.tsx
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, Pressable, Image, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, Pressable, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Link, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import planStore, { type Plan } from "../lib/planStore";
 
 function AvatarStack({ count = 5 }: { count?: number }) {
@@ -25,16 +24,16 @@ function AvatarStack({ count = 5 }: { count?: number }) {
   );
 }
 
-function PillSelectDate({ onPress }: { onPress: () => void }) {
+function PillSelectDate() {
   return (
-    <TouchableOpacity activeOpacity={0.85} onPress={onPress} className="self-start mb-3">
+    <View className="self-start mb-3">
       <View className="flex-row items-center bg-[#eaf3ff] border border-[#cfe4ff] px-3 py-2 rounded-full">
         <Ionicons name="calendar-outline" size={14} color="#2b7cff" />
         <Text className="ml-2 text-[12px] font-semibold text-[#2b7cff]">
           Select a date to see time slots
         </Text>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -49,64 +48,65 @@ function DateBadge() {
 
 function PlanCard({ plan }: { plan: Plan }) {
   const router = useRouter();
-
-  const goNext = () => {
-    if (plan.status === "noDate") {
-      router.push({
-        pathname: "/(main)/plan-detail/[meetingId]",
-        params: { meetingId: plan.meetingId },
-      });
-    } else {
-      router.push({
-        pathname: "/(main)/select-date",
-        params: { meetingId: plan.meetingId },
-      });
-    }
-  };
+  const goSelectDate = () =>
+    router.push({
+      pathname: "/(main)/select-date",
+      params: { meetingId: plan.meetingId },
+    });
 
   return (
-    <Pressable
-      onPress={goNext}
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 pt-3 pb-2 mb-3"
-      android_ripple={{ color: "#e6f0ff" }}
+    <Link
+      href={{
+        pathname: "/(main)/plan-detail/[meetingId]",
+        params: { meetingId: plan.meetingId },
+      }}
+      asChild
     >
-      <PillSelectDate onPress={goNext} />
-
-      <View className="flex-row">
-        <DateBadge />
-
-        <View className="flex-1 ml-3">
-          <View className="flex-row justify-between items-start">
-            <Text className="text-[15px] font-semibold text-[#111827]">{plan.title}</Text>
-          </View>
-
-          <Text className="text-[12px] text-[#6b7280] mt-1">Meeting ID: {plan.meetingId}</Text>
-
-          <View className="flex-row items-center mt-2">
-            <AvatarStack count={plan.participants} />
-            <Text className="text-[12px] text-[#2b7cff] ml-2">
-              {plan.participants} participants
-            </Text>
-          </View>
-
-          <View className="h-[1px] bg-[#f0f2f5] mt-3" />
-
-          <View className="flex-row items-center justify-between mt-3 mb-1">
-            <View className="flex-row items-center">
-              <Ionicons name="location-outline" size={14} color="#7c3aed" />
-              <Text className="ml-2 text-[12px] text-[#6b7280]">
-                {plan.locationName ? plan.locationName : "Undefined"}
+      <Pressable className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 pt-3 pb-2 mb-3">
+        <PillSelectDate />
+        <View className="flex-row">
+          <DateBadge />
+          <View className="flex-1 ml-3">
+            <View className="flex-row justify-between items-start">
+              <Text className="text-[15px] font-semibold text-[#111827]">
+                {plan.title}
               </Text>
             </View>
-            <Text className="text-[12px] font-medium text-[#2bbf6a]">
-              {plan.status === "noDate"
-                ? "Select a plan first"
-                : "Select a date (no date selected)"}
+
+            <Text className="text-[12px] text-[#6b7280] mt-1">
+              Meeting ID: {plan.meetingId}
             </Text>
+
+            <View className="flex-row items-center mt-2">
+              <AvatarStack count={plan.participants} />
+              <Text className="text-[12px] text-[#2b7cff] ml-2">
+                {plan.participants} participants
+              </Text>
+            </View>
+
+            <View className="h-[1px] bg-[#f0f2f5] mt-3" />
+
+            <View className="flex-row items-center justify-between mt-3 mb-1">
+              <View className="flex-row items-center">
+                <Ionicons name="location-outline" size={14} color="#7c3aed" />
+                <Text className="ml-2 text-[12px] text-[#6b7280]">
+                  {plan.locationName ?? "Undefined"}
+                </Text>
+              </View>
+
+              {/* แตะข้อความขวาเพื่อไปเลือกวัน */}
+              <Pressable onPress={goSelectDate} hitSlop={10}>
+                <Text className="text-[12px] font-medium text-[#2bbf6a]">
+                  {plan.status === "noDate"
+                    ? "Select a plan first"
+                    : "Select a date (no date selected)"}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
+    </Link>
   );
 }
 
@@ -117,7 +117,6 @@ export default function PlanScreen() {
   useEffect(() => {
     const unsub = planStore.subscribe(() => setPlans([...planStore.getAll()]));
     return () => {
-      // คืนค่าเป็นฟังก์ชัน cleanup ปกติ (ไม่ return boolean)
       unsub();
     };
   }, []);
@@ -137,8 +136,12 @@ export default function PlanScreen() {
       {/* Header */}
       <View className="flex-row items-center justify-between mb-3">
         <View>
-          <Text className="text-[17px] font-semibold text-[#111827]">Aliya Doherty</Text>
-          <Text className="text-[12px] text-[#6b7280]">09 September’ 23 • Monday</Text>
+          <Text className="text-[17px] font-semibold text-[#111827]">
+            Aliya Doherty
+          </Text>
+          <Text className="text-[12px] text-[#6b7280]">
+            09 September’ 23 • Monday
+          </Text>
         </View>
         <Ionicons name="notifications-outline" size={20} color="#007aff" />
       </View>
