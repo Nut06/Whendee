@@ -3,11 +3,10 @@
   "compilerOptions": {
     "strict": true,
     "module": "esnext",
-    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
     "paths": {
-      "@/*": [
-        "./app/*",
-      ]
+      "@/*": ["./app/*"]
     }
   },
   "include": [

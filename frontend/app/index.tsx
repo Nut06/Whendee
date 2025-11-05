@@ -1,22 +1,27 @@
-<<<<<<< HEAD
-import { Redirect } from "expo-router";
-export default function Index() {
-  return <Redirect href="/(main)/plan" />; // เข้าแท็บ Home (plan) อัตโนมัติ
-=======
-import { Redirect, router } from "expo-router";
+import { useRouter } from "expo-router";
 import { useEffect } from "react";
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, ActivityIndicator } from "react-native";
+import { useAuthStore } from "@/stores/authStore";
+import "./../global.css"
 
 export default function Index() {
+  const router = useRouter();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isInitialized = useAuthStore((state) => state.isInitialized);
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace('/(auth)/choose-auth');
-    }, 2000);
+    if (!isInitialized) {
+      return;
+    }
 
-    return () => clearTimeout(timer);
-  }, []);
+    if (isAuthenticated) {
+      router.replace('/(main)/plan');
+    } else {
+      router.replace('/(auth)/login');
+    }
+  }, [isAuthenticated, isInitialized, router]);
 
-  return(
+  return (
     <View className="flex items-center justify-center flex-1 grid-cols-4 gap-1 bg-white">
       <View className='flex items-center justify-center col-span-4 gap-2'>
         <Image
@@ -26,8 +31,8 @@ export default function Index() {
         />
         <Text className="text-display-2 font-lato text-default-900">WhenDee</Text>
         <Text className="text-body-xl font-lato text-default-600">Hangouts meeting enjoy in one</Text>
+        {!isInitialized && <ActivityIndicator className="mt-4" size="small" />}
       </View>
     </View>
   );
->>>>>>> fd24859 (Implement backend for otp, line, google-auth)
 }

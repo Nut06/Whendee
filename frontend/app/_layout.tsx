@@ -1,10 +1,11 @@
 // app/_layout.tsx
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import "./../global.css";
-import React, { useState } from "react";
+import "../../frontend/global.css";
+import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useAuthStore } from "@/stores/authStore";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,28 +16,56 @@ const queryClient = new QueryClient({
   },
 });
 
-export default function RootLayout() {
-<<<<<<< HEAD
-  return (
-    <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </SafeAreaProvider>
-  );
+function AuthGate() {
+  const router = useRouter();
+  const segments = useSegments();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isInitialized = useAuthStore((state) => state.isInitialized);
+
+  useEffect(() => {
+    if (!isInitialized) {
+      return;
+    }
+
+    if (!segments.length) {
+      return;
+    }
+
+    const root = segments[0];
+    const inAuthGroup = root === "(auth)";
+
+    if (!isAuthenticated && !inAuthGroup) {
+      router.replace("/(auth)/login");
+    } else if (isAuthenticated && inAuthGroup) {
+      router.replace("/(main)/plan");
+    }
+  }, [isAuthenticated, isInitialized, segments, router]);
+
+  return null;
 }
-=======
 
-  const [loading, isLoading] = useState<boolean>(false);
+export default function RootLayout() {
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
+  const isInitialized = useAuthStore((state) => state.isInitialized);
 
-  if (loading) {
+  useEffect(() => {
+    void initializeAuth();
+  }, [initializeAuth]);
+
+  if (!isInitialized) {
     return (
-      <View className="items-center justify-center flex-1 bg-white">
-        <ActivityIndicator size="large" />
-      </View>
-    )
+      <SafeAreaProvider>
+        <View className="items-center justify-center flex-1 bg-white">
+          <ActivityIndicator size="large" />
+        </View>
+      </SafeAreaProvider>
+    );
   }
 
   return (
+    <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
+        <AuthGate />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#fff' } }}>
           <Stack.Screen
             name="(auth)/register.tsx"
@@ -47,6 +76,6 @@ export default function RootLayout() {
           />
         </Stack>
       </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }
->>>>>>> fd24859 (Implement backend for otp, line, google-auth)

@@ -3,7 +3,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import {
   Image,
-  SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -25,9 +24,8 @@ export default function Home() {
   const dateLabel = formatDateLabel();
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F4F6FB]">
       <ScrollView
-        className="flex-1"
+        className="flex-1 bg-primary-50"
         contentContainerStyle={{ paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
       >
@@ -86,6 +84,5 @@ export default function Home() {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
   );
 }

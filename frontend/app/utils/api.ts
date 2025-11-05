@@ -1,6 +1,5 @@
 import axios, { AxiosError, AxiosHeaders, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig, isAxiosError } from 'axios';
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // ติดตั้งถ้ายังไม่มี
 import { SecureStorage } from '@/services/secureStorage';
 
 // =============================================
@@ -52,7 +51,7 @@ const withAccessToken = async (config: InternalAxiosRequestConfig): Promise<Inte
 
 const handleUnauthorized = async (error: AxiosError) => {
   if (error.response?.status === 401) {
-    await AsyncStorage.removeItem('access_token');
+    await SecureStorage.clearAccessToken();
   }
   return Promise.reject(error);
 };

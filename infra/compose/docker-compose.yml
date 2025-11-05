@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 version: "3.9"
 
-=======
->>>>>>> fdbddf5 (Add UC-3 invitation flow to comm-service)
 services:
   postgres:
     image: postgres:15
@@ -18,74 +15,41 @@ services:
   identity-service:
     image: node:20
     working_dir: /app
-<<<<<<< HEAD
-    command: bash -lc "corepack enable && pnpm install --frozen-lockfile=false && pnpm dev"
-=======
     command: bash -lc "corepack enable && pnpm install && pnpm dev"
->>>>>>> fdbddf5 (Add UC-3 invitation flow to comm-service)
     volumes:
       - ../../services/identity-service:/app
     ports:
       - "5001:3002"
-<<<<<<< HEAD
-    depends_on:
-      - postgres
-    environment:
-      DATABASE_URL: postgresql://dev:dev@postgres:5432/appdb?schema=public
-=======
     environment:
       DATABASE_URL: postgresql://dev:dev@postgres:5432/appdb?schema=identity
     depends_on:
       - postgres
->>>>>>> fdbddf5 (Add UC-3 invitation flow to comm-service)
 
   event-service:
     image: node:20
     working_dir: /app
-<<<<<<< HEAD
-    command: bash -lc "corepack enable && pnpm install --frozen-lockfile=false && pnpm dev"
-=======
     command: bash -lc "corepack enable && pnpm install && pnpm dev"
->>>>>>> fdbddf5 (Add UC-3 invitation flow to comm-service)
     volumes:
       - ../../services/event-service:/app
     ports:
       - "5002:3001"
-<<<<<<< HEAD
-    depends_on:
-      - postgres
-    environment:
-      DATABASE_URL: postgresql://dev:dev@postgres:5432/appdb?schema=public
-=======
     environment:
       DATABASE_URL: postgresql://dev:dev@postgres:5432/appdb?schema=event
     depends_on:
       - postgres
->>>>>>> fdbddf5 (Add UC-3 invitation flow to comm-service)
 
   comm-service:
     image: node:20
     working_dir: /app
-<<<<<<< HEAD
-    command: bash -lc "corepack enable && pnpm install --frozen-lockfile=false && pnpm dev"
-=======
     command: bash -lc "corepack enable && pnpm install && pnpm dev"
->>>>>>> fdbddf5 (Add UC-3 invitation flow to comm-service)
     volumes:
       - ../../services/comm-service:/app
     ports:
       - "5003:3000"
-<<<<<<< HEAD
-    depends_on:
-      - postgres
-    environment:
-      DATABASE_URL: postgresql://dev:dev@postgres:5432/appdb?schema=public
-=======
     environment:
       DATABASE_URL: postgresql://dev:dev@postgres:5432/appdb?schema=comm
     depends_on:
       - postgres
->>>>>>> fdbddf5 (Add UC-3 invitation flow to comm-service)
 
 volumes:
   pgdata:
