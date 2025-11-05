@@ -3,9 +3,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { Platform, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const TAB_H = 64;
+const TAB_H = 56; // reduce overall tab bar height
 const FAB = 56;
-const LIFT = 24;
+const LIFT = 22; // slightly less lift to match the thinner bar
 
 export default function MainTabs() {
   const insets = useSafeAreaInsets();
@@ -17,26 +17,20 @@ export default function MainTabs() {
         tabBarShowLabel: true,
         tabBarActiveTintColor: "#007AFF",
         tabBarInactiveTintColor: "#6b7280",
-        tabBarLabelStyle: { fontSize: 11, marginTop: 2 },
-        // ให้พื้นหลังเพจเป็นสีเดียวกันทุกหน้า
-        sceneStyle: { backgroundColor: "#F6F7FB" },
-        // ยกแท็บบาร์พ้นโฮมอินดิเคเตอร์เสมอ
+  tabBarLabelStyle: { fontSize: 10, marginTop: 0 },
+        // ให้พื้นหลังเพจเป็นสีเดียวกันทุกหน้า และเคารพ Safe Area ของอุปกรณ์
+        sceneStyle: {
+          backgroundColor: "#F6F7FB",
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        },
+        // ชิดขอบล่าง เต็มความกว้าง (ปล่อยให้ Safe Area ของตัว Tab ดูแลเอง)
         tabBarStyle: {
-          position: "absolute",
-          left: 12,
-          right: 12,
-          bottom: Math.max(12, insets.bottom + 6),
           height: TAB_H,
-          borderRadius: 18,
-          backgroundColor: "#fff",
           borderTopWidth: 0,
-          shadowColor: "#000",
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 6 },
-          elevation: 12,
-          paddingTop: 6,
-          paddingBottom: Platform.OS === "ios" ? 8 : 10,
+          backgroundColor: "#fff",
+          paddingTop: 4,
+          paddingBottom: Platform.OS === "ios" ? 6 : 8,
         },
         tabBarBackground: () => (
           <View style={{ flex: 1 }}>
@@ -45,7 +39,7 @@ export default function MainTabs() {
                 position: "absolute",
                 left: "32%",
                 right: "32%",
-                bottom: 8,
+                bottom: 6,
                 height: 4,
                 borderRadius: 2,
                 backgroundColor: "#E7E8EB",
@@ -83,37 +77,39 @@ export default function MainTabs() {
           tabBarLabel: () => null,
           tabBarIcon: () => null,
           tabBarButton: () => (
-            <Link href="/(main)/create" asChild>
-              <TouchableOpacity
-                activeOpacity={0.92}
-                style={{
-                  width: FAB,
-                  height: FAB,
-                  borderRadius: FAB / 2,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginTop: -LIFT,
-                }}
-              >
-                <View
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "flex-start" }}>
+              <Link href="/(main)/create" asChild>
+                <TouchableOpacity
+                  activeOpacity={0.92}
                   style={{
                     width: FAB,
                     height: FAB,
                     borderRadius: FAB / 2,
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: "#2b7cff",
-                    shadowColor: "#2b7cff",
-                    shadowOpacity: 0.22,
-                    shadowRadius: 10,
-                    shadowOffset: { width: 0, height: 6 },
-                    elevation: 10,
+                    marginTop: -LIFT,
                   }}
                 >
-                  <Ionicons name="add" color="#fff" size={26} />
-                </View>
-              </TouchableOpacity>
-            </Link>
+                  <View
+                    style={{
+                      width: FAB,
+                      height: FAB,
+                      borderRadius: FAB / 2,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "#2b7cff",
+                      shadowColor: "#2b7cff",
+                      shadowOpacity: 0.22,
+                      shadowRadius: 10,
+                      shadowOffset: { width: 0, height: 6},
+                      elevation: 10,
+                    }}
+                  >
+                    <Ionicons name="add" color="#fff" size={26} />
+                  </View>
+                </TouchableOpacity>
+              </Link>
+            </View>
           ),
         }}
       />
@@ -146,6 +142,8 @@ export default function MainTabs() {
       <Tabs.Screen name="vote-success" options={{ href: null }} />
       <Tabs.Screen name="location-status" options={{ href: null }} />
       <Tabs.Screen name="free-date-picker" options={{ href: null }} />
+      <Tabs.Screen name="schedule-meeting" options={{ href: null }} />
+      <Tabs.Screen name="select-date" options={{ href: null }} />
     </Tabs>
   );
 }

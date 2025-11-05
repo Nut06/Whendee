@@ -1,12 +1,22 @@
 // app/(main)/select-date.tsx
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import planStore from "../lib/planStore";
 
-function Chip({ onPress }: { onPress?: () => void }) {
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function formatDateDMY(ds: string) {
+  const [y, m, d] = ds.split("-");
+  const mm = parseInt(m || "1", 10);
+  const dd = d || "01";
+  return `${dd} ${MONTHS[Math.max(0, Math.min(11, mm - 1))]} ${y}`;
+}
+
+function Chip({ meetingId, onPress }: { meetingId: string; onPress?: () => void }) {
+  const finalDate = planStore.getMeetingDetails(meetingId)?.finalDate;
+  const label = finalDate ? formatDateDMY(finalDate) : "Select a date to see time slots";
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -25,10 +35,8 @@ function Chip({ onPress }: { onPress?: () => void }) {
       }}
     >
       <Ionicons name="calendar-outline" size={14} color="#2b7cff" />
-      <Text
-        style={{ marginLeft: 6, fontSize: 12, fontWeight: "700", color: "#2b7cff" }}
-      >
-        Select a date to see time slots
+      <Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "700", color: "#2b7cff" }}>
+        {label}
       </Text>
     </TouchableOpacity>
   );
@@ -60,7 +68,16 @@ export default function SelectDateScreen() {
   const router = useRouter();
   const { meetingId } = useLocalSearchParams<{ meetingId?: string }>();
   const mid = (meetingId ?? "").trim();
-  const plan = planStore.getByMeetingId(mid);
+  const [plan, setPlan] = useState(() => planStore.getByMeetingId(mid));
+  const currentUserId = useMemo(() => planStore.getCurrentUserId(), []);
+
+  // refresh when store changes (e.g., after saving dates)
+  useEffect(() => {
+    const unsub = planStore.subscribe(() => {
+      setPlan(planStore.getByMeetingId(mid));
+    });
+    return unsub;
+  }, [mid]);
 
   return (
     <ScrollView
@@ -83,7 +100,7 @@ export default function SelectDateScreen() {
         }}
       >
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
-          <Chip onPress={() => { /* ตรงนี้จะเปิด date picker ได้ในอนาคต */ }} />
+          <Chip meetingId={mid} onPress={() => router.push({ pathname: "/(main)/free-date-picker", params: { meetingId: mid } })} />
           <Ionicons name="ellipsis-horizontal" size={18} color="#9ca3af" />
         </View>
 
@@ -135,22 +152,22 @@ export default function SelectDateScreen() {
               <Text style={{ fontSize: 14, color: "#111827", fontWeight: "600" }}>
                 {plan?.locationName ?? "No location"}
               </Text>
-              {!!plan?.locationAddress && (
-                <Text style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-                  {plan.locationAddress}
-                </Text>
-              )}
+              {/* Optional address could be shown here in future if added to the store */}
             </View>
           </View>
 
           <TouchableOpacity
-            onPress={() => {/* ไปหน้าเลือกวันที่จริงในอนาคต */}}
+            onPress={() => router.push({ pathname: "/(main)/free-date-picker", params: { meetingId: mid } })}
             activeOpacity={0.9}
           >
-            <Text style={{ fontSize: 12, color: "#22c55e", fontWeight: "700" }}>
-              Select a date first{"\n"}
-              <Text style={{ color: "#22c55e", fontWeight: "700" }}>No date selected</Text>
-            </Text>
+            {planStore.hasUserFreeDates(mid, currentUserId) ? (
+              <Text style={{ fontSize: 12, color: "#22c55e", fontWeight: "700" }}>Date Selected</Text>
+            ) : (
+              <Text style={{ fontSize: 12, color: "#22c55e", fontWeight: "700" }}>
+                Select a date first{"\n"}
+                <Text style={{ color: "#22c55e", fontWeight: "700" }}>No date selected</Text>
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -169,13 +186,16 @@ export default function SelectDateScreen() {
           People
         </Text>
 
-        {[
-          { name: "Aliya", status: "Missing Date Selection" },
-          { name: "Ron", status: "Missing Date Selection" },
-          { name: "Amy", status: "Date Selected" },
-          { name: "Bill Gates", status: "Date Selected" },
-          { name: "Victoria", status: "Date Selected" },
-        ].map((p, idx) => (
+        {["Aliya", "Ron", "Amy", "Bill Gates", "Victoria"].map((name, idx) => {
+          const isMe = name === "Aliya"; // สมมติผู้ใช้ปัจจุบันคือ Aliya
+          const status = isMe
+            ? planStore.hasUserFreeDates(mid, currentUserId)
+              ? "Date Selected"
+              : "Missing Date Selection"
+            : idx >= 2
+            ? "Date Selected"
+            : "Missing Date Selection";
+          return (
           <View
             key={idx}
             style={{
@@ -200,14 +220,14 @@ export default function SelectDateScreen() {
             >
               <Ionicons name="person" size={16} color="#6b7280" />
             </View>
-            <Text style={{ flex: 1, color: "#111827" }}>{p.name}</Text>
-            <Text style={{ fontSize: 12, color: p.status.includes("Missing") ? "#9ca3af" : "#10b981" }}>
-              {p.status}
+            <Text style={{ flex: 1, color: "#111827" }}>{name}</Text>
+            <Text style={{ fontSize: 12, color: status.includes("Missing") ? "#9ca3af" : "#10b981" }}>
+              {status}
             </Text>
           </View>
-        ))}
+        );})}
 
-        {/* แถวเลือกวันของฉัน */}
+        {/* แถวเลือกวันของฉัน / เลือกวันแผน */}
         <TouchableOpacity
           activeOpacity={0.85}
           style={{
@@ -218,10 +238,17 @@ export default function SelectDateScreen() {
             borderTopWidth: 1,
             borderTopColor: "#f0f2f5",
           }}
-          onPress={() => {/* เปิด date-picker ของผู้ใช้ในอนาคต */}}
+          onPress={() => {
+            const hasMine = planStore.hasUserFreeDates(mid, currentUserId);
+            router.push({ pathname: "/(main)/free-date-picker", params: { meetingId: mid, mode: hasMine ? "final" : "free" } });
+          }}
         >
           <Ionicons name="add-circle-outline" size={18} color="#6b7280" />
-          <Text style={{ marginLeft: 8, color: "#6b7280" }}>Select your free date</Text>
+          <Text style={{ marginLeft: 8, color: "#6b7280" }}>
+            {planStore.hasUserFreeDates(mid, currentUserId)
+              ? "Select your plan date"
+              : "Select your free date"}
+          </Text>
           <View style={{ flex: 1 }} />
           <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
         </TouchableOpacity>
