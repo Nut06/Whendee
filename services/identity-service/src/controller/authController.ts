@@ -102,6 +102,7 @@ const buildRedirectWithParams = (base: string, params: Record<string, string>): 
   });
   return url.toString();
 };
+
 const genLoginResponse = (token:AuthToken, message='Login successful'):LoginResponse => {
   return {
     success: true,
@@ -212,6 +213,12 @@ export const lineCallback = async (req: Request, res: Response) => {
 
 export const googleLogin = async (req: Request, res: Response, next: NextFunction) => {
   const redirectTarget = parseRedirectTarget(req.query.redirectUri) ?? fallbackRedirectTarget;
+  // Debug: log incoming redirect target and resolved state
+  // Note: sanitize to avoid leaking secrets
+  console.log('[OIDC][Google] /auth/google start', {
+    redirectTarget,
+    allowedSchemes: allowedRedirectSchemes,
+  });
 
   return passport.authenticate('google', {
     scope: ['profile', 'email'],
@@ -223,20 +230,27 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
 
 export const googleCallback = async (req: Request, res: Response, next: NextFunction) => {
   const redirectUri = decodeState(req.query.state) ?? fallbackRedirectTarget;
+  console.log('[OIDC][Google] /auth/google/callback', { redirectUri });
 
   const sendRedirect = (params: Record<string, string>) => {
     const location = buildRedirectWithParams(redirectUri, params);
+    console.log('[OIDC][Google] redirecting back to app', { location });
     return res.redirect(location);
   };
 
   return passport.authenticate('google', { session: false }, (err:any, token:AuthToken, info?:any) => {
     if (err) {
+      console.error('[OIDC][Google] callback error', {
+        message: err?.message,
+        name: err?.name,
+      });
       return sendRedirect({
         success: 'false',
         error: err.message || 'Google login failed',
       });
     }
     if (!token) {
+      console.error('[OIDC][Google] callback: no token generated', { info });
       return sendRedirect({
         success: 'false',
         error: 'Invalid credentials',

@@ -14,11 +14,17 @@ export default function Login() {
   const { loginWithCredentials, loginGoogle, loginLine } = useAuthStore();
   
   const [loading, setIsLoading] = useState<boolean>(false);
+  const navigateAfterAuth = () => {
+    const currentUser = useAuthStore.getState().user;
+    const hasPreference = !!(currentUser?.preferences && currentUser.preferences.length > 0);
+
+    router.replace(hasPreference ? '/(main)/home' : '/(onboarding)/choose-preference');
+  };
   const handleLogin = async () => {
     try {
       setIsLoading(true);
       await loginWithCredentials(userInput);
-      router.replace('/(tab)/home');
+      navigateAfterAuth();
     } catch (err: any) {
       const message = typeof err?.message === 'string' ? err.message : 'Unable to log in. Please try again.';
       Alert.alert('Login failed', message);
@@ -31,7 +37,7 @@ export default function Login() {
     try {
       setIsLoading(true);
       await loginGoogle();
-      router.replace('/(tab)/choose-preference');
+      navigateAfterAuth();
     } catch (err: any) {
       const message = typeof err?.message === 'string' ? err.message : 'Google login failed.';
       Alert.alert('Login failed', message);
@@ -44,7 +50,7 @@ export default function Login() {
     try {
       setIsLoading(true);
       await loginLine();
-      router.replace('/(tab)/home');
+      navigateAfterAuth();
     } catch (err: any) {
       const message = typeof err?.message === 'string' ? err.message : 'LINE login failed.';
       Alert.alert('Login failed', message);

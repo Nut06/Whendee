@@ -12,7 +12,7 @@ import { refreshAccessToken } from '@/services/authService'
 export default function Register() {
   const router = useRouter()
   const [agree, setAgree] = useState(false);
-  const {user, setUser, setAuth, loginLine, loginGoogle, refreshToken} = useAuthStore();
+  const {user, setUser, loginLine, loginGoogle} = useAuthStore();
   const { requestOtp } = useOtpStore();
   const [errors, setErrors] = useState({
     name: false,
@@ -20,13 +20,14 @@ export default function Register() {
     phone: false,
     password: false,
   });
+
+  const navigateAfterAuth = () => {
+    const currentUser = useAuthStore.getState().user;
+    const hasPreference = !!(currentUser?.preferences && currentUser.preferences.length > 0);
+
+    router.replace(hasPreference ? '/(main)/home' : '/(onboarding)/choose-preference');
+  };
   
-  const move = () => {
-    if (user?.preferences === null) {
-        router.replace('/(tab)/choose-preference');
-      }
-      router.replace('/(tab)/home');
-  }
   const validateErrors = {
     name: !user?.name || user.name.trim() === '',
     email: !user?.email || user.email.trim() === '',
@@ -37,8 +38,7 @@ export default function Register() {
   const handleGoogle = async () => {
     try {
       await loginGoogle();
-      // move();
-      router.replace('/(tab)/choose-preference');
+      navigateAfterAuth();
     } catch (error: any) {
       const message = typeof error?.message === 'string' ? error.message : 'Google login failed.';
       Alert.alert('Login failed', message);
@@ -48,7 +48,7 @@ export default function Register() {
   const handleLine = async () => {
     try {
       await loginLine();
-      move();
+      navigateAfterAuth();
     } catch (error: any) {
       const message = typeof error?.message === 'string' ? error.message : 'LINE login failed.';
       Alert.alert('Login failed', message);

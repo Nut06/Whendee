@@ -26,11 +26,19 @@ passport.use(new LocalStrategy(
   }
 ));
 
+// Build callback URLs robustly: prefer explicit env, otherwise derive from IDENTITY_URL
+const identityBaseUrl = (process.env.IDENTITY_URL || '').replace(/\/$/, '');
+const googleCallbackURL = process.env.GOOGLE_CALLBACK_URL && !process.env.GOOGLE_CALLBACK_URL.includes('${')
+  ? process.env.GOOGLE_CALLBACK_URL
+  : identityBaseUrl
+    ? `${identityBaseUrl}/auth/google/callback`
+    : '/auth/google/callback';
+
 const googleStarategy = new Google(
   {
     clientID: process.env.GOOGLE_CLIENT_ID as string,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
+    callbackURL: googleCallbackURL
   },
   async (accessToken: string, refreshToken: string, profile: any, done: Function) => {
     try {
@@ -42,11 +50,17 @@ const googleStarategy = new Google(
   }
 );
 
+const lineCallbackURL = process.env.LINE_CALLBACK_URL && !process.env.LINE_CALLBACK_URL.includes('${')
+  ? process.env.LINE_CALLBACK_URL
+  : identityBaseUrl
+    ? `${identityBaseUrl}/auth/line/callback`
+    : '/auth/line/callback';
+
 const lineStrategy = new LineStrategy(
   {
     channelID: process.env.LINE_CHANNEL_ID as string,
     channelSecret: process.env.LINE_CHANNEL_SECRET as string,
-    callbackURL: process.env.LINE_CALLBACK_URL || '/auth/line/callback'
+    callbackURL: lineCallbackURL
   },
   async (accessToken: string, refreshToken: string, profile: any, done: Function) => {
     try {

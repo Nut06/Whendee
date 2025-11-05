@@ -151,6 +151,13 @@ const authService = {
 
     loginWithGoogle: async (profile: any): Promise<AuthToken> => {
         const email = profile?.emails?.[0]?.value;
+        // Debug: log limited profile details to help diagnose missing email cases
+        console.log('[OIDC][Google] loginWithGoogle profile', {
+            hasEmails: Array.isArray(profile?.emails),
+            email,
+            id: profile?.id,
+            provider: profile?.provider,
+        });
         if (!email) {
             throw new AppError('Email not provided by Google', BAD_REQUEST, 'GOOGLE_LOGIN_FAILED');
         }
@@ -176,6 +183,7 @@ const authService = {
         }
 
         if (!user) {
+            console.error('[OIDC][Google] loginWithGoogle: user creation failed');
             throw new AppError('Google login failed', INTERNAL_SERVER_ERROR, 'GOOGLE_LOGIN_FAILED');
         }
 

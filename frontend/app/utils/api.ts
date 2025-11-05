@@ -1,17 +1,77 @@
-import axios, { AxiosError, AxiosHeaders, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig, isAxiosError } from 'axios';
+import axios, { AxiosError, AxiosHeaders, AxiosInstance, InternalAxiosRequestConfig, isAxiosError } from 'axios';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { SecureStorage } from '@/services/secureStorage';
+import { debugAuth } from '@/utils/debug';
 
 // =============================================
 // API Configuration
 // =============================================
 
 // กำหนด Base URL ตาม environment
+// NOTE: ตัวแปรฝั่ง Expo จะถูกอินไลน์เฉพาะคีย์ที่ขึ้นต้นด้วย EXPO_PUBLIC_
+// เพื่อความยืดหยุ่น เราจะลองอ่านได้หลายคีย์ และค่อย fallback เป็น localhost
+const resolveDevHost = (port: number | string) => {
+  const explicit = process.env.EXPO_PUBLIC_DEV_HOST ?? process.env.EXPO_DEV_HOST;
+  if (explicit) {
+    return `http://${explicit}:${port}`;
+  }
+
+  const hostFromExpo =
+    Constants.expoConfig?.hostUri ??
+    Constants.expoConfig?.extra?.expoGo?.developer?.host ??
+    (typeof Constants.manifest2 === 'object'
+      ? (Constants.manifest2.extra as Record<string, any> | undefined)?.expoGo?.developer?.host
+      : undefined);
+
+  if (hostFromExpo) {
+    const host = hostFromExpo.split(':')[0];
+    if (host && host !== 'localhost') {
+      return `http://${host}:${port}`;
+    }
+  }
+
+  if (Platform.OS === 'android') {
+    return `http://10.0.2.2:${port}`;
+  }
+
+  if (Platform.OS === 'ios') {
+    return `http://127.0.0.1:${port}`;
+  }
+
+  return `http://localhost:${port}`;
+};
+
+const buildBaseUrl = (envValue: string | undefined, fallbackPort: number): string => {
+  if (envValue && envValue.trim().length > 0) {
+    return envValue;
+  }
+  return resolveDevHost(fallbackPort);
+};
+
 const SERVICE_BASES = {
-  identity: process.env.IDENTITY_SERVICE_URL || `http://localhost:${process.env.IDENTITY_SERVICE_PORT || 3002}`,
-  communication: process.env.COMMUNICATION_SERVICE_URL || `http://localhost:${process.env.COMMUNICATION_SERVICE_PORT || 3003}`,
-  event: process.env.EVENT_SERVICE_URL || `http://localhost:${process.env.EVENT_SERVICE_PORT || 3004}`,
-}
+  identity: buildBaseUrl(
+    process.env.EXPO_PUBLIC_IDENTITY_SERVICE_URL ||
+      process.env.EXPO_PUBLIC_IDENTITY_API_URL ||
+      process.env.IDENTITY_SERVICE_URL,
+    Number(process.env.IDENTITY_SERVICE_PORT || 3002)
+  ),
+  communication:
+    buildBaseUrl(
+      process.env.EXPO_PUBLIC_COMMUNICATION_SERVICE_URL ||
+        process.env.EXPO_PUBLIC_COMM_API_URL ||
+        process.env.COMMUNICATION_SERVICE_URL ||
+        process.env.COMM_SERVICE_URL,
+      Number(process.env.COMMUNICATION_SERVICE_PORT || 3003)
+    ),
+  event:
+    buildBaseUrl(
+      process.env.EXPO_PUBLIC_EVENT_SERVICE_URL ||
+        process.env.EXPO_PUBLIC_EVENT_API_URL ||
+        process.env.EVENT_SERVICE_URL,
+      Number(process.env.EVENT_SERVICE_PORT || 3004)
+    ),
+};
 
 
 // =============================================
@@ -33,6 +93,7 @@ const createApi = (baseUrl:string) => {
 export const identityApi = createApi(SERVICE_BASES.identity);
 export const communicationApi = createApi(SERVICE_BASES.communication);
 export const eventApi = createApi(SERVICE_BASES.event);
+debugAuth('API base URLs', SERVICE_BASES);
 
 // =============================================
 // Request Interceptor (สำหรับแนบ token)

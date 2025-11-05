@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { debugAuth } from "@/utils/debug";
 import { useEffect } from "react";
 import { View, Text, Image, ActivityIndicator } from "react-native";
 import { useAuthStore } from "@/stores/authStore";
@@ -8,6 +9,7 @@ export default function Index() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isInitialized = useAuthStore((state) => state.isInitialized);
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     if (!isInitialized) {
@@ -15,11 +17,21 @@ export default function Index() {
     }
 
     if (isAuthenticated) {
-      router.replace('/(main)/plan');
+      const hasPreference = !!(user?.preferences && user.preferences.length > 0);
+      if (hasPreference) {
+        debugAuth('Index: redirect -> /(tab)/home');
+        router.replace('/(tab)/home');
+      } else {
+        // ผู้ใช้ล็อกอินแล้ว แต่ยังไม่มี preference ให้พาไปตั้งค่าก่อน
+        debugAuth('Index: redirect -> /(onboarding)/choose-preference');
+        router.replace('/(onboarding)/choose-preference');
+      }
     } else {
-      router.replace('/(auth)/login');
+      // ผู้ใช้ยังไม่ล็อกอิน ให้ไปหน้าเลือกวิธีเข้าสู่ระบบ
+      debugAuth('Index: redirect -> /(auth)/choose-auth');
+      router.replace('/(auth)/choose-auth');
     }
-  }, [isAuthenticated, isInitialized, router]);
+  }, [isAuthenticated, isInitialized, user, router]);
 
   return (
     <View className="flex items-center justify-center flex-1 grid-cols-4 gap-1 bg-white">

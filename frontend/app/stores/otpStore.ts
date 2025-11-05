@@ -17,7 +17,17 @@ interface OtpState{
     
     setOtp: (otp:number,index:number) => void,
     requestOtp: (payload: RegisterRequest) => Promise<void>;
-    verifyOtp: (otp:string) => Promise<{success:boolean; user:User; message:string} | void>;
+    verifyOtp: (otp:string) => Promise<{
+        success: boolean;
+        user: User;
+        tokens: {
+            accessToken: string;
+            refreshToken: string;
+            accessTokenExpiresAt: string | null;
+            refreshTokenExpiresAt: string | null;
+        };
+        message: string;
+    } | void>;
     resendOtp: () => Promise<void>;
 
     setCountdown: (seconds:number) => void;

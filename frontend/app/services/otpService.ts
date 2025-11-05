@@ -1,18 +1,35 @@
-import api from "@/utils/api";
+import { identityApi } from "@/utils/api";
 import { SecureStorage } from "./secureStorage";
-import { RegisterRequest, RequestOTP, ResponseOtp, VerifyOtpRespone } from "@/types/user.types";
-import { ResponseOTP } from "@/types/user.types";
+import { RegisterRequest, RequestOTP, ResponseOTP } from "@/types/user.types";
 
 export const otpService = {
-        async requestOtp(data: RequestOTP): Promise<void> {
+        async requestOtp(data: RequestOTP | RegisterRequest): Promise<void> {
             try {
-                const response = await api.post('/auth/request-otp', data);
-                const resdata = response.data;
-                await SecureStorage.saveOTPSession(
-                    resdata.token,
-                    resdata.expiresIn
-                );
-            } catch (error) {
+                // Backend expects: { email, password, fullname, phone }
+                const payload = {
+                    email: (data as any).email,
+                    password: (data as any).password,
+                    fullname: (data as any).name ?? (data as any).fullname,
+                    phone: (data as any).phone,
+                };
+                const response = await identityApi.post('/auth/request-otp', payload);
+                const resdata = response.data?.data ?? response.data;
+                const sessionToken = resdata?.sessionToken;
+                const expiresIn = resdata?.expiresIn;
+
+                if (!sessionToken || !expiresIn) {
+                    throw new Error('Invalid OTP response');
+                }
+
+                // Persist session info for verification/resend
+                await SecureStorage.saveOTPSession(sessionToken, expiresIn);
+                // Persist minimal user info for resend (needs phone)
+                await SecureStorage.saveTempUserData({
+                    email: payload.email,
+                    name: payload.fullname,
+                    phone: payload.phone,
+                });
+            } catch {
                 throw new Error('Failed to request OTP');
             }
         },
@@ -24,73 +41,80 @@ export const otpService = {
                         throw new Error('OTP session has expired. Please request a new OTP.');
                     }
 
-                    const response = await api.post<VerifyOtpRespone>('/auth/verify-otp', {
+                    // Backend expects: { session, otp }
+                    const response = await identityApi.post('/auth/verify-otp', {
+                        session: sessionToken,
                         otp,
-                        sessionToken
                     });
 
                     const redata = response.data;
-                    if (redata) {
-                        await SecureStorage.clearOTPSession();
+                    const user = redata?.data?.user;
+                    const accessToken = redata?.data?.accessToken;
+                    const refreshToken = redata?.data?.refreshToken;
+                    const accessTokenExpiresAt = redata?.data?.accessTokenExpiresAt ?? null;
+                    const refreshTokenExpiresAt = redata?.data?.refreshTokenExpiresAt ?? null;
 
-                        await SecureStorage.saveVerificationToken(redata.data.accessToken);
+                    if (!accessToken || !refreshToken) {
+                        throw new Error('Missing tokens from verify response');
                     }
 
-                    return{
-                        success:true,
-                        user: redata.data.user,
-                        message: redata.message
-                    }
+                    // Clear OTP session and persist auth tokens
+                    await SecureStorage.clearOTPSession();
+                    await SecureStorage.saveAccessToken(accessToken);
+                    await SecureStorage.saveRefreshToken(refreshToken);
 
-            } catch (error) {
+                    return {
+                        success: true,
+                        user,
+                        tokens: {
+                            accessToken,
+                            refreshToken,
+                            accessTokenExpiresAt,
+                            refreshTokenExpiresAt,
+                        },
+                        message: redata?.message ?? 'OTP verified successfully',
+                    };
+
+            } catch {
                 throw new Error('Failed to verify OTP');
             }
         },
 
         async resendOTP(){
             try {
-                    const oldToken = await SecureStorage.getOTPSessionToken();
-                    if(!oldToken) throw new Error('No OTP session found');
+                    const session = await SecureStorage.getOTPSessionToken();
+                    if(!session) throw new Error('No OTP session found');
 
-                    const response = await api.post<ResponseOTP>('/auth/resend-otp', {
-                        oldToken
+                    const tmp = await SecureStorage.getTempUserData();
+                    const phone: string | undefined = tmp?.phone;
+                    if (!phone) throw new Error('Missing phone number for resend');
+
+                    // Backend handler reads req.query.session and req.query.phone (even on POST)
+                    const response = await identityApi.post<ResponseOTP>('/auth/resend-otp', undefined, {
+                        params: { session, phone },
                     });
 
                     const resdata = response.data;
-                    if (resdata) {
-                        await SecureStorage.saveOTPSession(
-                            resdata.data.sessionToken,
-                            resdata.data.expiresIn
-                        );
+                    const sessionToken = resdata?.data?.sessionToken;
+                    const expiresIn = resdata?.data?.expiresIn;
+                    if (sessionToken && expiresIn) {
+                        await SecureStorage.saveOTPSession(sessionToken, expiresIn);
                     }
 
                     return {
                         success: true,
-                        expiresIn: resdata.data.expiresIn,
-                        message: resdata.message
+                        expiresIn: expiresIn ?? 0,
+                        message: resdata?.message ?? 'OTP resent',
                     }
 
-            } catch (error) {
+            } catch {
                 throw new Error('Failed to resend OTP');
             }
         },
 
-        async completeRegister(userData: RequestOTP){
-            try {
-                    const verificationToken = await SecureStorage.getVerificationToken();
-                    
-                    if(!verificationToken) throw new Error('No verification token found');
-                    const response = await api.post('/auth/register', userData, {
-                        headers: {
-                            Authorization: `Bearer ${verificationToken}`
-                        }
-                    });
-                    return {
-                        success: true,
-                        message: response.data.message
-                    };
-            } catch (err) {
-                throw new Error('Registration failed');
-            }
+        async completeRegister(_userData: RequestOTP){
+            // Not used in current backend; registration happens within verifyOtp
+            // Keep as no-op for forward compatibility
+            return { success: true, message: 'Registration completed' };
         }
     }

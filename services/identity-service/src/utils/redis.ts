@@ -1,7 +1,7 @@
-import { createClient } from 'redis';
+import { createClient, RedisClientType } from 'redis';
 import {promisify} from 'util';
 
-export const redisClient = createClient({
+export const redisClient: RedisClientType = createClient({
     socket: {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),

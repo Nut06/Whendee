@@ -1,11 +1,10 @@
 // app/(auth)/verify-otp.tsx
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native'
-import { useState, useRef, useEffect } from 'react'
-import { router, useLocalSearchParams, useRouter } from 'expo-router'
+import { useRef, useEffect } from 'react'
+import { router } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
-import { useAuth } from '@/hooks/useAuth';
-import * as SecureStore from 'expo-secure-store';
 import { useOtpStore } from '@/stores/otpStore';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function VerifyOTP() {
 
@@ -25,12 +24,13 @@ export default function VerifyOTP() {
     decrementCountdown,
     resetState
   } = useOtpStore();
+  const setAuth = useAuthStore((s) => s.setAuth);
   
   useEffect(() => {
     if (countdown > 0) {
       decrementCountdown();
     }
-  },[countdown]);
+  },[countdown, decrementCountdown]);
 
 
   const handleChange = (text: string, index: number) => {
@@ -39,6 +39,29 @@ export default function VerifyOTP() {
       // auto-focus next
     } else if (text === '') {
       setOtp(0, index);
+    }
+  }
+
+  const handleVerify = async () => {
+    const code = otp.join('');
+    if (code.length !== 6) {
+      Alert.alert('Invalid code', 'Please enter all 6 digits.');
+      return;
+    }
+
+    const result = await verifyOtp(code);
+    if (!result || !result.success) {
+      Alert.alert('Verification failed', 'Please try again.');
+      return;
+    }
+
+    await setAuth(result.tokens);
+
+    const hasPreference = !!(result.user?.preferences && result.user.preferences.length > 0);
+    if (hasPreference) {
+      router.replace('/(main)/home');
+    } else {
+      router.replace('/(onboarding)/choose-preference');
     }
   }
 
@@ -100,6 +123,20 @@ export default function VerifyOTP() {
           </Text>
         </Text>
       )}
+
+      {/* Verify button */}
+      <View className="mt-6">
+        <TouchableOpacity
+          className={`rounded-full py-4 items-center ${isVerifying ? 'bg-blue-200' : 'bg-blue-500'}`}
+          activeOpacity={0.8}
+          onPress={handleVerify}
+          disabled={isVerifying}
+        >
+          <Text className="text-base font-semibold text-white">
+            {isVerifying ? 'Verifying...' : 'Verify & Continue'}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </KeyboardAvoidingView>
   )
 }
