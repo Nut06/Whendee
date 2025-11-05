@@ -3,10 +3,11 @@
   "compilerOptions": {
     "strict": true,
     "module": "esnext",
+    "jsx": "react-jsx",
+  "moduleResolution": "bundler",
+    "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./app/*"]
     }
   },
   "include": [
@@ -15,5 +16,8 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "nativewind-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }

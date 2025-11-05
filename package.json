@@ -1,5 +1,10 @@
 {
   "private": true,
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint"
+  },
   "workspaces": [
     "apps/*",
     "services/*",

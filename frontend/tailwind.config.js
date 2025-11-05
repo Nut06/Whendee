@@ -34,26 +34,48 @@ module.exports = {
         success: "#17c964",
         warning: "#f5a524",
         danger: "#f31260",
+        // Tab Bar Selection Color
+        tabbar: "#0088FF",
       },
       fontFamily: {
         lato: ["Lato", "sans-serif"], // ต้อง load font Lato ใน Expo ก่อน
       },
+      borderRadius: {
+        button: "0.75rem", // 12px for buttons
+      },
+      height: {
+        "screen-15": "15vh", // หรือใช้ plugin ก็ได้
+      },
       fontSize: {
-        // store numeric px values so we can scale them at runtime via a utility
-        h1: [48, { lineHeight: 60, fontWeight: "700" }],
-        h2: [32, { lineHeight: 40, fontWeight: "700" }],
-        h3: [22, { lineHeight: 32, fontWeight: "700" }],
-        h4: [18, { lineHeight: 24, fontWeight: "700" }],
-        h5: [16, { lineHeight: 22, fontWeight: "700" }],
-        h6: [14, { lineHeight: 18, fontWeight: "700" }],
+        // header
+        "display-1": ["3rem", { lineHeight: "3.75rem", fontWeight: "700" }], // 48/60
+        "display-2": ["2rem", { lineHeight: "2.5rem", fontWeight: "700" }], // 32/40
+        "heading-3": ["1.375rem", { lineHeight: "2rem", fontWeight: "700" }], // 22/32
+        "heading-4": ["1.125rem", { lineHeight: "1.5rem", fontWeight: "700" }], // 18/24
+        "heading-5": ["1rem", { lineHeight: "1.375rem", fontWeight: "700" }], // 16/22
+        "heading-6": [
+          "0.875rem",
+          { lineHeight: "1.125rem", fontWeight: "700" },
+        ], // 14/18
 
-        xxl: [24, { lineHeight: 36 }],
-        xl: [20, { lineHeight: 30 }],
-        l: [18, { lineHeight: 26 }],
-        m: [16, { lineHeight: 24 }],
-        s: [14, { lineHeight: 22 }],
-        xs: [12, { lineHeight: 18 }],
-        xxs: [10, { lineHeight: 16 }],
+        // body
+        "body-xxl": ["1.5rem", { lineHeight: "2.25rem" }], // 24/36
+        "body-xl": ["1.25rem", { lineHeight: "1.875rem" }], // 20/30
+        "body-l": ["1.125rem", { lineHeight: "1.625rem" }], // 18/26
+        "body-m": ["1rem", { lineHeight: "1.5rem" }], // 16/24
+        "body-s": ["0.875rem", { lineHeight: "1.375rem" }], // 14/22
+        "body-xs": ["0.75rem", { lineHeight: "1.125rem" }], // 12/18
+        "body-xxs": ["0.625rem", { lineHeight: "1rem" }], // 10/16
+
+        // fluid
+        "display-1-fluid": [
+          "clamp(2rem, 1.2rem + 2.5vw, 3rem)",
+          { lineHeight: "1.2", fontWeight: "700" },
+        ],
+        "display-2-fluid": [
+          "clamp(1.5rem, 1.0rem + 2vw, 2rem)",
+          { lineHeight: "1.25", fontWeight: "700" },
+        ],
       },
     },
   },
