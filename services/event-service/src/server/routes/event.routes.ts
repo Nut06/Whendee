@@ -1,5 +1,7 @@
 import { Router } from 'express';
 
+import { listEventsHandler } from './handlers/list-events.handler.js';
+import { getEventHandler } from './handlers/get-event.handler.js';
 import { createEventHandler } from './handlers/create-event.handler.js';
 import { createPollHandler } from './handlers/create-poll.handler.js';
 import { getPollHandler } from './handlers/get-poll.handler.js';
@@ -17,9 +19,13 @@ export const eventRouter: Router = Router();
 
 eventRouter.get('/', listEventsHandler);
 eventRouter.post('/', createEventHandler);
+<<<<<<< HEAD
 eventRouter.patch('/:eventId', updateEventHandler);
 eventRouter.get('/:eventId/free-dates', listFreeDatesHandler);
 eventRouter.post('/:eventId/free-dates', saveFreeDatesHandler);
+=======
+eventRouter.get('/:eventId', getEventHandler);
+>>>>>>> origin/fix-authen-branch
 eventRouter.post('/:eventId/poll', createPollHandler);
 eventRouter.post('/:eventId/poll/options', addPollOptionHandler);
 eventRouter.get('/:eventId/poll', getPollHandler);

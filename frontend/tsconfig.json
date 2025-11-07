@@ -3,9 +3,10 @@
   "compilerOptions": {
     "strict": true,
     "module": "esnext",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./*"
+        "./app/*",
       ]
     }
   },

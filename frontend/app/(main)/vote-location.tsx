@@ -1,85 +1,73 @@
-import { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { useCallback, useState } from "react";
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import planStore, { type Candidate } from "../lib/planStore";
-import {
-  closePoll,
-  ensureEventMember,
-  getPoll,
-  isApiError,
-  submitPollVote,
-} from "@/lib/eventApi";
+import { eventApi } from "../lib/api";
 
+type PollOption = {
+  id: string;
+  label: string;
+  tally: number;
+};
 
 export default function VoteLocationScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { meetingId } = useLocalSearchParams<{ meetingId?: string }>();
-  const mid = (meetingId ?? "").trim();
+  const { eventId, title } = useLocalSearchParams<{ eventId?: string; title?: string }>();
+  const eid = (eventId ?? "").trim();
 
-  const [candidates, setCandidates] = useState<Candidate[]>(() => planStore.getCandidates(mid));
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const backendEventId = planStore.getBackendEventId(mid);
+  const [options, setOptions] = useState<PollOption[]>([]);
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
-  useEffect(() => {
-    const unsub = planStore.subscribe(() => {
-      setCandidates(planStore.getCandidates(mid));
-    });
-    return unsub;
-  }, [mid]);
-
-  // ถ้าไม่มีตัวเลือกเลย ให้ย้อนกลับไป set-location
-  useEffect(() => {
-    if (mid && candidates.length === 0) {
-      (router as any).replace({ pathname: "/(main)/set-location", params: { meetingId: mid } });
+  const loadPoll = useCallback(async () => {
+    if (!eid) return;
+    try {
+      setLoading(true);
+      const response = await eventApi.getPoll(eid);
+      const pollData = response.data;
+      const pollOptions: PollOption[] = pollData?.options ?? [];
+      setOptions(pollOptions);
+      if (pollOptions.length === 0) {
+        router.replace({ pathname: "/(main)/set-location", params: { eventId: eid } });
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Unable to load poll options");
+    } finally {
+      setLoading(false);
     }
-  }, [mid, candidates.length, router]);
+  }, [eid, router]);
 
-  useEffect(() => {
-    const load = async () => {
-      if (!backendEventId) return;
-      try {
-        const poll = await getPoll(backendEventId);
-        planStore.setCandidates(mid, planStore.mapPollOptionsToCandidates(poll.data.options));
-      } catch (error) {
-        if (isApiError(error) && error.status === 404) {
-          // no poll yet; stay on set-location
-        } else {
-          console.warn("Failed to load poll", error);
-        }
+  useFocusEffect(
+    useCallback(() => {
+      if (eid) {
+        void loadPoll();
       }
-    };
-    load();
-  }, [backendEventId, mid]);
+    }, [eid, loadPoll]),
+  );
 
-  const vote = () => {
-    if (!selectedId) return;
-    const option = candidates.find((c) => c.id === selectedId);
-    if (!option) return;
-    (async () => {
-      if (!backendEventId) {
-        Alert.alert("Missing event", "Cannot submit vote without an event");
-        return;
-      }
-      try {
-        const userId = planStore.getCurrentUserId();
-        await ensureEventMember(backendEventId, userId);
-        await submitPollVote(backendEventId, option.id, userId);
-        await closePoll(backendEventId, option.id);
-        planStore.setLocation(mid, option.name);
-        (router as any).push({
-          pathname: "/(main)/vote-success",
-          params: { meetingId: mid, name: option.name },
-        });
-      } catch (error) {
-        Alert.alert(
-          "Unable to submit vote",
-          error instanceof Error ? error.message : "Unknown error",
-        );
-      }
-    })();
+  const vote = async () => {
+    if (!selectedOptionId || !eid) return;
+    try {
+      setSubmitting(true);
+      await eventApi.submitVote(eid, {
+        optionId: selectedOptionId,
+        voterId: "user_demo",
+      });
+      const optionName = options.find((option) => option.id === selectedOptionId)?.label ?? "";
+      router.push({
+        pathname: "/(main)/vote-success",
+        params: { eventId: eid, name: optionName, title: title ?? "" },
+      });
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Unable to submit vote");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -112,13 +100,24 @@ export default function VoteLocationScreen() {
           Location
         </Text>
 
-        {candidates.map((c: Candidate, idx: number) => {
-          const isActive = selectedId === c.id;
+        {loading ? (
+          <View style={{ paddingVertical: 24 }}>
+            <ActivityIndicator size="small" color="#2b7cff" />
+          </View>
+        ) : options.length === 0 ? (
+          <View style={{ padding: 16 }}>
+            <Text style={{ fontSize: 13, color: "#6b7280" }}>
+              No options yet. Add a location first.
+            </Text>
+          </View>
+        ) : (
+          options.map((c: PollOption, idx: number) => {
+            const isActive = selectedOptionId === c.id;
           return (
             <View key={c.id}>
               <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => setSelectedId(c.id)}
+                onPress={() => setSelectedOptionId(c.id)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -145,27 +144,28 @@ export default function VoteLocationScreen() {
                     fontWeight: isActive ? "700" : "400",
                   }}
                 >
-                  {c.name}
+                  {c.label}
                 </Text>
                 <Ionicons name="thumbs-up" size={18} color={isActive ? "#2b7cff" : "#9ca3af"} />
               </TouchableOpacity>
 
-              {idx < candidates.length - 1 && (
+              {idx < options.length - 1 && (
                 <View style={{ height: 1, backgroundColor: "#f1f3f6" }} />
               )}
             </View>
-          );
-        })}
+        );
+        })
+        )}
       </View>
 
       <TouchableOpacity
-        disabled={!selectedId}
+        disabled={!selectedOptionId || submitting}
         activeOpacity={0.9}
-        onPress={vote}
+        onPress={() => void vote()}
         style={{
           marginTop: 14,
           alignSelf: "center",
-          opacity: selectedId ? 1 : 0.5,
+          opacity: !selectedOptionId || submitting ? 0.5 : 1,
           backgroundColor: "#2b7cff",
           height: 44,
           paddingHorizontal: 26,
@@ -178,7 +178,9 @@ export default function VoteLocationScreen() {
           shadowOffset: { width: 0, height: 6 },
         }}
       >
-        <Text style={{ color: "#fff", fontWeight: "700" }}>Vote</Text>
+        <Text style={{ color: "#fff", fontWeight: "700" }}>
+          {submitting ? "Voting..." : "Vote"}
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );

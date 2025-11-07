@@ -135,19 +135,7 @@ export default function MainTabs() {
 
       {/* routes อื่นที่ไม่ต้องโชว์เป็นแท็บ */}
       <Tabs.Screen name="index" options={{ href: null }} />
-      <Tabs.Screen name="plan-detail/[meetingId]" options={{ href: null }} />
-      <Tabs.Screen name="addMember" options={{ href: null }} />
-      <Tabs.Screen name="inviteFriends" options={{ href: null }} />
-      <Tabs.Screen name="notifications" options={{ href: null }} />
-      <Tabs.Screen name="home" options={{ href: null }} />
-      <Tabs.Screen name="set-location" options={{ href: null }} />
-      <Tabs.Screen name="vote-location" options={{ href: null }} />
-      <Tabs.Screen name="vote-location-map" options={{ href: null }} />
-      <Tabs.Screen name="vote-success" options={{ href: null }} />
-      <Tabs.Screen name="location-status" options={{ href: null }} />
-      <Tabs.Screen name="free-date-picker" options={{ href: null }} />
-      <Tabs.Screen name="schedule-meeting" options={{ href: null }} />
-      <Tabs.Screen name="select-date" options={{ href: null }} />
+      <Tabs.Screen name="create" options={{ href: null }} /> {/* ปลายทางของปุ่ม + */}
     </Tabs>
   );
 }

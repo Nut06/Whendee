@@ -1,31 +1,53 @@
-import { useEffect, useMemo, useState } from "react";
-import { View, Text, ScrollView, Pressable, Image } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { View, Text, ScrollView, Pressable, Image, RefreshControl, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Link, useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import planStore, { type Plan } from "../lib/planStore";
-import CustomHeader from "@/components/customHeader";
-import { fetchEvents } from "@/lib/eventApi";
+import { Link, useFocusEffect, useRouter } from "expo-router";
+import { eventApi } from "../lib/api";
+
+type EventSummary = {
+  id: string;
+  title: string;
+  description?: string;
+  location?: string | null;
+  startsAt?: string;
+  endsAt?: string;
+  organizerId?: string;
+  poll?: {
+    id: string;
+    status: string;
+    options: { id: string; label: string; tally: number }[];
+  } | null;
+};
 
 function AvatarStack({ count = 5 }: { count?: number }) {
   const src = require("../../assets/images/react-logo.png");
   return (
-    <View className="flex-row items-center">
-      {Array.from({ length: Math.min(count, 5) }).map((_, i) => (
+    <View style={{ flexDirection: "row", alignItems: "center" }}>
+      {Array.from({ length: Math.min(count, 4) }).map((_, i) => (
         <Image
           key={i}
           source={src}
-          className="w-6 h-6 rounded-full border-2 border-white"
-          style={{ marginLeft: i === 0 ? 0 : -10 }}
+          style={{
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            borderWidth: 2,
+            borderColor: "#fff",
+            marginLeft: i === 0 ? 0 : -10,
+          }}
         />
       ))}
       <View
-        className="w-6 h-6 rounded-full items-center justify-center ml-1"
         style={{
-          backgroundColor: "#ffffff",
+          width: 24,
+          height: 24,
+          borderRadius: 12,
+          backgroundColor: "#fff",
           borderWidth: 1,
-          borderColor: "#2b7cff",
-          borderStyle: "dashed",
+          borderColor: "#cfe4ff",
+          alignItems: "center",
+          justifyContent: "center",
+          marginLeft: 4,
         }}
       >
         <Ionicons name="add" size={12} color="#2b7cff" />
@@ -34,40 +56,23 @@ function AvatarStack({ count = 5 }: { count?: number }) {
   );
 }
 
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-function formatDateDMY(ds: string) {
-  // ds: YYYY-MM-DD
-  const [y, m, d] = ds.split("-");
-  const mm = parseInt(m || "1", 10);
-  const dd = d || "01";
-  return `${dd} ${MONTHS[Math.max(0, Math.min(11, mm - 1))]} ${y}`;
-}
-
-function PillSelectDate({ meetingId }: { meetingId: string }) {
-  const finalDate = planStore.getMeetingDetails(meetingId)?.finalDate;
-  const label = finalDate ? formatDateDMY(finalDate) : "Select a date to see time slots";
+function PillSelectDate({ text = "Select a date to see time slots" }: { text?: string }) {
   return (
-    <View className="self-start mb-3">
-      <View className="flex-row items-center bg-[#eaf3ff] border border-[#cfe4ff] px-3 py-2 rounded-full">
-        <Ionicons name="calendar-outline" size={14} color="#2b7cff" />
-        <Text className="ml-2 text-[12px] font-semibold text-[#2b7cff]">
-          {label}
-        </Text>
-      </View>
+    <View
+      style={{
+        alignSelf: "flex-start",
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#eaf3ff",
+        borderColor: "#cfe4ff",
+        borderWidth: 1,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 999,
+      }}
+    >
+      <Ionicons name="calendar-outline" size={14} color="#2b7cff" />
+      <Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "600", color: "#2b7cff" }}>{text}</Text>
     </View>
   );
 }
@@ -82,27 +87,22 @@ function DateBadge({ meetingId }: { meetingId: string }) {
 
   return (
     <View
-      className="items-center justify-center"
       style={{
-        width: 60,
-        paddingVertical: 8,
-        borderRadius: 18,
-        backgroundColor: "#ffffff",
+        width: 56,
+        borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#dbeafe", // light blue border
-        shadowColor: "#000",
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 1,
+        borderColor: "#cfe4ff",
+        backgroundColor: "#f3f8ff",
+        paddingVertical: 8,
+        alignItems: "center",
       }}
     >
-      <Text className="text-[11px] font-semibold" style={{ color: "#2563eb" }}>
-        {label}
+      <Text
+        style={{ fontSize: 11, fontWeight: "700", color: "#2b7cff", textAlign: "center" }}
+      >
+        {"No\nDate"}
       </Text>
-      <Text className="text-[20px] font-extrabold" style={{ color: "#2563eb" }}>
-        {dayNum}
-      </Text>
+      <Text style={{ fontSize: 18, fontWeight: "800", color: "#2563eb" }}>00</Text>
     </View>
   );
 }
@@ -129,223 +129,203 @@ function endOfDayLocal(ds: string) {
   return dt;
 }
 
-function PlanCard({ plan }: { plan: Plan }) {
+function PlanCard({ event }: { event: EventSummary }) {
   const router = useRouter();
-  const details = planStore.getMeetingDetails(plan.meetingId);
-  const finalDate = details?.finalDate;
-  const participantCount =
-    plan.members?.filter((member) => member.status === "ACCEPTED").length ??
-    plan.participants;
-
-  // live countdown for cards with finalDate
-  const [now, setNow] = useState(() => Date.now());
-  const hasCountdown = Boolean(finalDate);
-  useEffect(() => {
-    if (!hasCountdown) return;
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [hasCountdown]);
-
-  const remainingText = useMemo(() => {
-    if (!finalDate) return null;
-    const end = endOfDayLocal(finalDate);
-    const diff = end.getTime() - now;
-    return formatHMS(diff);
-  }, [finalDate, now]);
-  const goSelectDate = () =>
-    router.push({
-      pathname: "/(main)/select-date",
-      params: { meetingId: plan.meetingId },
-    });
 
   return (
-    <Link
-      href={{
-        pathname: "/(main)/plan-detail/[meetingId]",
-        params: { meetingId: plan.meetingId },
+    <View
+      style={{
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: "#eef1f5",
+        padding: 16,
+        marginBottom: 16,
+        shadowColor: "#000",
+        shadowOpacity: 0.06,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 4,
       }}
-      asChild
     >
-      <Pressable className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 pt-3 pb-2 mb-3">
-  <PillSelectDate meetingId={plan.meetingId} />
-        <View className="flex-row">
-          <DateBadge meetingId={plan.meetingId} />
-          <View className="flex-1 ml-3">
-            <View className="flex-row justify-between items-start">
-              <View className="flex-1 pr-2">
-                <Text className="text-[15px] font-semibold text-[#111827]">
-                  {plan.title}
-                </Text>
-                {details?.agenda && (
-                  <Text className="text-[12px] text-[#4b5563]" numberOfLines={1}>
-                    Event detail: {details.agenda}
-                  </Text>
-                )}
-              </View>
-              <Pressable
-                onPress={() =>
-                  router.push({
-                    pathname: "/(main)/schedule-meeting",
-                    params: { meetingId: plan.meetingId },
-                  })
-                }
-                hitSlop={10}
-              >
-                <Ionicons name="ellipsis-horizontal" size={18} color="#9ca3af" />
-              </Pressable>
-            </View>
+      <PillSelectDate />
 
-            <Text className="text-[12px] text-[#6b7280] mt-1">
-              Meeting ID: {plan.meetingId}
+      <View style={{ flexDirection: "row", marginTop: 12 }}>
+        <DateBadge />
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <Text style={{ fontSize: 15, fontWeight: "600", color: "#111827" }}>{event.title}</Text>
+            <Ionicons name="ellipsis-horizontal" size={18} color="#9ca3af" />
+          </View>
+          <Text style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>Event ID: {event.id.slice(0, 8)}</Text>
+
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
+            <AvatarStack />
+            <Text style={{ marginLeft: 8, fontSize: 12, color: "#2b7cff" }}>
+              Organizer: {event.organizerId ?? "unknown"}
             </Text>
+          </View>
 
+          <View style={{ height: 1, backgroundColor: "#eef1f5", marginVertical: 14 }} />
+
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+              <Ionicons name="location-outline" size={16} color="#7c3aed" />
+              <Text style={{ marginLeft: 8, fontSize: 13, color: "#6b7280" }}>
+                {event.location ? event.location : "Location pending"}
+              </Text>
+            </View>
+            <Text style={{ fontSize: 12, fontWeight: "600", color: "#2bbf6a" }}>
+              {event.poll ? event.poll.status : "No poll"}
+            </Text>
+          </View>
+
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
+            <Link
+              href={{ pathname: "/(main)/set-location", params: { eventId: event.id, title: event.title } }}
+              asChild
+            >
+              <Pressable
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 14,
+                  paddingVertical: 10,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: "#cfe4ff",
+                  backgroundColor: "#eaf3ff",
+                }}
+              >
+                <Ionicons name="add-circle-outline" size={16} color="#2b7cff" />
+                <Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "600", color: "#2b7cff" }}>
+                  Add Option
+                </Text>
+              </Pressable>
+            </Link>
             <Pressable
-              className="flex-row items-center mt-2"
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 999,
+                backgroundColor: "#2b7cff",
+              }}
               onPress={() =>
-                router.push({
-                  pathname: "/(main)/addMember",
-                  params: { meetingId: plan.meetingId },
-                })
+                router.push({ pathname: "/(main)/vote-location", params: { eventId: event.id, title: event.title } })
               }
             >
-              <AvatarStack count={participantCount} />
-              <Text className="text-[12px] text-[#2b7cff] ml-2">
-                {participantCount} participant{participantCount === 1 ? "" : "s"}
-              </Text>
+              <Ionicons name="thumbs-up" size={16} color="#fff" />
+              <Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "600", color: "#fff" }}>Vote</Text>
             </Pressable>
-
-            <View className="h-[1px] bg-[#f0f2f5] mt-3" />
-
-            <View className="flex-row items-stretch justify-between mt-3 mb-1">
-              {/* Left: location block with subtitle */}
-              <View className="flex-1 flex-row items-start pr-3">
-                <Ionicons name="location-outline" size={16} color="#7c3aed" />
-                <View className="ml-2 flex-1">
-                  <Text className="text-[13px] font-semibold text-[#111827]">
-                    {plan.locationName ?? "Undefined"}
-                  </Text>
-                  <Text className="text-[12px] text-[#6b7280]">
-                    {plan.locationName
-                      ? ""
-                      : "This Plan didn’t have selected"}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Divider */}
-              <View className="w-[1px] bg-[#eef1f5] mx-2" />
-
-              {/* Right: Remaining Time or CTA */}
-              <View className="flex-1 items-end pl-3">
-                {finalDate ? (
-                  <>
-                    <Text className="text-[12px] text-[#6b7280]">Remaining Time</Text>
-                    <Text className="text-[12px] font-semibold text-[#22c55e]">{remainingText}</Text>
-                  </>
-                ) : (
-                  <Pressable onPress={goSelectDate} hitSlop={10}>
-                    <Text className="text-[12px] text-[#6b7280] mb-[2px]">Select a plan first</Text>
-                    <Text className="text-[12px] font-semibold text-[#22c55e]">No plan selected</Text>
-                  </Pressable>
-                )}
-              </View>
-            </View>
           </View>
         </View>
-      </Pressable>
-    </Link>
+      </View>
+    </View>
   );
 }
 
+const USERNAME = process.env.EXPO_PUBLIC_DISPLAY_NAME ?? "Aliya Doherty";
+
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "long",
+    year: "2-digit",
+    weekday: "long",
+  }).format(date);
+}
+
 export default function PlanScreen() {
-  const insets = useSafeAreaInsets();
-  const [plans, setPlans] = useState<Plan[]>(planStore.getAll());
-  const WEEKDAYS = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-  const MONTHS_LONG = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  const headerDate = useMemo(() => {
-    const d = new Date();
-    const day = d.getDate().toString().padStart(2, "0");
-    const month = MONTHS_LONG[d.getMonth()];
-    const yr = d.getFullYear().toString().slice(-2);
-    const dow = WEEKDAYS[d.getDay()];
-    return `${day} ${month}’ ${yr} • ${dow}`;
+  const [events, setEvents] = useState<EventSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadEvents = useCallback(async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const response = await eventApi.getEvents();
+      setEvents(response.data ?? []);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load events");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => {
-    const unsub = planStore.subscribe(() => setPlans([...planStore.getAll()]));
-    return () => {
-      unsub();
-    };
+  const refresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      const response = await eventApi.getEvents();
+      setEvents(response.data ?? []);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to refresh events");
+    } finally {
+      setRefreshing(false);
+    }
   }, []);
 
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      try {
-        const response = await fetchEvents();
-        if (!mounted) return;
-        planStore.loadFromBackend(response.data);
-      } catch (error) {
-        console.warn("Failed to load events", error);
-      }
-    };
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      void loadEvents();
+    }, [loadEvents]),
+  );
 
-  // Incoming: มี finalDate และวันที่ยังไม่ผ่าน
-  const incoming = useMemo(() => {
-    return plans.filter((p) => {
-      const fd = planStore.getMeetingDetails(p.meetingId)?.finalDate;
-      if (!fd) return false;
-      return endOfDayLocal(fd).getTime() > Date.now();
-    });
-  }, [plans]);
-  const incomingIds = useMemo(() => new Set(incoming.map((p) => p.id)), [incoming]);
-  const noSelected = plans.filter((p) => p.status === "noDate" && !incomingIds.has(p.id));
-  const noDateSelected = plans.filter((p) => p.status === "noDateSelected" && !incomingIds.has(p.id));
+  const todayText = useMemo(() => formatDate(new Date()), []);
 
   return (
     <ScrollView
-      className="flex-1 bg-[#f6f7fb]"
-      contentContainerStyle={{
-        paddingTop: insets.top + 8,
-        paddingBottom: insets.bottom + 16,
-        paddingHorizontal: 16,
-      }}
+      style={{ flex: 1, backgroundColor: "#f6f7fb", paddingHorizontal: 16, paddingTop: 16 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} />}
     >
       {/* Header */}
-      <CustomHeader dateLabel={headerDate} />
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <View>
+          <Text style={{ fontSize: 17, fontWeight: "600", color: "#111827" }}>{USERNAME}</Text>
+          <Text style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{todayText}</Text>
+        </View>
+        <View
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: "#eaf3ff",
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "#cfe4ff",
+          }}
+        >
+          <Ionicons name="notifications-outline" size={18} color="#2b7cff" />
+        </View>
+      </View>
 
       {/* Search bar */}
-      <View className="bg-white border border-gray-100 rounded-full px-4 py-2 flex-row items-center shadow-sm mb-4">
+      <View
+        style={{
+          backgroundColor: "#fff",
+          borderRadius: 999,
+          borderWidth: 1,
+          borderColor: "#e5e7eb",
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          flexDirection: "row",
+          alignItems: "center",
+          shadowColor: "#000",
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 2,
+          marginBottom: 18,
+        }}
+      >
         <Ionicons name="search-outline" size={18} color="#8e8e93" />
-        <Text className="ml-2 text-[13px] text-[#8e8e93]">
-          Search meetings and other things
-        </Text>
+        <Text style={{ marginLeft: 8, fontSize: 13, color: "#8e8e93" }}>Search meetings and other things</Text>
       </View>
 
       {/* Incoming Plans */}
@@ -360,21 +340,26 @@ export default function PlanScreen() {
         </>
       )}
 
-      {/* Section 1 */}
-      <Text className="text-[15px] font-semibold text-[#1f2937] mt-2 mb-2">
-        No selected plans ({noSelected.length})
-      </Text>
-      {noSelected.map((p) => (
-        <PlanCard key={p.id} plan={p} />
-      ))}
-
-      {/* Section 2 */}
-      <Text className="text-[15px] font-semibold text-[#1f2937] mt-6 mb-2">
-        No date selected plans ({noDateSelected.length})
-      </Text>
-      {noDateSelected.map((p) => (
-        <PlanCard key={p.id} plan={p} />
-      ))}
+      {loading ? (
+        <View className="flex-1 items-center justify-center py-10">
+          <ActivityIndicator size="small" color="#2b7cff" />
+        </View>
+      ) : error ? (
+        <View className="bg-red-50 border border-red-200 rounded-xl px-3 py-3">
+          <Text className="text-red-600 text-[13px]">{error}</Text>
+          <Pressable className="mt-2" onPress={() => void loadEvents()}>
+            <Text className="text-[13px] text-[#2b7cff] font-semibold">Tap to retry</Text>
+          </Pressable>
+        </View>
+      ) : events.length === 0 ? (
+        <View className="bg-white border border-dashed border-[#cfe4ff] rounded-2xl px-4 py-6 items-center">
+          <Text className="text-[14px] text-[#6b7280] text-center">
+            No events yet. Create a plan from the Create tab to get started.
+          </Text>
+        </View>
+      ) : (
+        events.map((event) => <PlanCard key={event.id} event={event} />)
+      )}
 
       <View className="h-6" />
     </ScrollView>
