@@ -166,7 +166,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Whendee\\services\\identity-service\\src\\prisma\\client",
+      "value": "/Users/poon/Work/Whendee/services/identity-service/src/prisma/client",
       "fromEnvVar": null
     },
     "config": {
@@ -175,12 +175,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "darwin-arm64",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Whendee\\services\\identity-service\\prisma\\schema.prisma",
+    "sourceFilePath": "/Users/poon/Work/Whendee/services/identity-service/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -194,6 +194,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -202,8 +203,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\n// schema.prisma\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/prisma/client\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id                String           @id @default(uuid())\n  name              String?\n  email             String?          @unique\n  phoneNumber       String?          @unique\n  password          String?          @unique\n  avatarUrl         String?\n  createdAt         DateTime         @default(now())\n  updatedAt         DateTime         @updatedAt\n  accessToken       String?\n  accessTokenExpiry DateTime?\n  preferences       UserPreference[]\n  friends           UserFriend[]     @relation(\"UserToFriends\")\n  friendOf          UserFriend[]     @relation(\"FriendToUsers\")\n  refreshTokens     RefreshToken[]\n}\n\nmodel RefreshToken {\n  id        String   @id @default(uuid())\n  userId    String\n  token     String   @unique\n  expiresAt DateTime\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n  user      User     @relation(fields: [userId], references: [id])\n}\n\nmodel PreferenceCategory {\n  id    String  @id @default(uuid())\n  key   String  @unique // e.g., \"karaoke\", \"travel\"\n  label String\n  icon  String?\n\n  preferences UserPreference[]\n}\n\nmodel UserPreference {\n  id         String @id @default(uuid())\n  userId     String\n  categoryId String\n  score      Int    @default(5)\n\n  user     User               @relation(fields: [userId], references: [id])\n  category PreferenceCategory @relation(fields: [categoryId], references: [id])\n\n  @@unique([userId, categoryId])\n}\n\nmodel UserFriend {\n  id       String @id @default(uuid())\n  userId   String\n  friendId String\n\n  user   User @relation(\"UserToFriends\", fields: [userId], references: [id])\n  friend User @relation(\"FriendToUsers\", fields: [friendId], references: [id])\n\n  @@unique([userId, friendId])\n}\n",
-  "inlineSchemaHash": "f95e7ccf4ff54f8934741734c33297044c0dd309cb725f98a0d40cf74de9630d",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\n// schema.prisma\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../src/prisma/client\"\n  binaryTargets = [\"native\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id                String           @id @default(uuid())\n  name              String?\n  email             String?          @unique\n  phoneNumber       String?          @unique\n  password          String?          @unique\n  avatarUrl         String?\n  createdAt         DateTime         @default(now())\n  updatedAt         DateTime         @updatedAt\n  accessToken       String?\n  accessTokenExpiry DateTime?\n  preferences       UserPreference[]\n  friends           UserFriend[]     @relation(\"UserToFriends\")\n  friendOf          UserFriend[]     @relation(\"FriendToUsers\")\n  refreshTokens     RefreshToken[]\n}\n\nmodel RefreshToken {\n  id        String   @id @default(uuid())\n  userId    String\n  token     String   @unique\n  expiresAt DateTime\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n  user      User     @relation(fields: [userId], references: [id])\n}\n\nmodel PreferenceCategory {\n  id    String  @id @default(uuid())\n  key   String  @unique // e.g., \"karaoke\", \"travel\"\n  label String\n  icon  String?\n\n  preferences UserPreference[]\n}\n\nmodel UserPreference {\n  id         String @id @default(uuid())\n  userId     String\n  categoryId String\n  score      Int    @default(5)\n\n  user     User               @relation(fields: [userId], references: [id])\n  category PreferenceCategory @relation(fields: [categoryId], references: [id])\n\n  @@unique([userId, categoryId])\n}\n\nmodel UserFriend {\n  id       String @id @default(uuid())\n  userId   String\n  friendId String\n\n  user   User @relation(\"UserToFriends\", fields: [userId], references: [id])\n  friend User @relation(\"FriendToUsers\", fields: [friendId], references: [id])\n\n  @@unique([userId, friendId])\n}\n",
+  "inlineSchemaHash": "f0d6b2349edf96acfb07a57e2523bd65a10412007cdcc905473ad06564e341f5",
   "copyEngine": true
 }
 config.dirname = '/'

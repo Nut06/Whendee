@@ -20,7 +20,7 @@ type EventSummary = {
 };
 
 function AvatarStack({ count = 5 }: { count?: number }) {
-  const src = require("../../assets/images/react-logo.png");
+  const src = require("../assets/images/react-logo.png");
   return (
     <View style={{ flexDirection: "row", alignItems: "center" }}>
       {Array.from({ length: Math.min(count, 4) }).map((_, i) => (

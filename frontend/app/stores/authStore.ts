@@ -5,6 +5,35 @@ import { create } from 'zustand';
 import { SecureStorage } from '@/services/secureStorage';
 import { AuthTokens, User } from '../types/user.types';
 
+const DEBUG_AUTH_MODE = process.env.EXPO_PUBLIC_DEBUG_AUTH === '1';
+
+const debugUser: User = {
+  id: process.env.EXPO_PUBLIC_DEBUG_USER_ID ?? '11111111-2222-4333-8444-555555555555',
+  name: process.env.EXPO_PUBLIC_DEBUG_USER_NAME ?? 'Alice Organizer',
+  email: process.env.EXPO_PUBLIC_DEBUG_USER_EMAIL ?? 'alice.organizer@whendee.local',
+  phoneNumber: process.env.EXPO_PUBLIC_DEBUG_USER_PHONE ?? '+66950000001',
+  avatarUrl: process.env.EXPO_PUBLIC_DEBUG_USER_AVATAR ?? 'https://cdn.whendee.local/avatars/alice.png',
+  preferences: [
+    {
+      id: 'debug-pref-karaoke',
+      score: 9,
+      category: {
+        id: 'debug-cat-karaoke',
+        key: 'karaoke',
+        label: 'Karaoke Nights',
+        icon: 'mic',
+      },
+    },
+  ],
+};
+
+const debugTokens: AuthTokens = {
+  accessToken: 'debug-access-token',
+  refreshToken: 'debug-refresh-token',
+  accessTokenExpiresAt: null,
+  refreshTokenExpiresAt: null,
+};
+
 interface AuthState {
   user: User | null;
   accessToken: string | null;
@@ -170,6 +199,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initializeAuth: async () => {
     try {
       debugAuth('store.initializeAuth: start');
+
+      if (DEBUG_AUTH_MODE) {
+        debugAuth('store.initializeAuth: debug auth enabled, hydrating mock session');
+        await SecureStorage.saveAccessToken(debugTokens.accessToken);
+        await SecureStorage.saveRefreshToken(debugTokens.refreshToken);
+        await SecureStorage.saveTempUserData(debugUser);
+        set({
+          user: debugUser,
+          accessToken: debugTokens.accessToken,
+          refreshToken: debugTokens.refreshToken,
+          accessTokenExpiresAt: debugTokens.accessTokenExpiresAt,
+          refreshTokenExpiresAt: debugTokens.refreshTokenExpiresAt,
+          isAuthenticated: true,
+          isInitialized: true,
+        });
+        return;
+      }
+
       const [accessToken, refreshToken, cachedUser] = await Promise.all([
         SecureStorage.getAccessToken(),
         SecureStorage.getRefreshToken(),

@@ -139,13 +139,22 @@ export default function MainTabs() {
 
       {/* routes อื่นที่ไม่ต้องโชว์เป็นแท็บ */}
       <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="home" options={{ href: null }} />
       <Tabs.Screen name="plan-detail/[meetingId]" options={{ href: null }} />
-      <Tabs.Screen name="set-location" options={{ href: null }} />
+      <Tabs.Screen name="plan/create" options={{ href: null }} />
+      <Tabs.Screen name="plan/create-meeting" options={{ href: null }} />
+      <Tabs.Screen name="plan/notifications" options={{ href: null }} />
+      <Tabs.Screen name="friends/add-member" options={{ href: null }} />
+      <Tabs.Screen name="friends/invite-friends" options={{ href: null }} />
+      <Tabs.Screen name="calendar/select-date" options={{ href: null }} />
+      <Tabs.Screen name="calendar/free-date-picker" options={{ href: null }} />
+      <Tabs.Screen name="select-date" options={{ href: null }} />
+      <Tabs.Screen name="free-date-picker" options={{ href: null }} />
+      <Tabs.Screen name="location/set-location" options={{ href: null }} />
       <Tabs.Screen name="vote-location" options={{ href: null }} />
       <Tabs.Screen name="vote-location-map" options={{ href: null }} />
       <Tabs.Screen name="vote-success" options={{ href: null }} />
       <Tabs.Screen name="location-status" options={{ href: null }} />
-      <Tabs.Screen name="free-date-picker" options={{ href: null }} />
     </Tabs>
   );
 }
