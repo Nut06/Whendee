@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router'
 import InputField from '@/components/input'
 import { RegisterRequest } from '@/types/user.types'
 import { useAuthStore } from '@/stores/authStore'
-import { useOtpStore } from '@/stores/otpStore'
+import { useOtpStore } from '@/app/stores/otpStore'
 import { refreshAccessToken } from '@/services/authService'
 
 export default function Register() {

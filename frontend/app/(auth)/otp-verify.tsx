@@ -5,7 +5,7 @@ import { router, useLocalSearchParams, useRouter } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
 import { useAuth } from '@/hooks/useAuth';
 import * as SecureStore from 'expo-secure-store';
-import { useOtpStore } from '@/stores/otpStore';
+import { useOtpStore } from '@/app/stores/otpStore';
 
 export default function VerifyOTP() {
 

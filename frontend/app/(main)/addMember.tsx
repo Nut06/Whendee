@@ -3,8 +3,12 @@ import { View, Text, TextInput, TouchableOpacity, Image, Alert, ActivityIndicato
 import { useRouter, useLocalSearchParams } from "expo-router";
 import planStore from "../lib/planStore";
 import { ensureEventMember } from "@/lib/eventApi";
-import { fetchFriends, type FriendProfile } from "@/lib/identityApi";
+import { identityApi } from '../utils/api';
 
+const fetchFriends = async (userId: string) => {
+  const res = await identityApi.get(`/users/${userId}/friends`);
+  return res.data;
+};
 type Props = {
   onCancel?: () => void;
   onSave?: () => void;
