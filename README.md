@@ -1,41 +1,45 @@
 # Whendee
 
-โค้ดเบสนี้ใช้สำหรับงานกลุ่มรายวิชา ISE 2025 🎓  
-รีโพนี้จัดเป็น [pnpm](https://pnpm.io)-based monorepo (frontend + backend services + infrastructure) และใช้ [Turborepo](https://turbo.build) สำหรับรันสคริปต์ข้ามแพ็กเกจ
+โปรเจ็กต์กลุ่มรายวิชา ISE 2025 🎓 ใช้โครงสร้าง monorepo (pnpm + Turborepo) รวมทั้ง frontend (Expo) และ backend services
 
 ---
 
 ## 📦 Prerequisites
 
-เตรียมสภาพแวดล้อมให้พร้อมก่อนเริ่ม
+เตรียมสภาพแวดล้อมก่อนเริ่มงาน
 
-- **Node.js 20+** – แนะนำติดตั้งผ่าน nvm แล้วตรวจสอบด้วย `node -v`
-- **pnpm 9+** – ถ้าใช้ Node 16+ ให้สั่ง `corepack enable` แล้ว `corepack prepare pnpm@latest --activate`
-- **Docker + Docker Compose** – สำหรับรัน PostgreSQL (และสามารถต่อ Container services ได้ภายหลัง)
-- **Expo CLI** – `pnpm add -g expo-cli` (เฉพาะทีม frontend)
+- **Node.js 20+** (แนะนำติดตั้งผ่าน `nvm` และตรวจด้วย `node -v`)
+- **pnpm 9+** – เปิด corepack แล้ว `corepack prepare pnpm@latest --activate`
+- **Expo CLI** – `pnpm add -g expo-cli` (หรือ `npm i -g expo-cli`)
+- **Docker + Docker Compose** – สำหรับฐานข้อมูล/บริการประกอบ
 - **Git**
 
 ---
 
-## 🚀 Quick start
+## 🚀 Quick Start
 
 ```bash
 git clone <repo-url>
 cd Whendee
+git checkout main
+git pull
+git checkout -b feature/<ชื่อฟีเจอร์>
 pnpm install
 ```
 
-### 1. ตั้งค่า Environment Variables
+---
 
-แต่ละ backend service มีไฟล์ `services/<name>/.env.example` ตัวอย่างค่าเริ่มต้นแล้ว
+## 😈 Backend Setup
+
+### 1. สร้าง Environment Variables
+
+ภายใน `services/<service>/.env.example` มีค่าเริ่มต้นให้ พร้อมพ้อยท์ไปที่ Postgres บนเครื่อง
 
 ```bash
 cp services/identity-service/.env.example services/identity-service/.env
 cp services/event-service/.env.example services/event-service/.env
 cp services/comm-service/.env.example services/comm-service/.env
 ```
-
-โดยค่าเริ่มต้นจะพ้อยท์ไปที่ฐานข้อมูล Postgres ภายในเครื่อง (`localhost:5432`) และตั้งค่า `PORT` ให้ตรงกับ service นั้น ๆ หากต้องการปรับแก้ให้แก้ในไฟล์ `.env`
 
 ### 2. รันฐานข้อมูล (Docker)
 
@@ -45,11 +49,9 @@ docker compose up -d
 cd ../../
 ```
 
-คำสั่งนี้จะสตาร์ท PostgreSQL (พร้อม volume เก็บข้อมูล) และถ้าต้องการสามารถเพิ่มบริการอื่น ๆ ภายหลังได้
-
 ### 3. รัน Backend Services
 
-รันทีละบริการ (แทนการรันทั้งหมดพร้อมกันเพื่อความยืดหยุ่น)
+เปิดเทอร์มินัลแยกกันเพื่อความง่าย
 
 ```bash
 pnpm --filter identity-service dev      # http://localhost:3002
@@ -57,77 +59,87 @@ pnpm --filter event-service dev         # http://localhost:3001
 pnpm --filter comm-service dev          # http://localhost:3000
 ```
 
-> ⚠️ สคริปต์ `dev` ใช้ `ts-node` + `nodemon` ถ่ายทอดสด ดังนั้นต้องรันคำสั่งบนเทอร์มินัลแยกกันหรือใช้ `tmux`/VSCode split terminal
+> `dev` script ใช้ ts-node + nodemon จึงรันแบบ live reload
 
-- รายละเอียดการพัฒนา UC-2 (Create Event) และ UC-6 (Poll & Voting) ดูเพิ่มใน `services/event-service/README.md`
+### เจ้าของบริการ
 
-### 4. รัน Frontend (Expo)
+- **นัท** → `services/identity-service`
+- **น้องเหนือ** → `services/comm-service`
+- **ปูน** → `services/event-service`
+
+เมื่อ schema Prisma เปลี่ยนให้รัน
 
 ```bash
-pnpm --filter frontend dev              # เปิด Expo DevTools
-# หรือเข้าโฟลเดอร์แล้วสั่ง
-cd frontend
-pnpm dev
+pnpm --filter <service> prisma:migrate
+pnpm --filter <service> prisma:generate
 ```
 
 ---
 
-## 🧰 Monorepo Commands
+## 🎨 Frontend (Expo)
 
-- `pnpm dev` – ใช้ Turbo รัน `dev` script ของทุกแพ็กเกจพร้อมกัน (frontend + backend)  
-  > ใช้ได้เมื่อพร้อมรับ log หลายตัวในเทอร์มินัลเดียว
-- `pnpm build` – (placeholder) รัน build ทุกแพ็กเกจ
-- `pnpm lint` – (placeholder) รันตัวตรวจ lint ถ้าแพ็กเกจนั้น ๆ กำหนดไว้
-- `pnpm --filter <pkg> <command>` – รันสคริปต์ของแพ็กเกจที่เลือก เช่น `pnpm --filter identity-service prisma:migrate`
+งานทั้งหมดอยู่ใน `frontend/`
+
+```bash
+cd frontend
+npm install            # ครั้งแรก
+npm start              # = npx expo start
+```
+
+คำสั่ง Dev Server:
+
+- กด `i` เปิด iOS simulator
+- กด `a` เปิด Android emulator
+- กด `w` เปิดเว็บ
+- หรือสแกน QR ผ่าน Expo Go
+
+สคริปต์ที่ใช้บ่อย
+
+- `npm run ios`, `npm run android`, `npm run web`
+- `npm run lint`
+- `npx expo start -c` (ล้าง cache ถ้า Expo งอแง)
+
+> ภายใต้แท็บ Home, Friends, Calendar, Settings มีไฟล์ใน `frontend/app/(main)/` ที่ใช้ file-based routing (Expo Router)
+
+---
+
+## 🧰 Monorepo Tips
+
+- `pnpm dev` – ให้ Turbo รัน `dev` script ทุกแพ็กเกจพร้อมกัน (จะมี log ปนกัน)
+- `pnpm --filter <pkg> <command>` – รันเฉพาะแพ็กเกจ เช่น `pnpm --filter identity-service prisma:migrate`
+- `pnpm build`, `pnpm lint` – placeholder ให้ตั้งเพิ่มตามความต้องการ
 
 ---
 
 ## 🧯 Troubleshooting
 
 - **ต่อฐานข้อมูลไม่ได้**  
-  ตรวจสอบ container `postgres`  
+  ตรวจ log Docker  
   ```bash
   docker ps | grep postgres
-  docker compose logs postgres           # ดู log ขณะเริ่มต้น
-  ```
-  ถ้าพอร์ต `5432` ถูกใช้งาน ให้ปรับพอร์ตภายใน `infra/compose/docker-compose.yml`
+  docker compose logs postgres
+  ```  
+  ถ้าพอร์ต 5432 ถูกใช้ ปรับใน `infra/compose/docker-compose.yml`
 
-- **Prisma client error** (เตรียมเพิ่ม schema ในอนาคต)  
-  เมื่อเพิ่ม schema แล้วให้รัน  
-  ```bash
-  pnpm --filter <service> prisma:migrate
-  pnpm --filter <service> prisma:generate
-  ```
+- **Prisma client error / schema mismatch**  
+  รัน `pnpm --filter <service> prisma:migrate` และ `pnpm --filter <service> prisma:generate`
 
-- **Expo cache โดนแคชเดิม**  
+- **Expo cache ค้าง**  
   `pnpm --filter frontend exec expo start -c`
 
-- **ต้องล้าง node_modules ของบริการใดบริการหนึ่ง**  
-  ```bash
-  pnpm --filter <service> install
-  ```
+- **ต้องล้าง node_modules บาง service**  
+  `pnpm --filter <service> install`
 
 ---
 
-## 🗺️ โครงสร้างไดเรกทอรี (สรุป)
+## 🗂 Directory Overview
 
 ```
-frontend/                  # ทีมจิง-โฟร์ท (Expo app)
+frontend/                     # Expo app (ทีมจิง-โฟร์ท)
 infra/compose/docker-compose.yml
 services/
-  identity-service/        # นัท
-  event-service/           # ปูน
-  comm-service/            # น้องเหนือ
-pnpm-workspace.yaml        # กำหนดแพ็กเกจทั้งหมดให้ pnpm เห็น
-package.json               # scripts + turborepo root
-turbo.json                 # pipeline definition
+  identity-service/           # นัท
+  event-service/              # ปูน
+  comm-service/               # น้องเหนือ
+pnpm-workspace.yaml           # รายการแพ็กเกจทั้งหมด
 ```
-
----
-
-## ✅ สิ่งที่ควรทำต่อ
-
-- เติม Prisma schema & migration ให้แต่ละบริการ
-- สร้างสคริปต์ทดสอบ (unit/integration) ในแต่ละ service
-- ระบุ environment variables เพิ่มเติมที่จำเป็นใน `.env.example`
-- เพิ่ม CI (เช่น GitHub Actions) เพื่อรัน lint/test อัตโนมัติ

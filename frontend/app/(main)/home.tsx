@@ -13,7 +13,7 @@ export default function Home() {
         }).start();
 
         const timer = setTimeout(() => {
-            router.replace("/login");
+            router.replace("/(auth)/login");
         }, 1400);
 
         return () => clearTimeout(timer);
