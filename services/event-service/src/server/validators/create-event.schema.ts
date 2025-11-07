@@ -17,6 +17,19 @@ export const createEventSchema = z.object({
     .min(3, 'location must be at least 3 characters')
     .max(255, 'location must be under 255 characters')
     .optional(),
+  scheduledAt: z
+    .string()
+    .optional()
+    .transform((value) => (value ? new Date(value) : undefined))
+    .refine(
+      (value) => !value || !Number.isNaN(value.getTime()),
+      'scheduledAt must be an ISO date string',
+    ),
+  meetingLink: z
+    .string()
+    .trim()
+    .url('meetingLink must be a valid URL')
+    .optional(),
   repeat: z
     .string()
     .trim()

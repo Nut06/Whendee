@@ -16,6 +16,8 @@ model Event {
   repeat           String?
   budget           Int?
   alertMinutes     Int?
+  scheduledAt      DateTime?
+  meetingLink      String?
   capacity         Int?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt

@@ -46,6 +46,8 @@ export interface Event {
   repeat?: string | null;
   budget?: number | null;
   alertMinutes?: number | null;
+  scheduledAt?: string | null;
+  meetingLink?: string | null;
   capacity?: number | null;
   createdAt: string;
   updatedAt: string;

@@ -10,6 +10,8 @@ export async function createEvent(input: CreateEventInput) {
       repeat: input.repeat ?? null,
       budget: input.budget ?? null,
       alertMinutes: input.alertMinutes ?? null,
+      scheduledAt: input.scheduledAt ?? null,
+      meetingLink: input.meetingLink ?? null,
       capacity: input.capacity ?? null,
     },
     select: {
