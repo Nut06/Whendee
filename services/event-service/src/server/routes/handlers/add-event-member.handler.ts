@@ -17,7 +17,7 @@ export async function addEventMemberHandler(
 
     const member = await addMemberToEvent({
       eventId,
-      memberId: body.memberId,
+      userId: body.userId,
       status: body.status,
     });
 

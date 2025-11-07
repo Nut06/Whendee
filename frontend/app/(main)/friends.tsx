@@ -1,5 +1,5 @@
-import AddMembers from "./addMember";
+import FriendsInvite from "./inviteFriends";
 
 export default function FriendsScreen() {
-  return <AddMembers onCancel={() => {}} onSave={() => {}} />;
+  return <FriendsInvite />;
 }

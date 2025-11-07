@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import planStore from "../../lib/planStore";
 
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 
 function Chip() {
@@ -31,7 +32,7 @@ function Chip() {
   );
 }
 
-function DateBadge() {
+function DateBadge({ label, day }: { label: string; day: string }) {
   return (
     <View
       style={{
@@ -45,9 +46,9 @@ function DateBadge() {
       }}
     >
       <Text style={{ fontSize: 11, fontWeight: "700", color: "#2b7cff", textAlign: "center" }}>
-        No{"\n"}Date
+        {label}
       </Text>
-      <Text style={{ fontSize: 18, fontWeight: "800", color: "#2563eb" }}>00</Text>
+      <Text style={{ fontSize: 18, fontWeight: "800", color: "#2563eb" }}>{day}</Text>
     </View>
   );
 }
@@ -62,39 +63,33 @@ function SuggestCard({
   onLike: () => void;
 }) {
   return (
-    <View style={{ backgroundColor: "#fff", borderRadius: 18, overflow: "hidden", marginBottom: 12 }}>
-      <Image
-        source={require("../../../assets/images/react-logo.png")}
-        style={{ width: "100%", height: 140 }}
-        resizeMode="cover"
-      />
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={onLike}
+      style={{
+        backgroundColor: "#fff",
+        borderRadius: 18,
+        paddingHorizontal: 16,
+        paddingVertical: 18,
+        marginBottom: 12,
+        flexDirection: "row",
+        alignItems: "center",
+      }}
+    >
+      <Text style={{ flex: 1, fontSize: 16, fontWeight: "600", color: "#111827" }}>{title}</Text>
       <View
         style={{
-          flexDirection: "row",
+          width: 34,
+          height: 34,
+          borderRadius: 17,
           alignItems: "center",
-          paddingHorizontal: 14,
-          paddingVertical: 10,
-          borderTopWidth: 1,
-          borderTopColor: "#f0f2f5",
+          justifyContent: "center",
+          backgroundColor: liked ? "#2b7cff" : "#eef2ff",
         }}
       >
-        <Text style={{ flex: 1, fontSize: 15, color: "#111827" }}>{title}</Text>
-        <TouchableOpacity
-          onPress={onLike}
-          activeOpacity={0.9}
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 17,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: liked ? "#2b7cff" : "#eef2ff",
-          }}
-        >
-          <Ionicons name="thumbs-up" size={18} color={liked ? "#fff" : "#2b7cff"} />
-        </TouchableOpacity>
+        <Ionicons name="thumbs-up" size={18} color={liked ? "#fff" : "#2b7cff"} />
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -104,8 +99,15 @@ export default function PlanDetailScreen() {
   const { meetingId } = useLocalSearchParams<{ meetingId?: string }>();
   const mid = (meetingId ?? "").trim();
 
+  const [, forceRefresh] = useState(0);
+  useEffect(() => {
+    const unsub = planStore.subscribe(() => forceRefresh((t) => t + 1));
+    return unsub;
+  }, []);
+
   // เรียก hooks เสมอ (ห้าม early return)
   const plan = useMemo(() => planStore.getByMeetingId(mid), [mid]);
+  const meetingDetails = mid ? planStore.getMeetingDetails(mid) : undefined;
 
   // ถ้ามี location แล้ว → redirect ไป success (แต่ยัง render โครง)
   useEffect(() => {
@@ -132,6 +134,12 @@ export default function PlanDetailScreen() {
   };
 
   const isRedirecting = !!plan?.locationName;
+  const finalDate = meetingDetails?.finalDate;
+  const badgeLabel = finalDate
+    ? MONTHS[Math.max(0, Math.min(11, parseInt(finalDate.split("-")[1] || "1", 10) - 1))]
+    : "No Date";
+  const badgeDay = finalDate ? (finalDate.split("-")[2] || "01").padStart(2, "0") : "00";
+  const displayMeetingId = plan?.meetingId ?? (mid || "—");
 
   return (
     <ScrollView
@@ -174,7 +182,7 @@ export default function PlanDetailScreen() {
           >
             <Chip />
             <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              <DateBadge />
+              <DateBadge label={badgeLabel} day={badgeDay} />
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                   <Text style={{ fontSize: 16, fontWeight: "700", color: "#111827" }}>
@@ -183,7 +191,7 @@ export default function PlanDetailScreen() {
                   <Ionicons name="ellipsis-horizontal" size={18} color="#9ca3af" />
                 </View>
                 <Text style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-                  Meeting ID: {mid || "—"}
+                  Meeting ID: {displayMeetingId}
                 </Text>
 
                 <View style={{ height: 1, backgroundColor: "#eef1f5", marginTop: 10 }} />

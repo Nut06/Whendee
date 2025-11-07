@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import planStore from "../lib/planStore";
+import { fetchFreeDates } from "@/lib/eventApi";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 function formatDateDMY(ds: string) {
@@ -70,6 +71,8 @@ export default function SelectDateScreen() {
   const mid = (meetingId ?? "").trim();
   const [plan, setPlan] = useState(() => planStore.getByMeetingId(mid));
   const currentUserId = useMemo(() => planStore.getCurrentUserId(), []);
+  const acceptedMembers = plan?.members?.filter((m) => m.status === "ACCEPTED") ?? [];
+  const participantsCount = acceptedMembers.length || plan?.participants || 0;
 
   // refresh when store changes (e.g., after saving dates)
   useEffect(() => {
@@ -78,6 +81,22 @@ export default function SelectDateScreen() {
     });
     return unsub;
   }, [mid]);
+
+  useEffect(() => {
+    const loadFreeDates = async () => {
+      const backendId = planStore.getBackendEventId(mid);
+      if (!backendId) return;
+      try {
+        const response = await fetchFreeDates(backendId);
+        response.data.forEach(({ userId, dates }) => {
+          planStore.setUserFreeDates(mid, userId, dates);
+        });
+      } catch (error) {
+        console.warn("Unable to load free dates", error);
+      }
+    };
+    loadFreeDates();
+  }, [mid, plan?.members]);
 
   return (
     <ScrollView
@@ -114,11 +133,11 @@ export default function SelectDateScreen() {
               Meeting ID: {plan?.meetingId ?? "—"}
             </Text>
 
-            {/* แถบผู้ร่วม (mock) */}
+            {/* ผู้ร่วม */}
             <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
-              {Array.from({ length: 5 }).map((_, i) => (
+              {acceptedMembers.slice(0, 5).map((member, i) => (
                 <Image
-                  key={i}
+                  key={member.userId ?? `${member.id}-${i}`}
                   source={require("../../assets/images/react-logo.png")}
                   style={{
                     width: 20,
@@ -130,7 +149,9 @@ export default function SelectDateScreen() {
                   }}
                 />
               ))}
-              <Text style={{ marginLeft: 8, fontSize: 12, color: "#2b7cff" }}>5 participants</Text>
+              <Text style={{ marginLeft: 8, fontSize: 12, color: "#2b7cff" }}>
+                {participantsCount} participant{participantsCount === 1 ? "" : "s"}
+              </Text>
             </View>
 
             <View style={{ height: 1, backgroundColor: "#eef1f5", marginTop: 10 }} />
@@ -186,18 +207,13 @@ export default function SelectDateScreen() {
           People
         </Text>
 
-        {["Aliya", "Ron", "Amy", "Bill Gates", "Victoria"].map((name, idx) => {
-          const isMe = name === "Aliya"; // สมมติผู้ใช้ปัจจุบันคือ Aliya
-          const status = isMe
-            ? planStore.hasUserFreeDates(mid, currentUserId)
-              ? "Date Selected"
-              : "Missing Date Selection"
-            : idx >= 2
-            ? "Date Selected"
-            : "Missing Date Selection";
+        {(plan?.members ?? []).map((member, idx) => {
+          const name = member.memberProfile?.displayName || member.userId;
+          const hasSelection = planStore.getUserFreeDates(mid, member.userId).length > 0;
+          const status = hasSelection ? "Date Selected" : "Missing Date Selection";
           return (
           <View
-            key={idx}
+            key={member.id ?? `${member.userId}-${idx}`}
             style={{
               paddingHorizontal: 12,
               paddingVertical: 12,

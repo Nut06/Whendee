@@ -113,7 +113,7 @@ export async function submitVote(params: {
 }) {
   await ensureAcceptedMember({
     eventId: params.eventId,
-    memberId: params.voterId,
+    userId: params.voterId,
   });
   const poll = (await db.poll.findUnique({
     where: { eventId: params.eventId },
@@ -191,11 +191,11 @@ export async function addPollOption(params: {
   eventId: string;
   label: string;
   order?: number;
-  memberId: string;
+  userId: string;
 }) {
   await ensureAcceptedMember({
     eventId: params.eventId,
-    memberId: params.memberId,
+    userId: params.userId,
   });
   const poll = (await db.poll.findUnique({
     where: { eventId: params.eventId },

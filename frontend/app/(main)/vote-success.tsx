@@ -1,11 +1,37 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import planStore from "../lib/planStore";
 
-function HeaderCard({ meetingId }: { meetingId?: string }) {
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const formatChipLabel = (finalDate?: string) => {
+  if (!finalDate) return "Select a date to see time slots";
+  const [y, m, d] = finalDate.split("-");
+  const mm = MONTHS[Math.max(0, Math.min(11, parseInt(m || "1", 10) - 1))];
+  return `${d} ${mm} ${y}`;
+};
+
+const formatBadge = (finalDate?: string) => {
+  if (!finalDate) return { label: "No Date", day: "00" };
+  const [y, m, d] = finalDate.split("-");
+  const mm = MONTHS[Math.max(0, Math.min(11, parseInt(m || "1", 10) - 1))];
+  return { label: `${mm} ${y.slice(-2)}`, day: (d || "01").padStart(2, "0") };
+};
+
+function HeaderCard({
+  chipLabel,
+  badge,
+  title,
+  meetingId,
+}: {
+  chipLabel: string;
+  badge: { label: string; day: string };
+  title: string;
+  meetingId: string;
+}) {
   return (
     <View
       style={{
@@ -37,7 +63,7 @@ function HeaderCard({ meetingId }: { meetingId?: string }) {
       >
         <Ionicons name="calendar-outline" size={14} color="#2b7cff" />
         <Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "600", color: "#2b7cff" }}>
-          Select a date to see time slots
+          {chipLabel}
         </Text>
       </View>
 
@@ -49,22 +75,24 @@ function HeaderCard({ meetingId }: { meetingId?: string }) {
             borderWidth: 1,
             borderColor: "#cfe4ff",
             backgroundColor: "#f3f8ff",
-            paddingVertical: 8,
-            alignItems: "center",
-            marginRight: 12,
-          }}
+          paddingVertical: 8,
+          alignItems: "center",
+          marginRight: 12,
+        }}
         >
-          <Text style={{ fontSize: 11, fontWeight: "700", color: "#2b7cff" }}>No{"\n"}Date</Text>
-          <Text style={{ fontSize: 18, fontWeight: "800", color: "#2563eb" }}>00</Text>
+          <Text style={{ fontSize: 11, fontWeight: "700", color: "#2b7cff", textAlign: "center" }}>
+            {badge.label}
+          </Text>
+          <Text style={{ fontSize: 18, fontWeight: "800", color: "#2563eb" }}>{badge.day}</Text>
         </View>
 
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#111827" }}>New Year trip</Text>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#111827" }}>{title}</Text>
             <Ionicons name="ellipsis-horizontal" size={18} color="#9ca3af" />
           </View>
           <Text style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-            Meeting ID: {meetingId ?? "—"}
+            Meeting ID: {meetingId}
           </Text>
           <View style={{ height: 1, backgroundColor: "#eef1f5", marginTop: 10 }} />
         </View>
@@ -76,14 +104,33 @@ function HeaderCard({ meetingId }: { meetingId?: string }) {
 export default function VoteSuccessScreen() {
   const insets = useSafeAreaInsets();
   const { name, meetingId } = useLocalSearchParams<{ name?: string; meetingId?: string }>();
-  const placeName = name && name.length > 0 ? name : "Selected location";
+  const normalizedMeetingId = meetingId ? (Array.isArray(meetingId) ? meetingId[0] : meetingId) : "";
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const unsub = planStore.subscribe(() => setTick((t) => t + 1));
+    return unsub;
+  }, []);
+
+  const plan = useMemo(
+    () => (normalizedMeetingId ? planStore.getByMeetingId(normalizedMeetingId) : undefined),
+    [normalizedMeetingId, tick],
+  );
+  const meetingDetails = normalizedMeetingId
+    ? planStore.getMeetingDetails(normalizedMeetingId)
+    : undefined;
+  const finalDate = meetingDetails?.finalDate;
+  const chipLabel = formatChipLabel(finalDate);
+  const badge = formatBadge(finalDate);
+  const displayTitle = plan?.title ?? "Untitled plan";
+  const displayMeetingId = plan?.meetingId ?? (normalizedMeetingId || "—");
+  const placeName = plan?.locationName ?? (name && name.length > 0 ? name : "Selected location");
 
   // ✅ อัปเดต store ทันทีที่เข้าหน้านี้ เพื่อให้หน้า Plan แสดง location ชนะทันที
   useEffect(() => {
-    if (meetingId && placeName) {
-      planStore.setLocation(meetingId, placeName);
+    if (normalizedMeetingId && placeName) {
+      planStore.setLocation(normalizedMeetingId, placeName);
     }
-  }, [meetingId, placeName]);
+  }, [normalizedMeetingId, placeName]);
 
   return (
     <View
@@ -95,7 +142,12 @@ export default function VoteSuccessScreen() {
         paddingBottom: insets.bottom + 110,
       }}
     >
-      <HeaderCard meetingId={meetingId} />
+      <HeaderCard
+        chipLabel={chipLabel}
+        badge={badge}
+        title={displayTitle}
+        meetingId={displayMeetingId}
+      />
 
       <View style={{ marginTop: 28, alignItems: "center", justifyContent: "center", paddingHorizontal: 20 }}>
         <View

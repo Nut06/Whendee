@@ -22,6 +22,7 @@ model Event {
   updatedAt        DateTime      @updatedAt
   polls            Poll[]
   members          EventMember[]
+  freeDates        EventFreeDate[]
 }
 
 model Poll {
@@ -69,14 +70,26 @@ model PollVote {
 model EventMember {
   id        String             @id @default(cuid())
   eventId   String
-  memberId  String
+  userId    String
   status    EventMemberStatus  @default(ACCEPTED)
   invitedAt DateTime           @default(now())
   joinedAt  DateTime?
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-  @@unique([eventId, memberId])
+  @@unique([eventId, userId])
+}
+
+model EventFreeDate {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  dateKey   DateTime
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId, dateKey])
 }
 
 enum PollStatus {

@@ -5,7 +5,7 @@ export type EventMemberStatus = "INVITED" | "ACCEPTED" | "DECLINED";
 export interface EventMember {
   id: string;
   eventId: string;
-  memberId: string;
+  userId: string;
   status: EventMemberStatus;
   invitedAt: string;
   joinedAt?: string;
@@ -32,10 +32,10 @@ export interface Poll {
 
 export interface PollTallies {
   pollId: string;
-  tallies: Array<{
+  tallies: {
     optionId: string;
     tally: number;
-  }>;
+  }[];
 }
 
 export interface Event {

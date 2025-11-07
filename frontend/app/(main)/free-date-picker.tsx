@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Calendar, DateData } from "react-native-calendars";
 import planStore from "../lib/planStore";
+import { ensureEventMember, saveFreeDates, updateEvent } from "@/lib/eventApi";
 
 // helper แปลง Date -> YYYY-MM-DD
 const toKey = (d: Date) => d.toISOString().slice(0, 10);
@@ -35,13 +36,13 @@ export default function FreeDatePickerScreen() {
     const mid = ((meetingId ?? "") as string).trim();
     if (!mid) return {} as Record<string, any>;
 
-    // เลือกกลุ่มผู้ใช้: ถ้ามี meetingDetails.members ใช้ชุดนั้น, ไม่งั้นใช้ผู้ใช้ทั้งหมดที่เคยบันทึกวันว่าง
-    const details = planStore.getMeetingDetails(mid);
-    let userIds = details?.members && details.members.length > 0
-      ? details.members
-      : planStore.getAllUsersWithFreeDates(mid);
+  const plan = planStore.getByMeetingId(mid);
+  const memberIds =
+    plan?.members?.map((m) => m.userId) ??
+    planStore.getMeetingDetails(mid)?.members ??
+    planStore.getAllUsersWithFreeDates(mid);
 
-    if (!userIds || userIds.length === 0) return {} as Record<string, any>;
+  if (!memberIds || memberIds.length === 0) return {} as Record<string, any>;
 
     const y = visibleYm.y;
     const m = visibleYm.m; // 1..12
@@ -51,14 +52,14 @@ export default function FreeDatePickerScreen() {
     for (let d = 1; d <= daysInMonth; d++) {
       const ds = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       let freeCount = 0;
-      for (const uid of userIds) {
+      for (const uid of memberIds) {
         const list = planStore.getUserFreeDates(mid, uid);
         if (list.includes(ds)) freeCount++;
       }
-      if (freeCount === userIds.length && userIds.length > 0) {
+      if (freeCount === memberIds.length && memberIds.length > 0) {
         // ทุกคนว่าง → จุดสีเขียว
         marks[ds] = { dots: [{ key: "all", color: "#16a34a" }], marked: true };
-      } else if (userIds.length > 0 && freeCount === 0) {
+      } else if (memberIds.length > 0 && freeCount === 0) {
         // ไม่มีใครว่าง → จุดสีแดง
         marks[ds] = { dots: [{ key: "none", color: "#ef4444" }], marked: true };
       }
@@ -114,19 +115,60 @@ export default function FreeDatePickerScreen() {
     if (existing) setSelected({ [existing]: true });
   }, [isFinalMode, meetingId]);
 
-  const onSave = () => {
+  const onSave = async () => {
     const picked = Object.keys(selected).sort();
     const mid = (meetingId ?? "").trim();
     if (!mid) return router.back();
+
+    const backendEventId = planStore.getBackendEventId(mid);
 
     if (isFinalMode) {
       const finalDate = picked[0];
       if (finalDate) {
         planStore.setMeetingDetails(mid, { finalDate });
+        if (backendEventId) {
+          try {
+            const iso = new Date(`${finalDate}T00:00:00.000Z`).toISOString();
+            await updateEvent(backendEventId, { scheduledAt: iso });
+          } catch (error) {
+            Alert.alert(
+              "Unable to lock date",
+              error instanceof Error ? error.message : "Unknown error",
+            );
+          }
+        }
       }
     } else {
       const uid = planStore.getCurrentUserId();
       planStore.setUserFreeDates(mid, uid, picked);
+      if (backendEventId) {
+        try {
+          await ensureEventMember(backendEventId, uid);
+          await saveFreeDates(backendEventId, uid, picked);
+        } catch (error) {
+          Alert.alert(
+            "Unable to save availability",
+            error instanceof Error ? error.message : "Unknown error",
+          );
+        }
+      }
+
+      const plan = planStore.getByMeetingId(mid);
+      const acceptedMembers =
+        plan?.members?.filter((member) => member.status === "ACCEPTED")
+          .length ?? 0;
+      if (picked[0] && backendEventId && acceptedMembers <= 1) {
+        try {
+          const iso = new Date(`${picked[0]}T00:00:00.000Z`).toISOString();
+          await updateEvent(backendEventId, { scheduledAt: iso });
+          planStore.setMeetingDetails(mid, { finalDate: picked[0] });
+        } catch (error) {
+          Alert.alert(
+            "Unable to lock date",
+            error instanceof Error ? error.message : "Unknown error",
+          );
+        }
+      }
     }
     router.back();
   };

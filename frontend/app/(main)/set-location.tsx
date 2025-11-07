@@ -1,10 +1,17 @@
-import React, { useMemo, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from "react-native";
 import MapView, { Marker, MapPressEvent, Region } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import planStore from "../lib/planStore";
+import {
+  addPollOptionApi,
+  createPollWithOption,
+  ensureEventMember,
+  getPoll,
+  isApiError,
+} from "@/lib/eventApi";
 
 function PillInfo({ text }: { text: string }) {
   return (
@@ -15,25 +22,47 @@ function PillInfo({ text }: { text: string }) {
   );
 }
 
-function DateBadge() {
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function formatBadgeParts(date?: string) {
+  if (!date) {
+    return { label: "No Date", day: "00" };
+  }
+  const [y, m, d] = date.split("-");
+  const monthIdx = Math.max(0, Math.min(11, parseInt(m || "1", 10) - 1));
+  return {
+    label: `${MONTHS[monthIdx]} ${y.slice(-2)}`,
+    day: (d || "01").padStart(2, "0"),
+  };
+}
+
+function DateBadge({ label, day }: { label: string; day: string }) {
   return (
     <View style={styles.dateBadge}>
-      <Text style={styles.dateBadgeTop}>No Date</Text>
-      <Text style={styles.dateBadgeNum}>00</Text>
+      <Text style={styles.dateBadgeTop}>{label}</Text>
+      <Text style={styles.dateBadgeNum}>{day}</Text>
     </View>
   );
 }
 
-function MeetingCard({ meetingId }: { meetingId: string }) {
+function MeetingCard({
+  meetingId,
+  title,
+  badge,
+}: {
+  meetingId: string;
+  title: string;
+  badge: { label: string; day: string };
+}) {
   return (
     <View style={styles.card}>
       <PillInfo text="No location selected yet" />
 
       <View style={{ flexDirection: "row", marginTop: 8 }}>
-        <DateBadge />
+        <DateBadge label={badge.label} day={badge.day} />
         <View style={{ flex: 1, marginLeft: 12 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text style={styles.meetingTitle}>New Year trip</Text>
+            <Text style={styles.meetingTitle}>{title}</Text>
             <Ionicons name="ellipsis-horizontal" size={18} color="#9ca3af" />
           </View>
           <Text style={styles.meetingSub}>
@@ -51,6 +80,22 @@ export default function SetLocationScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { meetingId = "" } = useLocalSearchParams<{ meetingId?: string }>();
+  const normalizedMeetingId = String(meetingId);
+
+  const [, forceRefresh] = useState(0);
+  useEffect(() => {
+    const unsub = planStore.subscribe(() => forceRefresh((t) => t + 1));
+    return unsub;
+  }, []);
+
+  const plan = normalizedMeetingId ? planStore.getByMeetingId(normalizedMeetingId) : undefined;
+  const meetingDetails = normalizedMeetingId
+    ? planStore.getMeetingDetails(normalizedMeetingId)
+    : undefined;
+  const finalDate = meetingDetails?.finalDate;
+  const badgeParts = useMemo(() => formatBadgeParts(finalDate), [finalDate]);
+  const cardTitle = plan?.title ?? "Untitled plan";
+  const displayMeetingId = plan?.meetingId ?? (normalizedMeetingId || "N/A");
 
   const initialRegion: Region = useMemo(
     () => ({
@@ -65,26 +110,56 @@ export default function SetLocationScreen() {
   const [region, setRegion] = useState<Region>(initialRegion);
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
   const [query, setQuery] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleMapPress = (e: MapPressEvent) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
     setPin({ lat: latitude, lng: longitude });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!pin) return;
-
     const displayName =
       query?.trim().length > 0
         ? query.trim()
         : `Pinned @ ${pin.lat.toFixed(4)}, ${pin.lng.toFixed(4)}`;
 
-    planStore.addCandidate(meetingId.toString(), displayName);
+    const backendEventId = planStore.getBackendEventId(normalizedMeetingId);
+    if (!backendEventId) {
+      Alert.alert("Missing event", "Please save the meeting first.");
+      return;
+    }
 
-    router.push({
-      pathname: "/(main)/vote-location",
-      params: { meetingId: meetingId.toString() },
-    });
+    setIsSaving(true);
+    try {
+      const userId = planStore.getCurrentUserId();
+      await ensureEventMember(backendEventId, userId);
+
+      try {
+        await addPollOptionApi(backendEventId, displayName, userId);
+      } catch (error) {
+        if (isApiError(error) && error.status === 404) {
+          await createPollWithOption(backendEventId, displayName);
+        } else {
+          throw error;
+        }
+      }
+
+      const poll = await getPoll(backendEventId);
+      planStore.setCandidates(normalizedMeetingId, planStore.mapPollOptionsToCandidates(poll.data.options));
+
+      router.push({
+        pathname: "/(main)/vote-location",
+        params: { meetingId: normalizedMeetingId },
+      });
+    } catch (error) {
+      Alert.alert(
+        "Unable to save location",
+        error instanceof Error ? error.message : "Unknown error",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -100,7 +175,11 @@ export default function SetLocationScreen() {
         </View>
 
         {/* Meeting card */}
-        <MeetingCard meetingId={String(meetingId)} />
+        <MeetingCard
+          meetingId={displayMeetingId}
+          title={cardTitle}
+          badge={badgeParts}
+        />
 
         {/* Search box */}
         <View style={styles.searchWrap}>
@@ -139,8 +218,17 @@ export default function SetLocationScreen() {
 
         {/* Save button (เฉพาะเมื่อมีหมุด) */}
         {pin && (
-          <TouchableOpacity style={styles.saveBtn} activeOpacity={0.9} onPress={handleSave}>
-            <Text style={styles.saveTxt}>Save</Text>
+          <TouchableOpacity
+            style={[styles.saveBtn, isSaving && { opacity: 0.6 }]}
+            activeOpacity={0.9}
+            onPress={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.saveTxt}>Save</Text>
+            )}
           </TouchableOpacity>
         )}
 

@@ -3,7 +3,7 @@ import { HttpError } from '../middleware/http-error.js';
 
 export async function addMemberToEvent(params: {
   eventId: string;
-  memberId: string;
+  userId: string;
   status?: 'INVITED' | 'ACCEPTED' | 'DECLINED';
 }) {
   const event = await prisma.event.findUnique({
@@ -18,9 +18,9 @@ export async function addMemberToEvent(params: {
   try {
     return await prisma.eventMember.upsert({
       where: {
-        eventId_memberId: {
+        eventId_userId: {
           eventId: params.eventId,
-          memberId: params.memberId,
+          userId: params.userId,
         },
       },
       update: {
@@ -29,14 +29,14 @@ export async function addMemberToEvent(params: {
       },
       create: {
         eventId: params.eventId,
-        memberId: params.memberId,
+        userId: params.userId,
         status: params.status ?? 'ACCEPTED',
         joinedAt: params.status === 'ACCEPTED' ? new Date() : null,
       },
       select: {
         id: true,
         eventId: true,
-        memberId: true,
+        userId: true,
         status: true,
         joinedAt: true,
       },
@@ -61,7 +61,7 @@ export async function listEventMembers(eventId: string) {
     orderBy: { invitedAt: 'asc' },
     select: {
       id: true,
-      memberId: true,
+      userId: true,
       status: true,
       invitedAt: true,
       joinedAt: true,
@@ -71,13 +71,13 @@ export async function listEventMembers(eventId: string) {
 
 export async function ensureAcceptedMember(params: {
   eventId: string;
-  memberId: string;
+  userId: string;
 }) {
   const membership = await prisma.eventMember.findUnique({
     where: {
-      eventId_memberId: {
+      eventId_userId: {
         eventId: params.eventId,
-        memberId: params.memberId,
+        userId: params.userId,
       },
     },
     select: {

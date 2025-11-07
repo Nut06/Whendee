@@ -1,4 +1,6 @@
 // libs/planStore.ts
+import type { Event, PollOption, EventMember } from "@/types/event.type";
+
 export type PlanStatus = "noDate" | "noDateSelected";
 export type Candidate = { id: string; name: string };
 
@@ -26,39 +28,31 @@ export type Plan = {
   freeDates?: string[]; // e.g. ["2025-02-10","2025-02-11"]
   // ✅ รายละเอียดการนัดหมายที่หน้ากำหนดเวลา
   meetingDetails?: MeetingDetails;
+  // id ที่สร้างจริงบน event-service
+  backendEventId?: string;
+  members?: EventMember[];
 };
 
 type Listener = () => void;
 const uid = () => Math.random().toString(36).slice(2, 9);
+const ALERT_MINUTES_TO_LABEL: { value: number; label: string }[] = [
+  { value: 0, label: "At time of event" },
+  { value: 5, label: "5 mins before" },
+  { value: 10, label: "10 mins before" },
+  { value: 15, label: "15 min before" },
+  { value: 30, label: "30 mins before" },
+  { value: 60, label: "1 hours before" },
+  { value: 120, label: "2 hours before" },
+  { value: 1440, label: "1 day before" },
+  { value: 2880, label: "2 day before" },
+  { value: 10080, label: "1 week before" },
+];
 
 class PlanStore {
   // เก็บวันว่างแยกตามผู้ใช้: freeDatesByUser[meetingId][userId] = ["YYYY-MM-DD", ...]
   private freeDatesByUser: Record<string, Record<string, string[]>> = {};
   private currentUserId: string = "u1"; // mock ผู้ใช้ปัจจุบัน (Aliya)
-  private plans: Plan[] = [
-    {
-      id: "p1",
-      title: "New Year trip",
-      meetingId: "213 2432 4423",
-      participants: 5,
-      status: "noDate",
-      candidateLocations: [],
-      freeDates: [],
-    },
-    {
-      id: "p2",
-      title: "Develop a new website page for product testimonials",
-      meetingId: "763 8965 3605",
-      participants: 5,
-      status: "noDateSelected",
-      locationName: undefined,
-      candidateLocations: [
-        { id: uid(), name: "Downtown" },
-        { id: uid(), name: "Barclays Center" },
-      ],
-      freeDates: [],
-    },
-  ];
+  private plans: Plan[] = [];
 
   private listeners = new Set<Listener>();
 
@@ -89,9 +83,12 @@ class PlanStore {
     const mid = meetingId.trim();
     return Object.keys(this.freeDatesByUser[mid] ?? {});
   }
+  getBackendEventId(meetingId: string) {
+    return this.getByMeetingId(meetingId)?.backendEventId;
+  }
 
   // -------- mutations --------
-  addCandidate(meetingId: string, name: string) {
+  addCandidate(meetingId: string, name: string, id?: string) {
     const p = this.getByMeetingId(meetingId);
     if (!p) return;
     const n = name.trim();
@@ -101,9 +98,16 @@ class PlanStore {
       (c) => c.name.toLowerCase() === n.toLowerCase()
     );
     if (!exists) {
-      p.candidateLocations.push({ id: uid(), name: n });
+      p.candidateLocations.push({ id: id ?? uid(), name: n });
       this.emit();
     }
+  }
+
+  setCandidates(meetingId: string, candidates: Candidate[]) {
+    const p = this.getByMeetingId(meetingId);
+    if (!p) return;
+    p.candidateLocations = candidates;
+    this.emit();
   }
 
   setLocation(meetingId: string, name: string) {
@@ -175,12 +179,140 @@ class PlanStore {
     this.emit();
   }
 
+  setBackendEventId(meetingId: string, backendId: string) {
+    const p = this.getByMeetingId(meetingId);
+    if (!p) return;
+    if (p.backendEventId === backendId) return;
+    p.backendEventId = backendId;
+    this.emit();
+  }
+
+  private generateReadableMeetingId(): string {
+    const digits = Array.from({ length: 12 }, () =>
+      Math.floor(Math.random() * 10),
+    ).join("");
+    return digits.replace(/(\d{3})(?=\d)/g, "$1 ").trim();
+  }
+
+  private formatMeetingIdFromEvent(eventId: string): string {
+    const digits = eventId.replace(/\D/g, "").slice(0, 12);
+    if (!digits) return eventId;
+    return digits.replace(/(\d{3})(?=\d)/g, "$1 ").trim();
+  }
+
+  createPlan(initial?: Partial<Omit<Plan, "id">>) {
+    const meetingId = initial?.meetingId ?? this.generateReadableMeetingId();
+    const plan: Plan = {
+      id: uid(),
+      title: initial?.title ?? "Untitled plan",
+      meetingId,
+      participants: initial?.participants ?? 1,
+      status: initial?.status ?? "noDate",
+      locationName: initial?.locationName,
+      candidateLocations: initial?.candidateLocations ?? [],
+      location: initial?.location,
+      freeDates: initial?.freeDates ?? [],
+      meetingDetails: initial?.meetingDetails,
+      backendEventId: initial?.backendEventId,
+    };
+    this.plans.unshift(plan);
+    this.emit();
+    return meetingId;
+  }
+
+  loadFromBackend(events: Event[]) {
+    const updated: Plan[] = [];
+
+    events.forEach((event) => {
+      const mapped = this.mapEventToPlan(event);
+      const existing = this.plans.find((p) => p.backendEventId === event.id);
+
+      if (existing) {
+        const merged: Plan = {
+          ...existing,
+          ...mapped,
+          meetingId: existing.meetingId,
+          freeDates: existing.freeDates ?? mapped.freeDates,
+          meetingDetails: {
+            ...mapped.meetingDetails,
+            ...existing.meetingDetails,
+          },
+        };
+        updated.push(merged);
+      } else {
+        updated.push(mapped);
+      }
+    });
+
+    const localDrafts = this.plans.filter((plan) => !plan.backendEventId);
+    this.plans = [...updated, ...localDrafts];
+    this.emit();
+  }
+
+  private mapEventToPlan(event: Event): Plan {
+    const acceptedCount =
+      event.members?.filter((member) => member.status === "ACCEPTED")
+        .length ?? 0;
+    const finalDate = event.scheduledAt
+      ? event.scheduledAt.slice(0, 10)
+      : undefined;
+    return {
+      id: event.id,
+      title: event.title,
+      meetingId: this.formatMeetingIdFromEvent(event.id),
+      participants: acceptedCount || event.members?.length || 0,
+      status: finalDate ? "noDateSelected" : "noDate",
+      locationName: event.location ?? undefined,
+      candidateLocations: [],
+      freeDates: finalDate ? [finalDate] : [],
+      meetingDetails: {
+        agenda: event.eventDescription,
+        repeat: event.repeat ?? "",
+        budget: event.budget ?? undefined,
+        alert: this.formatAlertLabel(event.alertMinutes),
+        members: event.members?.map((m) => m.userId) ?? [],
+        link: event.meetingLink ?? undefined,
+        finalDate,
+      },
+      backendEventId: event.id,
+      members: event.members ?? [],
+    };
+  }
+
+  private formatAlertLabel(minutes?: number | null) {
+    if (minutes == null) return undefined;
+    const preset = ALERT_MINUTES_TO_LABEL.find(
+      (entry) => entry.value === minutes,
+    );
+    if (preset) return preset.label;
+    if (minutes % 60 === 0) {
+      const hours = minutes / 60;
+      return `${hours} hours before`;
+    }
+    return `${minutes} mins before`;
+  }
+
   // ---------- ต่อผู้ใช้จริง ----------
   setCurrentUser(userId: string) {
     this.currentUserId = userId.trim() || this.currentUserId;
   }
   getCurrentUserId() {
     return this.currentUserId;
+  }
+  upsertMember(meetingId: string, member: EventMember) {
+    const plan = this.getByMeetingId(meetingId);
+    if (!plan) return;
+    if (!plan.members) plan.members = [];
+    const idx = plan.members.findIndex((m) => m.userId === member.userId);
+    if (idx >= 0) {
+      plan.members[idx] = { ...plan.members[idx], ...member };
+    } else {
+      plan.members.push(member);
+    }
+    plan.participants =
+      plan.members.filter((m) => m.status === "ACCEPTED").length ||
+      plan.participants;
+    this.emit();
   }
 
   setUserFreeDates(meetingId: string, userId: string, dates: string[]) {
@@ -209,6 +341,9 @@ class PlanStore {
   }
   private emit() {
     this.listeners.forEach((fn) => fn());
+  }
+  mapPollOptionsToCandidates(options: PollOption[]): Candidate[] {
+    return options.map((option) => ({ id: option.id, name: option.label }));
   }
 }
 

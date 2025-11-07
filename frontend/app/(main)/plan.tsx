@@ -5,6 +5,7 @@ import { Link, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import planStore, { type Plan } from "../lib/planStore";
 import CustomHeader from "@/components/customHeader";
+import { fetchEvents } from "@/lib/eventApi";
 
 function AvatarStack({ count = 5 }: { count?: number }) {
   const src = require("../../assets/images/react-logo.png");
@@ -132,6 +133,9 @@ function PlanCard({ plan }: { plan: Plan }) {
   const router = useRouter();
   const details = planStore.getMeetingDetails(plan.meetingId);
   const finalDate = details?.finalDate;
+  const participantCount =
+    plan.members?.filter((member) => member.status === "ACCEPTED").length ??
+    plan.participants;
 
   // live countdown for cards with finalDate
   const [now, setNow] = useState(() => Date.now());
@@ -189,9 +193,9 @@ function PlanCard({ plan }: { plan: Plan }) {
             </Text>
 
             <View className="flex-row items-center mt-2">
-              <AvatarStack count={plan.participants} />
+              <AvatarStack count={participantCount} />
               <Text className="text-[12px] text-[#2b7cff] ml-2">
-                {plan.participants} participants
+                {participantCount} participant{participantCount === 1 ? "" : "s"}
               </Text>
             </View>
 
@@ -277,6 +281,23 @@ export default function PlanScreen() {
     const unsub = planStore.subscribe(() => setPlans([...planStore.getAll()]));
     return () => {
       unsub();
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const response = await fetchEvents();
+        if (!mounted) return;
+        planStore.loadFromBackend(response.data);
+      } catch (error) {
+        console.warn("Failed to load events", error);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
     };
   }, []);
 

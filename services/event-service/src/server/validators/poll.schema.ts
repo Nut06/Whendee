@@ -57,7 +57,7 @@ export const createPollBodySchema = z.object({
 });
 
 export const addOptionBodySchema = pollOptionSchema.extend({
-  memberId: z.string().trim().min(1, 'memberId is required'),
+  userId: z.string().trim().min(1, 'userId is required'),
   pollId: z.string().trim().min(1, 'pollId is required').optional(),
 });
 

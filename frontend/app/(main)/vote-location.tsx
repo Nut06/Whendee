@@ -1,9 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import planStore, { type Candidate } from "../lib/planStore";
+import {
+  closePoll,
+  ensureEventMember,
+  getPoll,
+  isApiError,
+  submitPollVote,
+} from "@/lib/eventApi";
 
 
 export default function VoteLocationScreen() {
@@ -12,11 +19,16 @@ export default function VoteLocationScreen() {
   const { meetingId } = useLocalSearchParams<{ meetingId?: string }>();
   const mid = (meetingId ?? "").trim();
 
-  const candidates = useMemo<Candidate[]>(
-    () => planStore.getCandidates(mid),
-    [mid]
-  );
-  const [selectedName, setSelectedName] = useState<string | null>(null);
+  const [candidates, setCandidates] = useState<Candidate[]>(() => planStore.getCandidates(mid));
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const backendEventId = planStore.getBackendEventId(mid);
+
+  useEffect(() => {
+    const unsub = planStore.subscribe(() => {
+      setCandidates(planStore.getCandidates(mid));
+    });
+    return unsub;
+  }, [mid]);
 
   // ถ้าไม่มีตัวเลือกเลย ให้ย้อนกลับไป set-location
   useEffect(() => {
@@ -25,12 +37,49 @@ export default function VoteLocationScreen() {
     }
   }, [mid, candidates.length, router]);
 
+  useEffect(() => {
+    const load = async () => {
+      if (!backendEventId) return;
+      try {
+        const poll = await getPoll(backendEventId);
+        planStore.setCandidates(mid, planStore.mapPollOptionsToCandidates(poll.data.options));
+      } catch (error) {
+        if (isApiError(error) && error.status === 404) {
+          // no poll yet; stay on set-location
+        } else {
+          console.warn("Failed to load poll", error);
+        }
+      }
+    };
+    load();
+  }, [backendEventId, mid]);
+
   const vote = () => {
-    if (!selectedName) return;
-    (router as any).push({
-      pathname: "/(main)/vote-success",
-      params: { meetingId: mid, name: selectedName },
-    });
+    if (!selectedId) return;
+    const option = candidates.find((c) => c.id === selectedId);
+    if (!option) return;
+    (async () => {
+      if (!backendEventId) {
+        Alert.alert("Missing event", "Cannot submit vote without an event");
+        return;
+      }
+      try {
+        const userId = planStore.getCurrentUserId();
+        await ensureEventMember(backendEventId, userId);
+        await submitPollVote(backendEventId, option.id, userId);
+        await closePoll(backendEventId, option.id);
+        planStore.setLocation(mid, option.name);
+        (router as any).push({
+          pathname: "/(main)/vote-success",
+          params: { meetingId: mid, name: option.name },
+        });
+      } catch (error) {
+        Alert.alert(
+          "Unable to submit vote",
+          error instanceof Error ? error.message : "Unknown error",
+        );
+      }
+    })();
   };
 
   return (
@@ -64,12 +113,12 @@ export default function VoteLocationScreen() {
         </Text>
 
         {candidates.map((c: Candidate, idx: number) => {
-          const isActive = selectedName === c.name;
+          const isActive = selectedId === c.id;
           return (
             <View key={c.id}>
               <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => setSelectedName(c.name)}
+                onPress={() => setSelectedId(c.id)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -110,13 +159,13 @@ export default function VoteLocationScreen() {
       </View>
 
       <TouchableOpacity
-        disabled={!selectedName}
+        disabled={!selectedId}
         activeOpacity={0.9}
         onPress={vote}
         style={{
           marginTop: 14,
           alignSelf: "center",
-          opacity: selectedName ? 1 : 0.5,
+          opacity: selectedId ? 1 : 0.5,
           backgroundColor: "#2b7cff",
           height: 44,
           paddingHorizontal: 26,

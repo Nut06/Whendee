@@ -19,9 +19,7 @@ export default function FriendsInvite() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.cancel}>Cancel</Text>
         <Text style={styles.title}>All Contacts</Text>
-        <Text style={styles.save}>Save</Text>
       </View>
 
       {/* Search */}
@@ -68,12 +66,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", padding: 16 },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     marginBottom: 12,
   },
-  cancel: { color: "gray", fontSize: 16 },
   title: { fontWeight: "bold", fontSize: 18 },
-  save: { color: "#067bff", fontSize: 16 },
   search: {
     borderWidth: 1,
     borderColor: "#ccc",

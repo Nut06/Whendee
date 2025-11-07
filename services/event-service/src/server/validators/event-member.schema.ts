@@ -5,6 +5,6 @@ export const eventParamsSchema = z.object({
 });
 
 export const addMemberBodySchema = z.object({
-  memberId: z.string().trim().min(1, 'memberId is required'),
+  userId: z.string().trim().min(1, 'userId is required'),
   status: z.enum(['INVITED', 'ACCEPTED', 'DECLINED']).optional(),
 });

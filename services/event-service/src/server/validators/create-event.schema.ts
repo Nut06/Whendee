@@ -9,7 +9,6 @@ export const createEventSchema = z.object({
   eventDescription: z
     .string()
     .trim()
-    .min(10, 'description must be at least 10 characters')
     .max(2000, 'description must be under 2000 characters'),
   location: z
     .string()
@@ -50,5 +49,7 @@ export const createEventSchema = z.object({
     .max(60 * 24 * 30, 'alertMinutes should be within 30 days')
     .optional(),
 });
+
+export const updateEventSchema = createEventSchema.partial();
 
 export type CreateEventInput = z.infer<typeof createEventSchema>;
