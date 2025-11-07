@@ -1,8 +1,5 @@
-import { View, Text } from "react-native";
-export default function Screen() {
-  return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text>Friends Screen</Text>
-    </View>
-  );
+import AddMembers from "./addMember";
+
+export default function FriendsScreen() {
+  return <AddMembers onCancel={() => {}} onSave={() => {}} />;
 }

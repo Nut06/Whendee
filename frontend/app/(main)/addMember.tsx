@@ -1,6 +1,11 @@
 import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 
+type Props = {
+  onCancel?: () => void;
+  onSave?: () => void;
+};
+
 const groups = [
   { id: "1", name: "Friends Forever", avatar: "https://placekitten.com/50/50" },
   { id: "2", name: "Movie Lover", avatar: "https://placekitten.com/51/51" },
@@ -15,18 +20,28 @@ const people = [
   { id: "8", name: "Victoria H", avatar: "https://randomuser.me/api/portraits/women/2.jpg" },
 ];
 
-export default function AddMembers() {
+export default function AddMembers({ onCancel, onSave }: Props) {
   const router = useRouter();
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+      return;
+    }
+    router.back();
+  };
+  const handleSave = () => {
+    onSave?.();
+  };
 
   return (
     <View style={{ flex: 1, padding: 16, backgroundColor: "#fff" }}>
       {/* Header */}
       <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 16 }}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={handleCancel}>
           <Text style={{ color: "blue" }}>Cancel</Text>
         </TouchableOpacity>
         <Text style={{ fontSize: 18, fontWeight: "600" }}>Add Members</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={handleSave}>
           <Text style={{ color: "blue" }}>Save</Text>
         </TouchableOpacity>
       </View>

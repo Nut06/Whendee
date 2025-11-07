@@ -78,7 +78,7 @@ export default function MainTabs() {
           tabBarIcon: () => null,
           tabBarButton: () => (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "flex-start" }}>
-              <Link href="/(main)/create" asChild>
+              <Link href="/(main)/schedule-meeting" asChild>
                 <TouchableOpacity
                   activeOpacity={0.92}
                   style={{
