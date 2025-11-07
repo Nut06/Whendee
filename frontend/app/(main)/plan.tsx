@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, Pressable, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import planStore, { type Plan } from "../lib/planStore";
+import CustomHeader from "@/components/customHeader";
 
 function AvatarStack({ count = 5 }: { count?: number }) {
   const src = require("../../assets/images/react-logo.png");
@@ -301,15 +302,7 @@ export default function PlanScreen() {
       }}
     >
       {/* Header */}
-      <View className="flex-row items-center justify-between mb-3">
-        <View>
-          <Text className="text-[17px] font-semibold text-[#111827]">
-            Aliya Doherty
-          </Text>
-          <Text className="text-[12px] text-[#6b7280]">{headerDate}</Text>
-        </View>
-        <Ionicons name="notifications-outline" size={20} color="#007aff" />
-      </View>
+      <CustomHeader dateLabel={headerDate} />
 
       {/* Search bar */}
       <View className="bg-white border border-gray-100 rounded-full px-4 py-2 flex-row items-center shadow-sm mb-4">
