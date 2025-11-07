@@ -12,7 +12,6 @@ export async function createEvent(input: CreateEventInput) {
       alertMinutes: input.alertMinutes ?? null,
       scheduledAt: input.scheduledAt ?? null,
       meetingLink: input.meetingLink ?? null,
-      capacity: input.capacity ?? null,
     },
     select: {
       id: true,

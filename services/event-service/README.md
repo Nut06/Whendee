@@ -26,8 +26,7 @@ Content-Type: application/json
   "budget": 15000,
   "alertMinutes": 30,
   "scheduledAt": "2025-08-01T18:00:00.000Z",
-  "meetingLink": "https://meeting.example.com/abc123",
-  "capacity": 120
+  "meetingLink": "https://meeting.example.com/abc123"
 }
 ```
 

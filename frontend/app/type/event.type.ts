@@ -48,7 +48,6 @@ export interface Event {
   alertMinutes?: number | null;
   scheduledAt?: string | null;
   meetingLink?: string | null;
-  capacity?: number | null;
   createdAt: string;
   updatedAt: string;
   polls?: Poll[];

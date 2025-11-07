@@ -49,13 +49,6 @@ export const createEventSchema = z.object({
     .min(0, 'alertMinutes must be zero or greater')
     .max(60 * 24 * 30, 'alertMinutes should be within 30 days')
     .optional(),
-  capacity: z
-    .coerce
-    .number()
-    .int()
-    .positive('capacity must be greater than zero')
-    .max(100000, 'capacity is unrealistically high')
-    .optional(),
 });
 
 export type CreateEventInput = z.infer<typeof createEventSchema>;

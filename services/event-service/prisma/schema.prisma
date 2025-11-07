@@ -18,7 +18,6 @@ model Event {
   alertMinutes     Int?
   scheduledAt      DateTime?
   meetingLink      String?
-  capacity         Int?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   polls            Poll[]
