@@ -172,9 +172,16 @@ function PlanCard({ plan }: { plan: Plan }) {
           <DateBadge meetingId={plan.meetingId} />
           <View className="flex-1 ml-3">
             <View className="flex-row justify-between items-start">
-              <Text className="text-[15px] font-semibold text-[#111827]">
-                {plan.title}
-              </Text>
+              <View className="flex-1 pr-2">
+                <Text className="text-[15px] font-semibold text-[#111827]">
+                  {plan.title}
+                </Text>
+                {details?.agenda && (
+                  <Text className="text-[12px] text-[#4b5563]" numberOfLines={1}>
+                    Event detail: {details.agenda}
+                  </Text>
+                )}
+              </View>
               <Pressable
                 onPress={() =>
                   router.push({
@@ -192,12 +199,20 @@ function PlanCard({ plan }: { plan: Plan }) {
               Meeting ID: {plan.meetingId}
             </Text>
 
-            <View className="flex-row items-center mt-2">
+            <Pressable
+              className="flex-row items-center mt-2"
+              onPress={() =>
+                router.push({
+                  pathname: "/(main)/addMember",
+                  params: { meetingId: plan.meetingId },
+                })
+              }
+            >
               <AvatarStack count={participantCount} />
               <Text className="text-[12px] text-[#2b7cff] ml-2">
                 {participantCount} participant{participantCount === 1 ? "" : "s"}
               </Text>
-            </View>
+            </Pressable>
 
             <View className="h-[1px] bg-[#f0f2f5] mt-3" />
 

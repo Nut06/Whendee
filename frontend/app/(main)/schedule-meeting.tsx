@@ -105,13 +105,11 @@ export default function ScheduleMeetingScreen() {
     if (isSaving || !ensuredMeetingId) return;
 
     const title = agenda?.trim() || planTitle || "Untitled plan";
-    const description = agenda?.trim() || planTitle || "No description provided";
 
     try {
       setIsSaving(true);
-      const payload = {
+      const basePayload = {
         title,
-        eventDescription: description,
         repeat,
         budget,
         alertMinutes,
@@ -121,11 +119,14 @@ export default function ScheduleMeetingScreen() {
 
       const backendEventId = planStore.getBackendEventId(ensuredMeetingId);
       const response = backendEventId
-        ? await updateEvent(backendEventId, payload)
-        : await createEvent(payload);
+        ? await updateEvent(backendEventId, basePayload)
+        : await createEvent({
+            ...basePayload,
+            eventDescription: "",
+          });
 
       planStore.setMeetingDetails(ensuredMeetingId, {
-        agenda,
+        ...(existing ?? {}),
         repeat,
         budget,
         alert,

@@ -49,10 +49,12 @@ function MeetingCard({
   meetingId,
   title,
   badge,
+  detail,
 }: {
   meetingId: string;
   title: string;
   badge: { label: string; day: string };
+  detail?: string;
 }) {
   return (
     <View style={styles.card}>
@@ -68,6 +70,11 @@ function MeetingCard({
           <Text style={styles.meetingSub}>
             Meeting ID: <Text style={{ color: "#2b7cff", textDecorationLine: "underline" }}>{meetingId}</Text>
           </Text>
+          {detail && (
+            <Text style={[styles.meetingSub, { color: "#4b5563" }]} numberOfLines={1}>
+              Event detail: {detail}
+            </Text>
+          )}
 
           <View style={{ height: 1, backgroundColor: "#eef2f7", marginTop: 10 }} />
         </View>
@@ -96,6 +103,7 @@ export default function SetLocationScreen() {
   const badgeParts = useMemo(() => formatBadgeParts(finalDate), [finalDate]);
   const cardTitle = plan?.title ?? "Untitled plan";
   const displayMeetingId = plan?.meetingId ?? (normalizedMeetingId || "N/A");
+  const eventDetail = meetingDetails?.agenda;
 
   const initialRegion: Region = useMemo(
     () => ({
@@ -179,6 +187,7 @@ export default function SetLocationScreen() {
           meetingId={displayMeetingId}
           title={cardTitle}
           badge={badgeParts}
+          detail={eventDetail}
         />
 
         {/* Search box */}

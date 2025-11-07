@@ -26,11 +26,13 @@ function HeaderCard({
   badge,
   title,
   meetingId,
+  detail,
 }: {
   chipLabel: string;
   badge: { label: string; day: string };
   title: string;
   meetingId: string;
+  detail?: string;
 }) {
   return (
     <View
@@ -94,6 +96,11 @@ function HeaderCard({
           <Text style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
             Meeting ID: {meetingId}
           </Text>
+          {detail && (
+            <Text style={{ fontSize: 12, color: "#4b5563", marginTop: 2 }} numberOfLines={1}>
+              Event detail: {detail}
+            </Text>
+          )}
           <View style={{ height: 1, backgroundColor: "#eef1f5", marginTop: 10 }} />
         </View>
       </View>
@@ -123,6 +130,7 @@ export default function VoteSuccessScreen() {
   const badge = formatBadge(finalDate);
   const displayTitle = plan?.title ?? "Untitled plan";
   const displayMeetingId = plan?.meetingId ?? (normalizedMeetingId || "—");
+  const eventDetail = meetingDetails?.agenda;
   const placeName = plan?.locationName ?? (name && name.length > 0 ? name : "Selected location");
 
   // ✅ อัปเดต store ทันทีที่เข้าหน้านี้ เพื่อให้หน้า Plan แสดง location ชนะทันที
@@ -147,6 +155,7 @@ export default function VoteSuccessScreen() {
         badge={badge}
         title={displayTitle}
         meetingId={displayMeetingId}
+        detail={eventDetail}
       />
 
       <View style={{ marginTop: 28, alignItems: "center", justifyContent: "center", paddingHorizontal: 20 }}>

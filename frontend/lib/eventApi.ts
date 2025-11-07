@@ -65,7 +65,7 @@ export async function fetchEvents() {
   return request<{ data: Event[] }>("/events");
 }
 
-export async function updateEvent(eventId: string, payload: CreateEventPayload) {
+export async function updateEvent(eventId: string, payload: Partial<CreateEventPayload>) {
   return request<CreateEventResponse>(`/events/${eventId}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
@@ -74,10 +74,14 @@ export async function updateEvent(eventId: string, payload: CreateEventPayload) 
 
 type AddMemberResponse = { message: string; data: EventMember };
 
-export async function ensureEventMember(eventId: string, userId: string) {
+export async function ensureEventMember(
+  eventId: string,
+  userId: string,
+  status: "INVITED" | "ACCEPTED" | "DECLINED" = "ACCEPTED",
+) {
   return request<AddMemberResponse>(`/events/${eventId}/members`, {
     method: "POST",
-    body: JSON.stringify({ userId, status: "ACCEPTED" }),
+    body: JSON.stringify({ userId, status }),
   });
 }
 
