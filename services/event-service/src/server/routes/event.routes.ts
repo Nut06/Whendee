@@ -6,6 +6,8 @@ import { getPollHandler } from './handlers/get-poll.handler.js';
 import { addPollOptionHandler } from './handlers/add-poll-option.handler.js';
 import { submitVoteHandler } from './handlers/submit-vote.handler.js';
 import { closePollHandler } from './handlers/close-poll.handler.js';
+import { addEventMemberHandler } from './handlers/add-event-member.handler.js';
+import { listEventMembersHandler } from './handlers/list-event-members.handler.js';
 
 export const eventRouter: Router = Router();
 
@@ -15,3 +17,5 @@ eventRouter.post('/:eventId/poll/options', addPollOptionHandler);
 eventRouter.get('/:eventId/poll', getPollHandler);
 eventRouter.post('/:eventId/poll/votes', submitVoteHandler);
 eventRouter.post('/:eventId/poll/close', closePollHandler);
+eventRouter.post('/:eventId/members', addEventMemberHandler);
+eventRouter.get('/:eventId/members', listEventMembersHandler);

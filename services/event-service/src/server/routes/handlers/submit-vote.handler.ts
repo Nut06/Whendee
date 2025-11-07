@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { ensureUserIsActive } from '../../services/user-validation.service.js';
 import { submitVote } from '../../services/poll.service.js';
 import {
   eventIdParamSchema,
@@ -15,8 +14,6 @@ export async function submitVoteHandler(
   try {
     const { eventId } = eventIdParamSchema.parse(req.params);
     const { optionId, voterId } = submitVoteBodySchema.parse(req.body);
-
-    await ensureUserIsActive(voterId, { reason: 'vote in this poll' });
 
     const result = await submitVote({
       eventId,

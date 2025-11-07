@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
 import { createPoll } from '../../services/poll.service.js';
-import { ensureUserIsActive } from '../../services/user-validation.service.js';
 import {
   createPollBodySchema,
   eventIdParamSchema,
@@ -14,15 +13,10 @@ export async function createPollHandler(
 ) {
   try {
     const { eventId } = eventIdParamSchema.parse(req.params);
-    const { organizerId, closesAt, options } = createPollBodySchema.parse(
-      req.body,
-    );
-
-    await ensureUserIsActive(organizerId, { reason: 'create polls' });
+    const { closesAt, options } = createPollBodySchema.parse(req.body);
 
     const poll = await createPoll({
       eventId,
-      organizerId,
       options,
       closesAt,
     });

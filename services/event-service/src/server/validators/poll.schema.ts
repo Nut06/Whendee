@@ -45,7 +45,6 @@ export const pollOptionSchema = z.object({
 });
 
 export const createPollBodySchema = z.object({
-  organizerId: z.string().trim().min(1, 'organizerId is required'),
   closesAt: z
     .string()
     .optional()
@@ -54,12 +53,11 @@ export const createPollBodySchema = z.object({
       (value) => !value || !Number.isNaN(value.getTime()),
       'closesAt must be an ISO date string',
     ),
-  options: z
-    .array(pollOptionSchema)
-    .min(2, 'Poll must have at least two options'),
+  options: z.array(pollOptionSchema).default([]),
 });
 
 export const addOptionBodySchema = pollOptionSchema.extend({
+  memberId: z.string().trim().min(1, 'memberId is required'),
   pollId: z.string().trim().min(1, 'pollId is required').optional(),
 });
 

@@ -9,17 +9,18 @@ datasource db {
 }
 
 model Event {
-  id           String   @id @default(cuid())
-  organizerId  String
-  title        String
-  description  String
-  location     String
-  startsAt     DateTime
-  endsAt       DateTime
-  capacity     Int?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  polls        Poll[]
+  id               String        @id @default(cuid())
+  title            String
+  eventDescription String
+  location         String?
+  repeat           String?
+  budget           Int?
+  alertMinutes     Int?
+  capacity         Int?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  polls            Poll[]
+  members          EventMember[]
 }
 
 model Poll {
@@ -64,7 +65,26 @@ model PollVote {
   @@unique([pollId, voterId])
 }
 
+model EventMember {
+  id        String             @id @default(cuid())
+  eventId   String
+  memberId  String
+  status    EventMemberStatus  @default(ACCEPTED)
+  invitedAt DateTime           @default(now())
+  joinedAt  DateTime?
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, memberId])
+}
+
 enum PollStatus {
   OPEN
   CLOSED
+}
+
+enum EventMemberStatus {
+  INVITED
+  ACCEPTED
+  DECLINED
 }

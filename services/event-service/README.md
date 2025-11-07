@@ -20,12 +20,11 @@ POST /events
 Content-Type: application/json
 
 {
-  "organizerId": "user_123",
   "title": "ISE Networking Night",
-  "description": "Meet and greet for 2025 class",
-  "location": "Innovation Hub",
-  "startsAt": "2025-05-01T18:00:00.000Z",
-  "endsAt": "2025-05-01T21:00:00.000Z",
+  "eventDescription": "Meet and greet for 2025 class",
+  "repeat": "Every Friday",
+  "budget": 15000,
+  "alertMinutes": 30,
   "capacity": 120
 }
 ```
@@ -45,27 +44,53 @@ Content-Type: application/json
 - `400 Bad Request` → invalid event payload.
 - `503/504` → identity service offline or timed out.
 
+### Manage members (post-invite acceptance)
+
+```
+POST /events/:eventId/members
+Content-Type: application/json
+
+{
+  "memberId": "user_789",
+  "status": "ACCEPTED"   // optional, defaults to ACCEPTED
+}
+```
+
+- Adds or updates the membership row once a user accepts an invite.
+- Use the invite/accept flow to register members before they can vote or propose locations.
+
+```
+GET /events/:eventId/members
+```
+
+Returns
+
+```json
+{
+  "data": [
+    { "memberId": "user_123", "status": "ACCEPTED", "joinedAt": "2025-05-01T10:00:00.000Z" }
+  ]
+}
+```
+
 ### Poll endpoints (UC-6)
 
-#### Create poll for event
+#### Create poll for event (location voting)
 
 ```
 POST /events/:eventId/poll
 Content-Type: application/json
 
 {
-  "organizerId": "user_123",
   "closesAt": "2025-06-02T12:00:00.000Z",
   "options": [
-    { "label": "Option A" },
-    { "label": "Option B" },
-    { "label": "Option C", "order": 5 }
+    { "label": "Downtown Cafe" },
+    { "label": "Rooftop Bar" }
   ]
 }
 ```
 
-- `201 Created` → returns the full poll with options
-- Requires at least 2 options; organiser must be active (user validation)
+- `201 Created` → returns the full poll with options (array may be empty if you want members to add their own suggestions later)
 
 #### Add option to existing poll
 
@@ -73,10 +98,10 @@ Content-Type: application/json
 POST /events/:eventId/poll/options
 Content-Type: application/json
 
-{ "label": "Late Option", "order": 99 }
+{ "label": "Late Option", "memberId": "user_abc", "order": 99 }
 ```
 
-Adds an option while the poll is still open. `order` is optional (auto-increments).
+Adds an option while the poll is still open. `memberId` must belong to an accepted event member. `order` is optional (auto-increments).
 
 #### Get poll by event
 
@@ -112,7 +137,8 @@ Content-Type: application/json
 ```
 
 - `202 Accepted` → vote stored, response contains updated tallies.
-- `409 Conflict` → user already voted or poll is tied and needs organiser decision.
+- `409 Conflict` → member already voted or poll is tied and needs organiser decision.
+- Only accepted members may vote, and each member can vote for exactly one option.
 
 #### Close poll
 
@@ -125,6 +151,7 @@ Content-Type: application/json
 
 - `200 OK` → poll closed, payload mirrors `GET /poll`.
 - `409 Conflict` → tie detected, response includes `tiedOptionIds` array (provide one of them in `finalOptionId` to resolve).
+- When a winner is determined, the Event's `location` field is updated to match the winning option's label automatically.
 
 ## Environment variables
 

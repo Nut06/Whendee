@@ -4,12 +4,12 @@ import type { CreateEventInput } from '../validators/create-event.schema.js';
 export async function createEvent(input: CreateEventInput) {
   return prisma.event.create({
     data: {
-      organizerId: input.organizerId,
       title: input.title,
-      description: input.description,
-      location: input.location,
-      startsAt: input.startsAt,
-      endsAt: input.endsAt,
+      eventDescription: input.eventDescription,
+      location: input.location ?? null,
+      repeat: input.repeat ?? null,
+      budget: input.budget ?? null,
+      alertMinutes: input.alertMinutes ?? null,
       capacity: input.capacity ?? null,
     },
     select: {

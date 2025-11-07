@@ -13,12 +13,13 @@ export async function addPollOptionHandler(
 ) {
   try {
     const { eventId } = eventIdParamSchema.parse(req.params);
-    const { label, order } = addOptionBodySchema.parse(req.body);
+    const { label, order, memberId } = addOptionBodySchema.parse(req.body);
 
     const option = await addPollOption({
       eventId,
       label,
       order,
+      memberId,
     });
 
     return res.status(201).json({

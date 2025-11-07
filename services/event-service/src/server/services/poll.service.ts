@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { HttpError } from '../middleware/http-error.js';
 import { publishPollClosed, publishTallyUpdate } from './notifier.service.js';
 import { prisma } from './prisma.js';
+import { ensureAcceptedMember } from './member.service.js';
 
 interface PollWithOptions {
   id: string;
@@ -33,7 +34,6 @@ interface CreatePollOptionInput {
 
 export async function createPoll(params: {
   eventId: string;
-  organizerId: string;
   options: CreatePollOptionInput[];
   closesAt?: Date;
 }) {
@@ -55,10 +55,6 @@ export async function createPoll(params: {
     throw new HttpError(409, 'Poll already exists for this event', {
       pollId: existingPoll.id,
     });
-  }
-
-  if (params.options.length < 2) {
-    throw new HttpError(400, 'Poll requires at least two options');
   }
 
   const poll = await prisma.$transaction(async (tx) => {
@@ -115,6 +111,10 @@ export async function submitVote(params: {
   optionId: string;
   voterId: string;
 }) {
+  await ensureAcceptedMember({
+    eventId: params.eventId,
+    memberId: params.voterId,
+  });
   const poll = (await db.poll.findUnique({
     where: { eventId: params.eventId },
     include: {
@@ -191,7 +191,12 @@ export async function addPollOption(params: {
   eventId: string;
   label: string;
   order?: number;
+  memberId: string;
 }) {
+  await ensureAcceptedMember({
+    eventId: params.eventId,
+    memberId: params.memberId,
+  });
   const poll = (await db.poll.findUnique({
     where: { eventId: params.eventId },
     include: {
@@ -297,6 +302,17 @@ export async function closePoll(params: {
       },
     },
   })) as PollWithOptions;
+
+  // Update event location to winning label
+  const winningOption = updatedPoll.options.find(
+    (option) => option.id === winnerOptionId,
+  );
+  if (winningOption) {
+    await db.event.update({
+      where: { id: params.eventId },
+      data: { location: winningOption.label },
+    });
+  }
 
   await publishPollClosed({
     eventId: params.eventId,
