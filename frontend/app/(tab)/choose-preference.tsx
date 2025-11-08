@@ -3,8 +3,8 @@ import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
-import { userService } from '@/services/accountService'
-import { useAuthStore } from '@/stores/authStore'
+import { useAuthStore } from '../stores/authStore'
+import { userService } from '../services/userService'
 
 // Preference options matching Figma design - WhenDee activities
 const PREFERENCES = [
@@ -44,7 +44,7 @@ export default function ChoosePreference() {
     if (selectedPreferences.length === 0) {
       Alert.alert('No Preferences Selected', 'Please select at least one preference before skipping.');
     }
-    router.replace('/(tab)/home')
+    router.replace('/home');
   }
 
   const handleNext = async () => {
@@ -65,7 +65,7 @@ export default function ChoosePreference() {
 
       const updatedUser = await userService.setUserPreference(payload)
       await updateUser(updatedUser)
-      router.replace('/(tab)/home')
+      router.replace('/home')
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to save your preferences right now.'
       Alert.alert('Save failed', message)

@@ -1,5 +1,18 @@
-const EVENT_API_URL = process.env.EXPO_PUBLIC_EVENT_API_URL ?? 'http://localhost:3001';
-const COMM_API_URL = process.env.EXPO_PUBLIC_COMM_API_URL ?? 'http://localhost:3000';
+const pickEnv = (...keys: string[]) => {
+  for (const k of keys) {
+    const val = (process.env as any)?.[k];
+    if (typeof val === 'string' && val.trim().length > 0) return val.trim();
+  }
+  return undefined;
+};
+
+const EVENT_API_URL =
+  pickEnv('EXPO_PUBLIC_EVENT_SERVICE_URL', 'EXPO_PUBLIC_EVENT_API_URL') ??
+  'http://localhost:3001';
+
+const COMM_API_URL =
+  pickEnv('EXPO_PUBLIC_COMMUNICATION_SERVICE_URL', 'EXPO_PUBLIC_COMM_API_URL') ??
+  'http://localhost:3000';
 
 interface RequestOptions extends RequestInit {
   base?: 'event' | 'comm';

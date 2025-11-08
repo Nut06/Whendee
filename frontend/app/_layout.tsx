@@ -16,15 +16,11 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
-<<<<<<< HEAD
-  return (
-    <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </SafeAreaProvider>
-  );
-}
-=======
-
+  // return (
+  //   <SafeAreaProvider>
+  //     <Stack screenOptions={{ headerShown: false }} />
+  //   </SafeAreaProvider>
+  // );
   const [loading, isLoading] = useState<boolean>(false);
 
   if (loading) {
@@ -49,4 +45,3 @@ export default function RootLayout() {
       </QueryClientProvider>
   );
 }
->>>>>>> fd24859 (Implement backend for otp, line, google-auth)

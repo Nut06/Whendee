@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-import { Redirect } from "expo-router";
-export default function Index() {
-  return <Redirect href="/(main)/plan" />; // เข้าแท็บ Home (plan) อัตโนมัติ
-=======
 import { Redirect, router } from "expo-router";
 import { useEffect } from "react";
 import { View, Text, Image } from "react-native";
@@ -29,5 +24,4 @@ export default function Index() {
       </View>
     </View>
   );
->>>>>>> fd24859 (Implement backend for otp, line, google-auth)
 }

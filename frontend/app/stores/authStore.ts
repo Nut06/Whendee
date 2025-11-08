@@ -1,7 +1,7 @@
 import { getUser, loginGoogle, loginLine, loginLocal } from './../services/authService';
 // TO DO ปรับปรุงให้เข้ากับ code
 import { create } from 'zustand';
-import { SecureStorage } from '@/services/secureStorage';
+import { SecureStorage } from '../services/secureStorage';
 import { AuthTokens, User } from '../types/user.types';
 
 interface AuthState {

@@ -2,8 +2,8 @@ import { View, Image, Text, TouchableOpacity, Alert } from 'react-native'
 import { useState } from 'react'
 import { useRouter } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
-import { PrimaryButton } from '@/components/Buttons';
-import InputField from '@/components/input';
+import { PrimaryButton } from '../components/ui/Button';
+import InputField from '../components/ui/InputField';
 import { LoginRequest } from '@/types/user.types';
 import { useAuthStore } from '@/stores/authStore';
 
