@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { prisma } from '../../services/prisma.js';
+import { listEvents } from '../../services/event.service.js';
 
 export async function listEventsHandler(
   _req: Request,
@@ -8,14 +8,9 @@ export async function listEventsHandler(
   next: NextFunction,
 ) {
   try {
-    const events = await prisma.event.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        members: true,
-      },
-    });
+    const events = await listEvents();
 
-    return res.json({
+    return res.status(200).json({
       data: events,
     });
   } catch (error) {

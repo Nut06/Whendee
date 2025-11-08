@@ -39,8 +39,9 @@ pnpm install
 cp services/identity-service/.env.example services/identity-service/.env
 cp services/event-service/.env.example services/event-service/.env
 cp services/comm-service/.env.example services/comm-service/.env
+cp frontend/.env.example frontend/.env
 ```
-
+โดยค่าเริ่มต้น environment จะพอยท์ไปที่ Postgres ภายในเครื่อง (`localhost:5432`) และตั้งค่า `PORT` ให้ตรงกับ service นั้น ๆ หากต้องการปรับให้แก้ในไฟล์ `.env` ของ service นั้น ๆ ส่วนฝั่ง frontend (Expo) สามารถตั้งค่า base URL ของ API ได้ที่ `frontend/.env`
 ### 2. รันฐานข้อมูล (Docker)
 
 ```bash

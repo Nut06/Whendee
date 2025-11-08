@@ -15,6 +15,22 @@ pnpm dev                    # ts-node + nodemon
 
 ## HTTP contract
 
+### List events
+
+```
+GET /events
+```
+
+Returns an array of event summaries, each including poll meta and options when available.
+
+### Get single event
+
+```
+GET /events/:eventId
+```
+
+Responds with the event detail and poll (if created) including vote tally counts.
+
 ```
 POST /events
 Content-Type: application/json

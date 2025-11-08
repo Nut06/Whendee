@@ -48,3 +48,36 @@ export async function updateEvent(eventId: string, input: UpdateEventInput) {
     select: { id: true },
   });
 }
+
+export async function listEvents() {
+  return prisma.event.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: {
+      members: true,
+      polls: {
+        include: {
+          options: {
+            orderBy: { order: 'asc' },
+          },
+        },
+      },
+    },
+  });
+}
+
+export async function getEventById(eventId: string) {
+  return prisma.event.findUnique({
+    where: { id: eventId },
+    include: {
+      members: true,
+      polls: {
+        include: {
+          options: {
+            orderBy: { order: 'asc' },
+          },
+          votes: true,
+        },
+      },
+    },
+  });
+}

@@ -48,3 +48,27 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Dev auth override (optional)
+
+For fast local development you can bypass JWT auth and send a fixed userId to the backend. This mirrors the backend's dev override and should only be used locally.
+
+How to enable:
+
+1. Copy `.env.example` to `.env`
+2. Set these keys:
+   - `EXPO_PUBLIC_DEV_AUTH_OVERRIDE=true`
+   - `EXPO_PUBLIC_DEV_USER_ID=<your-dev-user-id>`
+3. Start the app (`pnpm --filter frontend dev` or `npm run dev`).
+
+What it does:
+
+- Adds `x-user-id: <EXPO_PUBLIC_DEV_USER_ID>` to every request header.
+- For POST/PUT/PATCH with JSON bodies, injects `{ userId: <id> }` if the body doesn't already include `userId` or `id`.
+- If an access token is present, it will still be sent in the `Authorization` header.
+
+Safety notes:
+
+- Never enable this in production.
+- The interceptor does not overwrite existing `userId`/`id` fields or tamper with FormData.
+- Backend must also have its dev override enabled to accept the userId directly.
