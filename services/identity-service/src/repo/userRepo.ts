@@ -23,6 +23,11 @@ const userSelect = {
     },
 } as const;
 
+const userSelectWithPassword = {
+    ...userSelect,
+    password: true,
+} as const;
+
 type PreferenceRecord = {
     id: string;
     score: number | null;
@@ -196,10 +201,11 @@ const UserRepo = {
         });
     },
 
-    findUserbyEmail: async (email: string): Promise<User | null> => {
+    findUserbyEmail: async (email: string, options?: { includePassword?: boolean }): Promise<User | null> => {
+        const select = options?.includePassword ? userSelectWithPassword : userSelect;
         const record = await prisma.user.findUnique({
             where: { email },
-            select: userSelect,
+            select,
         });
         return record ? mapUser(record) : null;
     },

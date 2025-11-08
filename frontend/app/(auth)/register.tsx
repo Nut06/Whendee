@@ -5,8 +5,8 @@ import { useState } from 'react'
 import { useRouter } from 'expo-router'
 import InputField from '@/components/ui/InputField'
 import { RegisterRequest } from '@/types/user.types'
-import { useAuthStore } from '@/stores/authStore'
-import { useOtpStore } from '@/stores/otpStore'
+import { useAuthStore } from '../stores/authStore'
+import { useOtpStore } from '../stores/otpStore'
 import { refreshAccessToken } from '@/services/authService'
 
 export default function Register() {

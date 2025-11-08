@@ -132,7 +132,7 @@ const authService = {
     },
     
     loginUser: async (email: string, password?: string): Promise<AuthToken> => {
-        const user = await UserRepo.findUserbyEmail(email);
+        const user = await UserRepo.findUserbyEmail(email, { includePassword: true });
         if (!user) {
             throw new AppError('Incorrect email or password', BAD_REQUEST, 'INCORRECT_CREDENTIALS');
         }

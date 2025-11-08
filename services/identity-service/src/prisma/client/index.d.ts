@@ -1187,17 +1187,17 @@ export namespace Prisma {
    */
 
   export type UserCountOutputType = {
-    preferences: number
-    friends: number
-    friendOf: number
     refreshTokens: number
+    friendOf: number
+    friends: number
+    preferences: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    preferences?: boolean | UserCountOutputTypeCountPreferencesArgs
-    friends?: boolean | UserCountOutputTypeCountFriendsArgs
-    friendOf?: boolean | UserCountOutputTypeCountFriendOfArgs
     refreshTokens?: boolean | UserCountOutputTypeCountRefreshTokensArgs
+    friendOf?: boolean | UserCountOutputTypeCountFriendOfArgs
+    friends?: boolean | UserCountOutputTypeCountFriendsArgs
+    preferences?: boolean | UserCountOutputTypeCountPreferencesArgs
   }
 
   // Custom InputTypes
@@ -1214,15 +1214,8 @@ export namespace Prisma {
   /**
    * UserCountOutputType without action
    */
-  export type UserCountOutputTypeCountPreferencesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: UserPreferenceWhereInput
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
-  export type UserCountOutputTypeCountFriendsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: UserFriendWhereInput
+  export type UserCountOutputTypeCountRefreshTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RefreshTokenWhereInput
   }
 
   /**
@@ -1235,8 +1228,15 @@ export namespace Prisma {
   /**
    * UserCountOutputType without action
    */
-  export type UserCountOutputTypeCountRefreshTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: RefreshTokenWhereInput
+  export type UserCountOutputTypeCountFriendsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserFriendWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountPreferencesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserPreferenceWhereInput
   }
 
 
@@ -1290,10 +1290,10 @@ export namespace Prisma {
     name: string | null
     email: string | null
     phoneNumber: string | null
-    password: string | null
     avatarUrl: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    password: string | null
     accessToken: string | null
     accessTokenExpiry: Date | null
   }
@@ -1303,10 +1303,10 @@ export namespace Prisma {
     name: string | null
     email: string | null
     phoneNumber: string | null
-    password: string | null
     avatarUrl: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    password: string | null
     accessToken: string | null
     accessTokenExpiry: Date | null
   }
@@ -1316,10 +1316,10 @@ export namespace Prisma {
     name: number
     email: number
     phoneNumber: number
-    password: number
     avatarUrl: number
     createdAt: number
     updatedAt: number
+    password: number
     accessToken: number
     accessTokenExpiry: number
     _all: number
@@ -1331,10 +1331,10 @@ export namespace Prisma {
     name?: true
     email?: true
     phoneNumber?: true
-    password?: true
     avatarUrl?: true
     createdAt?: true
     updatedAt?: true
+    password?: true
     accessToken?: true
     accessTokenExpiry?: true
   }
@@ -1344,10 +1344,10 @@ export namespace Prisma {
     name?: true
     email?: true
     phoneNumber?: true
-    password?: true
     avatarUrl?: true
     createdAt?: true
     updatedAt?: true
+    password?: true
     accessToken?: true
     accessTokenExpiry?: true
   }
@@ -1357,10 +1357,10 @@ export namespace Prisma {
     name?: true
     email?: true
     phoneNumber?: true
-    password?: true
     avatarUrl?: true
     createdAt?: true
     updatedAt?: true
+    password?: true
     accessToken?: true
     accessTokenExpiry?: true
     _all?: true
@@ -1443,10 +1443,10 @@ export namespace Prisma {
     name: string | null
     email: string | null
     phoneNumber: string | null
-    password: string | null
     avatarUrl: string | null
     createdAt: Date
     updatedAt: Date
+    password: string | null
     accessToken: string | null
     accessTokenExpiry: Date | null
     _count: UserCountAggregateOutputType | null
@@ -1473,16 +1473,16 @@ export namespace Prisma {
     name?: boolean
     email?: boolean
     phoneNumber?: boolean
-    password?: boolean
     avatarUrl?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    password?: boolean
     accessToken?: boolean
     accessTokenExpiry?: boolean
-    preferences?: boolean | User$preferencesArgs<ExtArgs>
-    friends?: boolean | User$friendsArgs<ExtArgs>
-    friendOf?: boolean | User$friendOfArgs<ExtArgs>
     refreshTokens?: boolean | User$refreshTokensArgs<ExtArgs>
+    friendOf?: boolean | User$friendOfArgs<ExtArgs>
+    friends?: boolean | User$friendsArgs<ExtArgs>
+    preferences?: boolean | User$preferencesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -1491,10 +1491,10 @@ export namespace Prisma {
     name?: boolean
     email?: boolean
     phoneNumber?: boolean
-    password?: boolean
     avatarUrl?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    password?: boolean
     accessToken?: boolean
     accessTokenExpiry?: boolean
   }, ExtArgs["result"]["user"]>
@@ -1504,19 +1504,19 @@ export namespace Prisma {
     name?: boolean
     email?: boolean
     phoneNumber?: boolean
-    password?: boolean
     avatarUrl?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    password?: boolean
     accessToken?: boolean
     accessTokenExpiry?: boolean
   }
 
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    preferences?: boolean | User$preferencesArgs<ExtArgs>
-    friends?: boolean | User$friendsArgs<ExtArgs>
-    friendOf?: boolean | User$friendOfArgs<ExtArgs>
     refreshTokens?: boolean | User$refreshTokensArgs<ExtArgs>
+    friendOf?: boolean | User$friendOfArgs<ExtArgs>
+    friends?: boolean | User$friendsArgs<ExtArgs>
+    preferences?: boolean | User$preferencesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -1524,20 +1524,20 @@ export namespace Prisma {
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
     objects: {
-      preferences: Prisma.$UserPreferencePayload<ExtArgs>[]
-      friends: Prisma.$UserFriendPayload<ExtArgs>[]
-      friendOf: Prisma.$UserFriendPayload<ExtArgs>[]
       refreshTokens: Prisma.$RefreshTokenPayload<ExtArgs>[]
+      friendOf: Prisma.$UserFriendPayload<ExtArgs>[]
+      friends: Prisma.$UserFriendPayload<ExtArgs>[]
+      preferences: Prisma.$UserPreferencePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       name: string | null
       email: string | null
       phoneNumber: string | null
-      password: string | null
       avatarUrl: string | null
       createdAt: Date
       updatedAt: Date
+      password: string | null
       accessToken: string | null
       accessTokenExpiry: Date | null
     }, ExtArgs["result"]["user"]>
@@ -1904,10 +1904,10 @@ export namespace Prisma {
    */
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    preferences<T extends User$preferencesArgs<ExtArgs> = {}>(args?: Subset<T, User$preferencesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "findMany"> | Null>
-    friends<T extends User$friendsArgs<ExtArgs> = {}>(args?: Subset<T, User$friendsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserFriendPayload<ExtArgs>, T, "findMany"> | Null>
-    friendOf<T extends User$friendOfArgs<ExtArgs> = {}>(args?: Subset<T, User$friendOfArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserFriendPayload<ExtArgs>, T, "findMany"> | Null>
     refreshTokens<T extends User$refreshTokensArgs<ExtArgs> = {}>(args?: Subset<T, User$refreshTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RefreshTokenPayload<ExtArgs>, T, "findMany"> | Null>
+    friendOf<T extends User$friendOfArgs<ExtArgs> = {}>(args?: Subset<T, User$friendOfArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserFriendPayload<ExtArgs>, T, "findMany"> | Null>
+    friends<T extends User$friendsArgs<ExtArgs> = {}>(args?: Subset<T, User$friendsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserFriendPayload<ExtArgs>, T, "findMany"> | Null>
+    preferences<T extends User$preferencesArgs<ExtArgs> = {}>(args?: Subset<T, User$preferencesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1941,10 +1941,10 @@ export namespace Prisma {
     readonly name: FieldRef<"User", 'String'>
     readonly email: FieldRef<"User", 'String'>
     readonly phoneNumber: FieldRef<"User", 'String'>
-    readonly password: FieldRef<"User", 'String'>
     readonly avatarUrl: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
+    readonly password: FieldRef<"User", 'String'>
     readonly accessToken: FieldRef<"User", 'String'>
     readonly accessTokenExpiry: FieldRef<"User", 'DateTime'>
   }
@@ -2261,43 +2261,23 @@ export namespace Prisma {
   }
 
   /**
-   * User.preferences
+   * User.refreshTokens
    */
-  export type User$preferencesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type User$refreshTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the UserPreference
+     * Select specific fields to fetch from the RefreshToken
      */
-    select?: UserPreferenceSelect<ExtArgs> | null
+    select?: RefreshTokenSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: UserPreferenceInclude<ExtArgs> | null
-    where?: UserPreferenceWhereInput
-    orderBy?: UserPreferenceOrderByWithRelationInput | UserPreferenceOrderByWithRelationInput[]
-    cursor?: UserPreferenceWhereUniqueInput
+    include?: RefreshTokenInclude<ExtArgs> | null
+    where?: RefreshTokenWhereInput
+    orderBy?: RefreshTokenOrderByWithRelationInput | RefreshTokenOrderByWithRelationInput[]
+    cursor?: RefreshTokenWhereUniqueInput
     take?: number
     skip?: number
-    distinct?: UserPreferenceScalarFieldEnum | UserPreferenceScalarFieldEnum[]
-  }
-
-  /**
-   * User.friends
-   */
-  export type User$friendsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the UserFriend
-     */
-    select?: UserFriendSelect<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserFriendInclude<ExtArgs> | null
-    where?: UserFriendWhereInput
-    orderBy?: UserFriendOrderByWithRelationInput | UserFriendOrderByWithRelationInput[]
-    cursor?: UserFriendWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: UserFriendScalarFieldEnum | UserFriendScalarFieldEnum[]
+    distinct?: RefreshTokenScalarFieldEnum | RefreshTokenScalarFieldEnum[]
   }
 
   /**
@@ -2321,23 +2301,43 @@ export namespace Prisma {
   }
 
   /**
-   * User.refreshTokens
+   * User.friends
    */
-  export type User$refreshTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type User$friendsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the RefreshToken
+     * Select specific fields to fetch from the UserFriend
      */
-    select?: RefreshTokenSelect<ExtArgs> | null
+    select?: UserFriendSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: RefreshTokenInclude<ExtArgs> | null
-    where?: RefreshTokenWhereInput
-    orderBy?: RefreshTokenOrderByWithRelationInput | RefreshTokenOrderByWithRelationInput[]
-    cursor?: RefreshTokenWhereUniqueInput
+    include?: UserFriendInclude<ExtArgs> | null
+    where?: UserFriendWhereInput
+    orderBy?: UserFriendOrderByWithRelationInput | UserFriendOrderByWithRelationInput[]
+    cursor?: UserFriendWhereUniqueInput
     take?: number
     skip?: number
-    distinct?: RefreshTokenScalarFieldEnum | RefreshTokenScalarFieldEnum[]
+    distinct?: UserFriendScalarFieldEnum | UserFriendScalarFieldEnum[]
+  }
+
+  /**
+   * User.preferences
+   */
+  export type User$preferencesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserPreference
+     */
+    select?: UserPreferenceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserPreferenceInclude<ExtArgs> | null
+    where?: UserPreferenceWhereInput
+    orderBy?: UserPreferenceOrderByWithRelationInput | UserPreferenceOrderByWithRelationInput[]
+    cursor?: UserPreferenceWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserPreferenceScalarFieldEnum | UserPreferenceScalarFieldEnum[]
   }
 
   /**
@@ -4426,8 +4426,8 @@ export namespace Prisma {
     userId?: boolean
     categoryId?: boolean
     score?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
     category?: boolean | PreferenceCategoryDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["userPreference"]>
 
   export type UserPreferenceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -4435,8 +4435,8 @@ export namespace Prisma {
     userId?: boolean
     categoryId?: boolean
     score?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
     category?: boolean | PreferenceCategoryDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["userPreference"]>
 
   export type UserPreferenceSelectScalar = {
@@ -4447,19 +4447,19 @@ export namespace Prisma {
   }
 
   export type UserPreferenceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
     category?: boolean | PreferenceCategoryDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type UserPreferenceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
     category?: boolean | PreferenceCategoryDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
 
   export type $UserPreferencePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "UserPreference"
     objects: {
-      user: Prisma.$UserPayload<ExtArgs>
       category: Prisma.$PreferenceCategoryPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -4830,8 +4830,8 @@ export namespace Prisma {
    */
   export interface Prisma__UserPreferenceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     category<T extends PreferenceCategoryDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PreferenceCategoryDefaultArgs<ExtArgs>>): Prisma__PreferenceCategoryClient<$Result.GetResult<Prisma.$PreferenceCategoryPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5345,16 +5345,16 @@ export namespace Prisma {
     id?: boolean
     userId?: boolean
     friendId?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
     friend?: boolean | UserDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["userFriend"]>
 
   export type UserFriendSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     userId?: boolean
     friendId?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
     friend?: boolean | UserDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["userFriend"]>
 
   export type UserFriendSelectScalar = {
@@ -5364,19 +5364,19 @@ export namespace Prisma {
   }
 
   export type UserFriendInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
     friend?: boolean | UserDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type UserFriendIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
     friend?: boolean | UserDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
 
   export type $UserFriendPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "UserFriend"
     objects: {
-      user: Prisma.$UserPayload<ExtArgs>
       friend: Prisma.$UserPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -5746,8 +5746,8 @@ export namespace Prisma {
    */
   export interface Prisma__UserFriendClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     friend<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6131,10 +6131,10 @@ export namespace Prisma {
     name: 'name',
     email: 'email',
     phoneNumber: 'phoneNumber',
-    password: 'password',
     avatarUrl: 'avatarUrl',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
+    password: 'password',
     accessToken: 'accessToken',
     accessTokenExpiry: 'accessTokenExpiry'
   };
@@ -6279,16 +6279,16 @@ export namespace Prisma {
     name?: StringNullableFilter<"User"> | string | null
     email?: StringNullableFilter<"User"> | string | null
     phoneNumber?: StringNullableFilter<"User"> | string | null
-    password?: StringNullableFilter<"User"> | string | null
     avatarUrl?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    password?: StringNullableFilter<"User"> | string | null
     accessToken?: StringNullableFilter<"User"> | string | null
     accessTokenExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
-    preferences?: UserPreferenceListRelationFilter
-    friends?: UserFriendListRelationFilter
-    friendOf?: UserFriendListRelationFilter
     refreshTokens?: RefreshTokenListRelationFilter
+    friendOf?: UserFriendListRelationFilter
+    friends?: UserFriendListRelationFilter
+    preferences?: UserPreferenceListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -6296,16 +6296,16 @@ export namespace Prisma {
     name?: SortOrderInput | SortOrder
     email?: SortOrderInput | SortOrder
     phoneNumber?: SortOrderInput | SortOrder
-    password?: SortOrderInput | SortOrder
     avatarUrl?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    password?: SortOrderInput | SortOrder
     accessToken?: SortOrderInput | SortOrder
     accessTokenExpiry?: SortOrderInput | SortOrder
-    preferences?: UserPreferenceOrderByRelationAggregateInput
-    friends?: UserFriendOrderByRelationAggregateInput
-    friendOf?: UserFriendOrderByRelationAggregateInput
     refreshTokens?: RefreshTokenOrderByRelationAggregateInput
+    friendOf?: UserFriendOrderByRelationAggregateInput
+    friends?: UserFriendOrderByRelationAggregateInput
+    preferences?: UserPreferenceOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -6322,10 +6322,10 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"User"> | Date | string
     accessToken?: StringNullableFilter<"User"> | string | null
     accessTokenExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
-    preferences?: UserPreferenceListRelationFilter
-    friends?: UserFriendListRelationFilter
-    friendOf?: UserFriendListRelationFilter
     refreshTokens?: RefreshTokenListRelationFilter
+    friendOf?: UserFriendListRelationFilter
+    friends?: UserFriendListRelationFilter
+    preferences?: UserPreferenceListRelationFilter
   }, "id" | "email" | "phoneNumber" | "password">
 
   export type UserOrderByWithAggregationInput = {
@@ -6333,10 +6333,10 @@ export namespace Prisma {
     name?: SortOrderInput | SortOrder
     email?: SortOrderInput | SortOrder
     phoneNumber?: SortOrderInput | SortOrder
-    password?: SortOrderInput | SortOrder
     avatarUrl?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    password?: SortOrderInput | SortOrder
     accessToken?: SortOrderInput | SortOrder
     accessTokenExpiry?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -6352,10 +6352,10 @@ export namespace Prisma {
     name?: StringNullableWithAggregatesFilter<"User"> | string | null
     email?: StringNullableWithAggregatesFilter<"User"> | string | null
     phoneNumber?: StringNullableWithAggregatesFilter<"User"> | string | null
-    password?: StringNullableWithAggregatesFilter<"User"> | string | null
     avatarUrl?: StringNullableWithAggregatesFilter<"User"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    password?: StringNullableWithAggregatesFilter<"User"> | string | null
     accessToken?: StringNullableWithAggregatesFilter<"User"> | string | null
     accessTokenExpiry?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   }
@@ -6478,8 +6478,8 @@ export namespace Prisma {
     userId?: StringFilter<"UserPreference"> | string
     categoryId?: StringFilter<"UserPreference"> | string
     score?: IntFilter<"UserPreference"> | number
-    user?: XOR<UserRelationFilter, UserWhereInput>
     category?: XOR<PreferenceCategoryRelationFilter, PreferenceCategoryWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
   }
 
   export type UserPreferenceOrderByWithRelationInput = {
@@ -6487,8 +6487,8 @@ export namespace Prisma {
     userId?: SortOrder
     categoryId?: SortOrder
     score?: SortOrder
-    user?: UserOrderByWithRelationInput
     category?: PreferenceCategoryOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
   }
 
   export type UserPreferenceWhereUniqueInput = Prisma.AtLeast<{
@@ -6500,8 +6500,8 @@ export namespace Prisma {
     userId?: StringFilter<"UserPreference"> | string
     categoryId?: StringFilter<"UserPreference"> | string
     score?: IntFilter<"UserPreference"> | number
-    user?: XOR<UserRelationFilter, UserWhereInput>
     category?: XOR<PreferenceCategoryRelationFilter, PreferenceCategoryWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
   }, "id" | "userId_categoryId">
 
   export type UserPreferenceOrderByWithAggregationInput = {
@@ -6533,16 +6533,16 @@ export namespace Prisma {
     id?: StringFilter<"UserFriend"> | string
     userId?: StringFilter<"UserFriend"> | string
     friendId?: StringFilter<"UserFriend"> | string
-    user?: XOR<UserRelationFilter, UserWhereInput>
     friend?: XOR<UserRelationFilter, UserWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
   }
 
   export type UserFriendOrderByWithRelationInput = {
     id?: SortOrder
     userId?: SortOrder
     friendId?: SortOrder
-    user?: UserOrderByWithRelationInput
     friend?: UserOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
   }
 
   export type UserFriendWhereUniqueInput = Prisma.AtLeast<{
@@ -6553,8 +6553,8 @@ export namespace Prisma {
     NOT?: UserFriendWhereInput | UserFriendWhereInput[]
     userId?: StringFilter<"UserFriend"> | string
     friendId?: StringFilter<"UserFriend"> | string
-    user?: XOR<UserRelationFilter, UserWhereInput>
     friend?: XOR<UserRelationFilter, UserWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
   }, "id" | "userId_friendId">
 
   export type UserFriendOrderByWithAggregationInput = {
@@ -6580,16 +6580,16 @@ export namespace Prisma {
     name?: string | null
     email?: string | null
     phoneNumber?: string | null
-    password?: string | null
     avatarUrl?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    password?: string | null
     accessToken?: string | null
     accessTokenExpiry?: Date | string | null
-    preferences?: UserPreferenceCreateNestedManyWithoutUserInput
-    friends?: UserFriendCreateNestedManyWithoutUserInput
-    friendOf?: UserFriendCreateNestedManyWithoutFriendInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    friendOf?: UserFriendCreateNestedManyWithoutFriendInput
+    friends?: UserFriendCreateNestedManyWithoutUserInput
+    preferences?: UserPreferenceCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -6597,16 +6597,16 @@ export namespace Prisma {
     name?: string | null
     email?: string | null
     phoneNumber?: string | null
-    password?: string | null
     avatarUrl?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    password?: string | null
     accessToken?: string | null
     accessTokenExpiry?: Date | string | null
-    preferences?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
-    friends?: UserFriendUncheckedCreateNestedManyWithoutUserInput
-    friendOf?: UserFriendUncheckedCreateNestedManyWithoutFriendInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    friendOf?: UserFriendUncheckedCreateNestedManyWithoutFriendInput
+    friends?: UserFriendUncheckedCreateNestedManyWithoutUserInput
+    preferences?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -6614,16 +6614,16 @@ export namespace Prisma {
     name?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     accessToken?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    preferences?: UserPreferenceUpdateManyWithoutUserNestedInput
-    friends?: UserFriendUpdateManyWithoutUserNestedInput
-    friendOf?: UserFriendUpdateManyWithoutFriendNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    friendOf?: UserFriendUpdateManyWithoutFriendNestedInput
+    friends?: UserFriendUpdateManyWithoutUserNestedInput
+    preferences?: UserPreferenceUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -6631,16 +6631,16 @@ export namespace Prisma {
     name?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     accessToken?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    preferences?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
-    friends?: UserFriendUncheckedUpdateManyWithoutUserNestedInput
-    friendOf?: UserFriendUncheckedUpdateManyWithoutFriendNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    friendOf?: UserFriendUncheckedUpdateManyWithoutFriendNestedInput
+    friends?: UserFriendUncheckedUpdateManyWithoutUserNestedInput
+    preferences?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -6648,10 +6648,10 @@ export namespace Prisma {
     name?: string | null
     email?: string | null
     phoneNumber?: string | null
-    password?: string | null
     avatarUrl?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    password?: string | null
     accessToken?: string | null
     accessTokenExpiry?: Date | string | null
   }
@@ -6661,10 +6661,10 @@ export namespace Prisma {
     name?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     accessToken?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -6674,10 +6674,10 @@ export namespace Prisma {
     name?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     accessToken?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -6800,8 +6800,8 @@ export namespace Prisma {
   export type UserPreferenceCreateInput = {
     id?: string
     score?: number
-    user: UserCreateNestedOneWithoutPreferencesInput
     category: PreferenceCategoryCreateNestedOneWithoutPreferencesInput
+    user: UserCreateNestedOneWithoutPreferencesInput
   }
 
   export type UserPreferenceUncheckedCreateInput = {
@@ -6814,8 +6814,8 @@ export namespace Prisma {
   export type UserPreferenceUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     score?: IntFieldUpdateOperationsInput | number
-    user?: UserUpdateOneRequiredWithoutPreferencesNestedInput
     category?: PreferenceCategoryUpdateOneRequiredWithoutPreferencesNestedInput
+    user?: UserUpdateOneRequiredWithoutPreferencesNestedInput
   }
 
   export type UserPreferenceUncheckedUpdateInput = {
@@ -6846,8 +6846,8 @@ export namespace Prisma {
 
   export type UserFriendCreateInput = {
     id?: string
-    user: UserCreateNestedOneWithoutFriendsInput
     friend: UserCreateNestedOneWithoutFriendOfInput
+    user: UserCreateNestedOneWithoutFriendsInput
   }
 
   export type UserFriendUncheckedCreateInput = {
@@ -6858,8 +6858,8 @@ export namespace Prisma {
 
   export type UserFriendUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    user?: UserUpdateOneRequiredWithoutFriendsNestedInput
     friend?: UserUpdateOneRequiredWithoutFriendOfNestedInput
+    user?: UserUpdateOneRequiredWithoutFriendsNestedInput
   }
 
   export type UserFriendUncheckedUpdateInput = {
@@ -6936,10 +6936,10 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
-  export type UserPreferenceListRelationFilter = {
-    every?: UserPreferenceWhereInput
-    some?: UserPreferenceWhereInput
-    none?: UserPreferenceWhereInput
+  export type RefreshTokenListRelationFilter = {
+    every?: RefreshTokenWhereInput
+    some?: RefreshTokenWhereInput
+    none?: RefreshTokenWhereInput
   }
 
   export type UserFriendListRelationFilter = {
@@ -6948,10 +6948,10 @@ export namespace Prisma {
     none?: UserFriendWhereInput
   }
 
-  export type RefreshTokenListRelationFilter = {
-    every?: RefreshTokenWhereInput
-    some?: RefreshTokenWhereInput
-    none?: RefreshTokenWhereInput
+  export type UserPreferenceListRelationFilter = {
+    every?: UserPreferenceWhereInput
+    some?: UserPreferenceWhereInput
+    none?: UserPreferenceWhereInput
   }
 
   export type SortOrderInput = {
@@ -6959,7 +6959,7 @@ export namespace Prisma {
     nulls?: NullsOrder
   }
 
-  export type UserPreferenceOrderByRelationAggregateInput = {
+  export type RefreshTokenOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -6967,7 +6967,7 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type RefreshTokenOrderByRelationAggregateInput = {
+  export type UserPreferenceOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -6976,10 +6976,10 @@ export namespace Prisma {
     name?: SortOrder
     email?: SortOrder
     phoneNumber?: SortOrder
-    password?: SortOrder
     avatarUrl?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    password?: SortOrder
     accessToken?: SortOrder
     accessTokenExpiry?: SortOrder
   }
@@ -6989,10 +6989,10 @@ export namespace Prisma {
     name?: SortOrder
     email?: SortOrder
     phoneNumber?: SortOrder
-    password?: SortOrder
     avatarUrl?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    password?: SortOrder
     accessToken?: SortOrder
     accessTokenExpiry?: SortOrder
   }
@@ -7002,10 +7002,10 @@ export namespace Prisma {
     name?: SortOrder
     email?: SortOrder
     phoneNumber?: SortOrder
-    password?: SortOrder
     avatarUrl?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    password?: SortOrder
     accessToken?: SortOrder
     accessTokenExpiry?: SortOrder
   }
@@ -7216,18 +7216,11 @@ export namespace Prisma {
     friendId?: SortOrder
   }
 
-  export type UserPreferenceCreateNestedManyWithoutUserInput = {
-    create?: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput> | UserPreferenceCreateWithoutUserInput[] | UserPreferenceUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: UserPreferenceCreateOrConnectWithoutUserInput | UserPreferenceCreateOrConnectWithoutUserInput[]
-    createMany?: UserPreferenceCreateManyUserInputEnvelope
-    connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
-  }
-
-  export type UserFriendCreateNestedManyWithoutUserInput = {
-    create?: XOR<UserFriendCreateWithoutUserInput, UserFriendUncheckedCreateWithoutUserInput> | UserFriendCreateWithoutUserInput[] | UserFriendUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: UserFriendCreateOrConnectWithoutUserInput | UserFriendCreateOrConnectWithoutUserInput[]
-    createMany?: UserFriendCreateManyUserInputEnvelope
-    connect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
+  export type RefreshTokenCreateNestedManyWithoutUserInput = {
+    create?: XOR<RefreshTokenCreateWithoutUserInput, RefreshTokenUncheckedCreateWithoutUserInput> | RefreshTokenCreateWithoutUserInput[] | RefreshTokenUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: RefreshTokenCreateOrConnectWithoutUserInput | RefreshTokenCreateOrConnectWithoutUserInput[]
+    createMany?: RefreshTokenCreateManyUserInputEnvelope
+    connect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
   }
 
   export type UserFriendCreateNestedManyWithoutFriendInput = {
@@ -7237,25 +7230,25 @@ export namespace Prisma {
     connect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
   }
 
-  export type RefreshTokenCreateNestedManyWithoutUserInput = {
-    create?: XOR<RefreshTokenCreateWithoutUserInput, RefreshTokenUncheckedCreateWithoutUserInput> | RefreshTokenCreateWithoutUserInput[] | RefreshTokenUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: RefreshTokenCreateOrConnectWithoutUserInput | RefreshTokenCreateOrConnectWithoutUserInput[]
-    createMany?: RefreshTokenCreateManyUserInputEnvelope
-    connect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
+  export type UserFriendCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserFriendCreateWithoutUserInput, UserFriendUncheckedCreateWithoutUserInput> | UserFriendCreateWithoutUserInput[] | UserFriendUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserFriendCreateOrConnectWithoutUserInput | UserFriendCreateOrConnectWithoutUserInput[]
+    createMany?: UserFriendCreateManyUserInputEnvelope
+    connect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
   }
 
-  export type UserPreferenceUncheckedCreateNestedManyWithoutUserInput = {
+  export type UserPreferenceCreateNestedManyWithoutUserInput = {
     create?: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput> | UserPreferenceCreateWithoutUserInput[] | UserPreferenceUncheckedCreateWithoutUserInput[]
     connectOrCreate?: UserPreferenceCreateOrConnectWithoutUserInput | UserPreferenceCreateOrConnectWithoutUserInput[]
     createMany?: UserPreferenceCreateManyUserInputEnvelope
     connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
   }
 
-  export type UserFriendUncheckedCreateNestedManyWithoutUserInput = {
-    create?: XOR<UserFriendCreateWithoutUserInput, UserFriendUncheckedCreateWithoutUserInput> | UserFriendCreateWithoutUserInput[] | UserFriendUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: UserFriendCreateOrConnectWithoutUserInput | UserFriendCreateOrConnectWithoutUserInput[]
-    createMany?: UserFriendCreateManyUserInputEnvelope
-    connect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
+  export type RefreshTokenUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<RefreshTokenCreateWithoutUserInput, RefreshTokenUncheckedCreateWithoutUserInput> | RefreshTokenCreateWithoutUserInput[] | RefreshTokenUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: RefreshTokenCreateOrConnectWithoutUserInput | RefreshTokenCreateOrConnectWithoutUserInput[]
+    createMany?: RefreshTokenCreateManyUserInputEnvelope
+    connect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
   }
 
   export type UserFriendUncheckedCreateNestedManyWithoutFriendInput = {
@@ -7265,11 +7258,18 @@ export namespace Prisma {
     connect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
   }
 
-  export type RefreshTokenUncheckedCreateNestedManyWithoutUserInput = {
-    create?: XOR<RefreshTokenCreateWithoutUserInput, RefreshTokenUncheckedCreateWithoutUserInput> | RefreshTokenCreateWithoutUserInput[] | RefreshTokenUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: RefreshTokenCreateOrConnectWithoutUserInput | RefreshTokenCreateOrConnectWithoutUserInput[]
-    createMany?: RefreshTokenCreateManyUserInputEnvelope
-    connect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
+  export type UserFriendUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserFriendCreateWithoutUserInput, UserFriendUncheckedCreateWithoutUserInput> | UserFriendCreateWithoutUserInput[] | UserFriendUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserFriendCreateOrConnectWithoutUserInput | UserFriendCreateOrConnectWithoutUserInput[]
+    createMany?: UserFriendCreateManyUserInputEnvelope
+    connect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
+  }
+
+  export type UserPreferenceUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput> | UserPreferenceCreateWithoutUserInput[] | UserPreferenceUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserPreferenceCreateOrConnectWithoutUserInput | UserPreferenceCreateOrConnectWithoutUserInput[]
+    createMany?: UserPreferenceCreateManyUserInputEnvelope
+    connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -7288,32 +7288,18 @@ export namespace Prisma {
     set?: Date | string | null
   }
 
-  export type UserPreferenceUpdateManyWithoutUserNestedInput = {
-    create?: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput> | UserPreferenceCreateWithoutUserInput[] | UserPreferenceUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: UserPreferenceCreateOrConnectWithoutUserInput | UserPreferenceCreateOrConnectWithoutUserInput[]
-    upsert?: UserPreferenceUpsertWithWhereUniqueWithoutUserInput | UserPreferenceUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: UserPreferenceCreateManyUserInputEnvelope
-    set?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
-    disconnect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
-    delete?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
-    connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
-    update?: UserPreferenceUpdateWithWhereUniqueWithoutUserInput | UserPreferenceUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: UserPreferenceUpdateManyWithWhereWithoutUserInput | UserPreferenceUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
-  }
-
-  export type UserFriendUpdateManyWithoutUserNestedInput = {
-    create?: XOR<UserFriendCreateWithoutUserInput, UserFriendUncheckedCreateWithoutUserInput> | UserFriendCreateWithoutUserInput[] | UserFriendUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: UserFriendCreateOrConnectWithoutUserInput | UserFriendCreateOrConnectWithoutUserInput[]
-    upsert?: UserFriendUpsertWithWhereUniqueWithoutUserInput | UserFriendUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: UserFriendCreateManyUserInputEnvelope
-    set?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
-    disconnect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
-    delete?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
-    connect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
-    update?: UserFriendUpdateWithWhereUniqueWithoutUserInput | UserFriendUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: UserFriendUpdateManyWithWhereWithoutUserInput | UserFriendUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: UserFriendScalarWhereInput | UserFriendScalarWhereInput[]
+  export type RefreshTokenUpdateManyWithoutUserNestedInput = {
+    create?: XOR<RefreshTokenCreateWithoutUserInput, RefreshTokenUncheckedCreateWithoutUserInput> | RefreshTokenCreateWithoutUserInput[] | RefreshTokenUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: RefreshTokenCreateOrConnectWithoutUserInput | RefreshTokenCreateOrConnectWithoutUserInput[]
+    upsert?: RefreshTokenUpsertWithWhereUniqueWithoutUserInput | RefreshTokenUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: RefreshTokenCreateManyUserInputEnvelope
+    set?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
+    disconnect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
+    delete?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
+    connect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
+    update?: RefreshTokenUpdateWithWhereUniqueWithoutUserInput | RefreshTokenUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: RefreshTokenUpdateManyWithWhereWithoutUserInput | RefreshTokenUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: RefreshTokenScalarWhereInput | RefreshTokenScalarWhereInput[]
   }
 
   export type UserFriendUpdateManyWithoutFriendNestedInput = {
@@ -7330,21 +7316,21 @@ export namespace Prisma {
     deleteMany?: UserFriendScalarWhereInput | UserFriendScalarWhereInput[]
   }
 
-  export type RefreshTokenUpdateManyWithoutUserNestedInput = {
-    create?: XOR<RefreshTokenCreateWithoutUserInput, RefreshTokenUncheckedCreateWithoutUserInput> | RefreshTokenCreateWithoutUserInput[] | RefreshTokenUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: RefreshTokenCreateOrConnectWithoutUserInput | RefreshTokenCreateOrConnectWithoutUserInput[]
-    upsert?: RefreshTokenUpsertWithWhereUniqueWithoutUserInput | RefreshTokenUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: RefreshTokenCreateManyUserInputEnvelope
-    set?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
-    disconnect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
-    delete?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
-    connect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
-    update?: RefreshTokenUpdateWithWhereUniqueWithoutUserInput | RefreshTokenUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: RefreshTokenUpdateManyWithWhereWithoutUserInput | RefreshTokenUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: RefreshTokenScalarWhereInput | RefreshTokenScalarWhereInput[]
+  export type UserFriendUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserFriendCreateWithoutUserInput, UserFriendUncheckedCreateWithoutUserInput> | UserFriendCreateWithoutUserInput[] | UserFriendUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserFriendCreateOrConnectWithoutUserInput | UserFriendCreateOrConnectWithoutUserInput[]
+    upsert?: UserFriendUpsertWithWhereUniqueWithoutUserInput | UserFriendUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserFriendCreateManyUserInputEnvelope
+    set?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
+    disconnect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
+    delete?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
+    connect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
+    update?: UserFriendUpdateWithWhereUniqueWithoutUserInput | UserFriendUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserFriendUpdateManyWithWhereWithoutUserInput | UserFriendUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserFriendScalarWhereInput | UserFriendScalarWhereInput[]
   }
 
-  export type UserPreferenceUncheckedUpdateManyWithoutUserNestedInput = {
+  export type UserPreferenceUpdateManyWithoutUserNestedInput = {
     create?: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput> | UserPreferenceCreateWithoutUserInput[] | UserPreferenceUncheckedCreateWithoutUserInput[]
     connectOrCreate?: UserPreferenceCreateOrConnectWithoutUserInput | UserPreferenceCreateOrConnectWithoutUserInput[]
     upsert?: UserPreferenceUpsertWithWhereUniqueWithoutUserInput | UserPreferenceUpsertWithWhereUniqueWithoutUserInput[]
@@ -7358,18 +7344,18 @@ export namespace Prisma {
     deleteMany?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
   }
 
-  export type UserFriendUncheckedUpdateManyWithoutUserNestedInput = {
-    create?: XOR<UserFriendCreateWithoutUserInput, UserFriendUncheckedCreateWithoutUserInput> | UserFriendCreateWithoutUserInput[] | UserFriendUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: UserFriendCreateOrConnectWithoutUserInput | UserFriendCreateOrConnectWithoutUserInput[]
-    upsert?: UserFriendUpsertWithWhereUniqueWithoutUserInput | UserFriendUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: UserFriendCreateManyUserInputEnvelope
-    set?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
-    disconnect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
-    delete?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
-    connect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
-    update?: UserFriendUpdateWithWhereUniqueWithoutUserInput | UserFriendUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: UserFriendUpdateManyWithWhereWithoutUserInput | UserFriendUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: UserFriendScalarWhereInput | UserFriendScalarWhereInput[]
+  export type RefreshTokenUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<RefreshTokenCreateWithoutUserInput, RefreshTokenUncheckedCreateWithoutUserInput> | RefreshTokenCreateWithoutUserInput[] | RefreshTokenUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: RefreshTokenCreateOrConnectWithoutUserInput | RefreshTokenCreateOrConnectWithoutUserInput[]
+    upsert?: RefreshTokenUpsertWithWhereUniqueWithoutUserInput | RefreshTokenUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: RefreshTokenCreateManyUserInputEnvelope
+    set?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
+    disconnect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
+    delete?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
+    connect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
+    update?: RefreshTokenUpdateWithWhereUniqueWithoutUserInput | RefreshTokenUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: RefreshTokenUpdateManyWithWhereWithoutUserInput | RefreshTokenUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: RefreshTokenScalarWhereInput | RefreshTokenScalarWhereInput[]
   }
 
   export type UserFriendUncheckedUpdateManyWithoutFriendNestedInput = {
@@ -7386,18 +7372,32 @@ export namespace Prisma {
     deleteMany?: UserFriendScalarWhereInput | UserFriendScalarWhereInput[]
   }
 
-  export type RefreshTokenUncheckedUpdateManyWithoutUserNestedInput = {
-    create?: XOR<RefreshTokenCreateWithoutUserInput, RefreshTokenUncheckedCreateWithoutUserInput> | RefreshTokenCreateWithoutUserInput[] | RefreshTokenUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: RefreshTokenCreateOrConnectWithoutUserInput | RefreshTokenCreateOrConnectWithoutUserInput[]
-    upsert?: RefreshTokenUpsertWithWhereUniqueWithoutUserInput | RefreshTokenUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: RefreshTokenCreateManyUserInputEnvelope
-    set?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
-    disconnect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
-    delete?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
-    connect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
-    update?: RefreshTokenUpdateWithWhereUniqueWithoutUserInput | RefreshTokenUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: RefreshTokenUpdateManyWithWhereWithoutUserInput | RefreshTokenUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: RefreshTokenScalarWhereInput | RefreshTokenScalarWhereInput[]
+  export type UserFriendUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserFriendCreateWithoutUserInput, UserFriendUncheckedCreateWithoutUserInput> | UserFriendCreateWithoutUserInput[] | UserFriendUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserFriendCreateOrConnectWithoutUserInput | UserFriendCreateOrConnectWithoutUserInput[]
+    upsert?: UserFriendUpsertWithWhereUniqueWithoutUserInput | UserFriendUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserFriendCreateManyUserInputEnvelope
+    set?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
+    disconnect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
+    delete?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
+    connect?: UserFriendWhereUniqueInput | UserFriendWhereUniqueInput[]
+    update?: UserFriendUpdateWithWhereUniqueWithoutUserInput | UserFriendUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserFriendUpdateManyWithWhereWithoutUserInput | UserFriendUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserFriendScalarWhereInput | UserFriendScalarWhereInput[]
+  }
+
+  export type UserPreferenceUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput> | UserPreferenceCreateWithoutUserInput[] | UserPreferenceUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserPreferenceCreateOrConnectWithoutUserInput | UserPreferenceCreateOrConnectWithoutUserInput[]
+    upsert?: UserPreferenceUpsertWithWhereUniqueWithoutUserInput | UserPreferenceUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserPreferenceCreateManyUserInputEnvelope
+    set?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    disconnect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    delete?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    connect?: UserPreferenceWhereUniqueInput | UserPreferenceWhereUniqueInput[]
+    update?: UserPreferenceUpdateWithWhereUniqueWithoutUserInput | UserPreferenceUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserPreferenceUpdateManyWithWhereWithoutUserInput | UserPreferenceUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutRefreshTokensInput = {
@@ -7456,16 +7456,16 @@ export namespace Prisma {
     deleteMany?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
   }
 
-  export type UserCreateNestedOneWithoutPreferencesInput = {
-    create?: XOR<UserCreateWithoutPreferencesInput, UserUncheckedCreateWithoutPreferencesInput>
-    connectOrCreate?: UserCreateOrConnectWithoutPreferencesInput
-    connect?: UserWhereUniqueInput
-  }
-
   export type PreferenceCategoryCreateNestedOneWithoutPreferencesInput = {
     create?: XOR<PreferenceCategoryCreateWithoutPreferencesInput, PreferenceCategoryUncheckedCreateWithoutPreferencesInput>
     connectOrCreate?: PreferenceCategoryCreateOrConnectWithoutPreferencesInput
     connect?: PreferenceCategoryWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutPreferencesInput = {
+    create?: XOR<UserCreateWithoutPreferencesInput, UserUncheckedCreateWithoutPreferencesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutPreferencesInput
+    connect?: UserWhereUniqueInput
   }
 
   export type IntFieldUpdateOperationsInput = {
@@ -7476,14 +7476,6 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type UserUpdateOneRequiredWithoutPreferencesNestedInput = {
-    create?: XOR<UserCreateWithoutPreferencesInput, UserUncheckedCreateWithoutPreferencesInput>
-    connectOrCreate?: UserCreateOrConnectWithoutPreferencesInput
-    upsert?: UserUpsertWithoutPreferencesInput
-    connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutPreferencesInput, UserUpdateWithoutPreferencesInput>, UserUncheckedUpdateWithoutPreferencesInput>
-  }
-
   export type PreferenceCategoryUpdateOneRequiredWithoutPreferencesNestedInput = {
     create?: XOR<PreferenceCategoryCreateWithoutPreferencesInput, PreferenceCategoryUncheckedCreateWithoutPreferencesInput>
     connectOrCreate?: PreferenceCategoryCreateOrConnectWithoutPreferencesInput
@@ -7492,10 +7484,12 @@ export namespace Prisma {
     update?: XOR<XOR<PreferenceCategoryUpdateToOneWithWhereWithoutPreferencesInput, PreferenceCategoryUpdateWithoutPreferencesInput>, PreferenceCategoryUncheckedUpdateWithoutPreferencesInput>
   }
 
-  export type UserCreateNestedOneWithoutFriendsInput = {
-    create?: XOR<UserCreateWithoutFriendsInput, UserUncheckedCreateWithoutFriendsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutFriendsInput
+  export type UserUpdateOneRequiredWithoutPreferencesNestedInput = {
+    create?: XOR<UserCreateWithoutPreferencesInput, UserUncheckedCreateWithoutPreferencesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutPreferencesInput
+    upsert?: UserUpsertWithoutPreferencesInput
     connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutPreferencesInput, UserUpdateWithoutPreferencesInput>, UserUncheckedUpdateWithoutPreferencesInput>
   }
 
   export type UserCreateNestedOneWithoutFriendOfInput = {
@@ -7504,12 +7498,10 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
-  export type UserUpdateOneRequiredWithoutFriendsNestedInput = {
+  export type UserCreateNestedOneWithoutFriendsInput = {
     create?: XOR<UserCreateWithoutFriendsInput, UserUncheckedCreateWithoutFriendsInput>
     connectOrCreate?: UserCreateOrConnectWithoutFriendsInput
-    upsert?: UserUpsertWithoutFriendsInput
     connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutFriendsInput, UserUpdateWithoutFriendsInput>, UserUncheckedUpdateWithoutFriendsInput>
   }
 
   export type UserUpdateOneRequiredWithoutFriendOfNestedInput = {
@@ -7518,6 +7510,14 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutFriendOfInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutFriendOfInput, UserUpdateWithoutFriendOfInput>, UserUncheckedUpdateWithoutFriendOfInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutFriendsNestedInput = {
+    create?: XOR<UserCreateWithoutFriendsInput, UserUncheckedCreateWithoutFriendsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutFriendsInput
+    upsert?: UserUpsertWithoutFriendsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutFriendsInput, UserUpdateWithoutFriendsInput>, UserUncheckedUpdateWithoutFriendsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -7681,68 +7681,6 @@ export namespace Prisma {
     not?: NestedFloatFilter<$PrismaModel> | number
   }
 
-  export type UserPreferenceCreateWithoutUserInput = {
-    id?: string
-    score?: number
-    category: PreferenceCategoryCreateNestedOneWithoutPreferencesInput
-  }
-
-  export type UserPreferenceUncheckedCreateWithoutUserInput = {
-    id?: string
-    categoryId: string
-    score?: number
-  }
-
-  export type UserPreferenceCreateOrConnectWithoutUserInput = {
-    where: UserPreferenceWhereUniqueInput
-    create: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput>
-  }
-
-  export type UserPreferenceCreateManyUserInputEnvelope = {
-    data: UserPreferenceCreateManyUserInput | UserPreferenceCreateManyUserInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type UserFriendCreateWithoutUserInput = {
-    id?: string
-    friend: UserCreateNestedOneWithoutFriendOfInput
-  }
-
-  export type UserFriendUncheckedCreateWithoutUserInput = {
-    id?: string
-    friendId: string
-  }
-
-  export type UserFriendCreateOrConnectWithoutUserInput = {
-    where: UserFriendWhereUniqueInput
-    create: XOR<UserFriendCreateWithoutUserInput, UserFriendUncheckedCreateWithoutUserInput>
-  }
-
-  export type UserFriendCreateManyUserInputEnvelope = {
-    data: UserFriendCreateManyUserInput | UserFriendCreateManyUserInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type UserFriendCreateWithoutFriendInput = {
-    id?: string
-    user: UserCreateNestedOneWithoutFriendsInput
-  }
-
-  export type UserFriendUncheckedCreateWithoutFriendInput = {
-    id?: string
-    userId: string
-  }
-
-  export type UserFriendCreateOrConnectWithoutFriendInput = {
-    where: UserFriendWhereUniqueInput
-    create: XOR<UserFriendCreateWithoutFriendInput, UserFriendUncheckedCreateWithoutFriendInput>
-  }
-
-  export type UserFriendCreateManyFriendInputEnvelope = {
-    data: UserFriendCreateManyFriendInput | UserFriendCreateManyFriendInput[]
-    skipDuplicates?: boolean
-  }
-
   export type RefreshTokenCreateWithoutUserInput = {
     id?: string
     token: string
@@ -7769,71 +7707,66 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type UserPreferenceUpsertWithWhereUniqueWithoutUserInput = {
-    where: UserPreferenceWhereUniqueInput
-    update: XOR<UserPreferenceUpdateWithoutUserInput, UserPreferenceUncheckedUpdateWithoutUserInput>
-    create: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput>
+  export type UserFriendCreateWithoutFriendInput = {
+    id?: string
+    user: UserCreateNestedOneWithoutFriendsInput
   }
 
-  export type UserPreferenceUpdateWithWhereUniqueWithoutUserInput = {
-    where: UserPreferenceWhereUniqueInput
-    data: XOR<UserPreferenceUpdateWithoutUserInput, UserPreferenceUncheckedUpdateWithoutUserInput>
+  export type UserFriendUncheckedCreateWithoutFriendInput = {
+    id?: string
+    userId: string
   }
 
-  export type UserPreferenceUpdateManyWithWhereWithoutUserInput = {
-    where: UserPreferenceScalarWhereInput
-    data: XOR<UserPreferenceUpdateManyMutationInput, UserPreferenceUncheckedUpdateManyWithoutUserInput>
-  }
-
-  export type UserPreferenceScalarWhereInput = {
-    AND?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
-    OR?: UserPreferenceScalarWhereInput[]
-    NOT?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
-    id?: StringFilter<"UserPreference"> | string
-    userId?: StringFilter<"UserPreference"> | string
-    categoryId?: StringFilter<"UserPreference"> | string
-    score?: IntFilter<"UserPreference"> | number
-  }
-
-  export type UserFriendUpsertWithWhereUniqueWithoutUserInput = {
+  export type UserFriendCreateOrConnectWithoutFriendInput = {
     where: UserFriendWhereUniqueInput
-    update: XOR<UserFriendUpdateWithoutUserInput, UserFriendUncheckedUpdateWithoutUserInput>
-    create: XOR<UserFriendCreateWithoutUserInput, UserFriendUncheckedCreateWithoutUserInput>
-  }
-
-  export type UserFriendUpdateWithWhereUniqueWithoutUserInput = {
-    where: UserFriendWhereUniqueInput
-    data: XOR<UserFriendUpdateWithoutUserInput, UserFriendUncheckedUpdateWithoutUserInput>
-  }
-
-  export type UserFriendUpdateManyWithWhereWithoutUserInput = {
-    where: UserFriendScalarWhereInput
-    data: XOR<UserFriendUpdateManyMutationInput, UserFriendUncheckedUpdateManyWithoutUserInput>
-  }
-
-  export type UserFriendScalarWhereInput = {
-    AND?: UserFriendScalarWhereInput | UserFriendScalarWhereInput[]
-    OR?: UserFriendScalarWhereInput[]
-    NOT?: UserFriendScalarWhereInput | UserFriendScalarWhereInput[]
-    id?: StringFilter<"UserFriend"> | string
-    userId?: StringFilter<"UserFriend"> | string
-    friendId?: StringFilter<"UserFriend"> | string
-  }
-
-  export type UserFriendUpsertWithWhereUniqueWithoutFriendInput = {
-    where: UserFriendWhereUniqueInput
-    update: XOR<UserFriendUpdateWithoutFriendInput, UserFriendUncheckedUpdateWithoutFriendInput>
     create: XOR<UserFriendCreateWithoutFriendInput, UserFriendUncheckedCreateWithoutFriendInput>
   }
 
-  export type UserFriendUpdateWithWhereUniqueWithoutFriendInput = {
-    where: UserFriendWhereUniqueInput
-    data: XOR<UserFriendUpdateWithoutFriendInput, UserFriendUncheckedUpdateWithoutFriendInput>
+  export type UserFriendCreateManyFriendInputEnvelope = {
+    data: UserFriendCreateManyFriendInput | UserFriendCreateManyFriendInput[]
+    skipDuplicates?: boolean
   }
 
-  export type UserFriendUpdateManyWithWhereWithoutFriendInput = {
-    where: UserFriendScalarWhereInput
-    data: XOR<UserFriendUpdateManyMutationInput, UserFriendUncheckedUpdateManyWithoutFriendInput>
+  export type UserFriendCreateWithoutUserInput = {
+    id?: string
+    friend: UserCreateNestedOneWithoutFriendOfInput
+  }
+
+  export type UserFriendUncheckedCreateWithoutUserInput = {
+    id?: string
+    friendId: string
+  }
+
+  export type UserFriendCreateOrConnectWithoutUserInput = {
+    where: UserFriendWhereUniqueInput
+    create: XOR<UserFriendCreateWithoutUserInput, UserFriendUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserFriendCreateManyUserInputEnvelope = {
+    data: UserFriendCreateManyUserInput | UserFriendCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type UserPreferenceCreateWithoutUserInput = {
+    id?: string
+    score?: number
+    category: PreferenceCategoryCreateNestedOneWithoutPreferencesInput
+  }
+
+  export type UserPreferenceUncheckedCreateWithoutUserInput = {
+    id?: string
+    categoryId: string
+    score?: number
+  }
+
+  export type UserPreferenceCreateOrConnectWithoutUserInput = {
+    where: UserPreferenceWhereUniqueInput
+    create: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserPreferenceCreateManyUserInputEnvelope = {
+    data: UserPreferenceCreateManyUserInput | UserPreferenceCreateManyUserInput[]
+    skipDuplicates?: boolean
   }
 
   export type RefreshTokenUpsertWithWhereUniqueWithoutUserInput = {
@@ -7864,20 +7797,87 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"RefreshToken"> | Date | string
   }
 
+  export type UserFriendUpsertWithWhereUniqueWithoutFriendInput = {
+    where: UserFriendWhereUniqueInput
+    update: XOR<UserFriendUpdateWithoutFriendInput, UserFriendUncheckedUpdateWithoutFriendInput>
+    create: XOR<UserFriendCreateWithoutFriendInput, UserFriendUncheckedCreateWithoutFriendInput>
+  }
+
+  export type UserFriendUpdateWithWhereUniqueWithoutFriendInput = {
+    where: UserFriendWhereUniqueInput
+    data: XOR<UserFriendUpdateWithoutFriendInput, UserFriendUncheckedUpdateWithoutFriendInput>
+  }
+
+  export type UserFriendUpdateManyWithWhereWithoutFriendInput = {
+    where: UserFriendScalarWhereInput
+    data: XOR<UserFriendUpdateManyMutationInput, UserFriendUncheckedUpdateManyWithoutFriendInput>
+  }
+
+  export type UserFriendScalarWhereInput = {
+    AND?: UserFriendScalarWhereInput | UserFriendScalarWhereInput[]
+    OR?: UserFriendScalarWhereInput[]
+    NOT?: UserFriendScalarWhereInput | UserFriendScalarWhereInput[]
+    id?: StringFilter<"UserFriend"> | string
+    userId?: StringFilter<"UserFriend"> | string
+    friendId?: StringFilter<"UserFriend"> | string
+  }
+
+  export type UserFriendUpsertWithWhereUniqueWithoutUserInput = {
+    where: UserFriendWhereUniqueInput
+    update: XOR<UserFriendUpdateWithoutUserInput, UserFriendUncheckedUpdateWithoutUserInput>
+    create: XOR<UserFriendCreateWithoutUserInput, UserFriendUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserFriendUpdateWithWhereUniqueWithoutUserInput = {
+    where: UserFriendWhereUniqueInput
+    data: XOR<UserFriendUpdateWithoutUserInput, UserFriendUncheckedUpdateWithoutUserInput>
+  }
+
+  export type UserFriendUpdateManyWithWhereWithoutUserInput = {
+    where: UserFriendScalarWhereInput
+    data: XOR<UserFriendUpdateManyMutationInput, UserFriendUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type UserPreferenceUpsertWithWhereUniqueWithoutUserInput = {
+    where: UserPreferenceWhereUniqueInput
+    update: XOR<UserPreferenceUpdateWithoutUserInput, UserPreferenceUncheckedUpdateWithoutUserInput>
+    create: XOR<UserPreferenceCreateWithoutUserInput, UserPreferenceUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserPreferenceUpdateWithWhereUniqueWithoutUserInput = {
+    where: UserPreferenceWhereUniqueInput
+    data: XOR<UserPreferenceUpdateWithoutUserInput, UserPreferenceUncheckedUpdateWithoutUserInput>
+  }
+
+  export type UserPreferenceUpdateManyWithWhereWithoutUserInput = {
+    where: UserPreferenceScalarWhereInput
+    data: XOR<UserPreferenceUpdateManyMutationInput, UserPreferenceUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type UserPreferenceScalarWhereInput = {
+    AND?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
+    OR?: UserPreferenceScalarWhereInput[]
+    NOT?: UserPreferenceScalarWhereInput | UserPreferenceScalarWhereInput[]
+    id?: StringFilter<"UserPreference"> | string
+    userId?: StringFilter<"UserPreference"> | string
+    categoryId?: StringFilter<"UserPreference"> | string
+    score?: IntFilter<"UserPreference"> | number
+  }
+
   export type UserCreateWithoutRefreshTokensInput = {
     id?: string
     name?: string | null
     email?: string | null
     phoneNumber?: string | null
-    password?: string | null
     avatarUrl?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    password?: string | null
     accessToken?: string | null
     accessTokenExpiry?: Date | string | null
-    preferences?: UserPreferenceCreateNestedManyWithoutUserInput
-    friends?: UserFriendCreateNestedManyWithoutUserInput
     friendOf?: UserFriendCreateNestedManyWithoutFriendInput
+    friends?: UserFriendCreateNestedManyWithoutUserInput
+    preferences?: UserPreferenceCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutRefreshTokensInput = {
@@ -7885,15 +7885,15 @@ export namespace Prisma {
     name?: string | null
     email?: string | null
     phoneNumber?: string | null
-    password?: string | null
     avatarUrl?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    password?: string | null
     accessToken?: string | null
     accessTokenExpiry?: Date | string | null
-    preferences?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
-    friends?: UserFriendUncheckedCreateNestedManyWithoutUserInput
     friendOf?: UserFriendUncheckedCreateNestedManyWithoutFriendInput
+    friends?: UserFriendUncheckedCreateNestedManyWithoutUserInput
+    preferences?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutRefreshTokensInput = {
@@ -7917,15 +7917,15 @@ export namespace Prisma {
     name?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     accessToken?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    preferences?: UserPreferenceUpdateManyWithoutUserNestedInput
-    friends?: UserFriendUpdateManyWithoutUserNestedInput
     friendOf?: UserFriendUpdateManyWithoutFriendNestedInput
+    friends?: UserFriendUpdateManyWithoutUserNestedInput
+    preferences?: UserPreferenceUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutRefreshTokensInput = {
@@ -7933,15 +7933,15 @@ export namespace Prisma {
     name?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     accessToken?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    preferences?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
-    friends?: UserFriendUncheckedUpdateManyWithoutUserNestedInput
     friendOf?: UserFriendUncheckedUpdateManyWithoutFriendNestedInput
+    friends?: UserFriendUncheckedUpdateManyWithoutUserNestedInput
+    preferences?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserPreferenceCreateWithoutCategoryInput = {
@@ -7982,43 +7982,6 @@ export namespace Prisma {
     data: XOR<UserPreferenceUpdateManyMutationInput, UserPreferenceUncheckedUpdateManyWithoutCategoryInput>
   }
 
-  export type UserCreateWithoutPreferencesInput = {
-    id?: string
-    name?: string | null
-    email?: string | null
-    phoneNumber?: string | null
-    password?: string | null
-    avatarUrl?: string | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    accessToken?: string | null
-    accessTokenExpiry?: Date | string | null
-    friends?: UserFriendCreateNestedManyWithoutUserInput
-    friendOf?: UserFriendCreateNestedManyWithoutFriendInput
-    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
-  }
-
-  export type UserUncheckedCreateWithoutPreferencesInput = {
-    id?: string
-    name?: string | null
-    email?: string | null
-    phoneNumber?: string | null
-    password?: string | null
-    avatarUrl?: string | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    accessToken?: string | null
-    accessTokenExpiry?: Date | string | null
-    friends?: UserFriendUncheckedCreateNestedManyWithoutUserInput
-    friendOf?: UserFriendUncheckedCreateNestedManyWithoutFriendInput
-    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
-  }
-
-  export type UserCreateOrConnectWithoutPreferencesInput = {
-    where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutPreferencesInput, UserUncheckedCreateWithoutPreferencesInput>
-  }
-
   export type PreferenceCategoryCreateWithoutPreferencesInput = {
     id?: string
     key: string
@@ -8038,47 +8001,41 @@ export namespace Prisma {
     create: XOR<PreferenceCategoryCreateWithoutPreferencesInput, PreferenceCategoryUncheckedCreateWithoutPreferencesInput>
   }
 
-  export type UserUpsertWithoutPreferencesInput = {
-    update: XOR<UserUpdateWithoutPreferencesInput, UserUncheckedUpdateWithoutPreferencesInput>
+  export type UserCreateWithoutPreferencesInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    phoneNumber?: string | null
+    avatarUrl?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    password?: string | null
+    accessToken?: string | null
+    accessTokenExpiry?: Date | string | null
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    friendOf?: UserFriendCreateNestedManyWithoutFriendInput
+    friends?: UserFriendCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutPreferencesInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    phoneNumber?: string | null
+    avatarUrl?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    password?: string | null
+    accessToken?: string | null
+    accessTokenExpiry?: Date | string | null
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    friendOf?: UserFriendUncheckedCreateNestedManyWithoutFriendInput
+    friends?: UserFriendUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutPreferencesInput = {
+    where: UserWhereUniqueInput
     create: XOR<UserCreateWithoutPreferencesInput, UserUncheckedCreateWithoutPreferencesInput>
-    where?: UserWhereInput
-  }
-
-  export type UserUpdateToOneWithWhereWithoutPreferencesInput = {
-    where?: UserWhereInput
-    data: XOR<UserUpdateWithoutPreferencesInput, UserUncheckedUpdateWithoutPreferencesInput>
-  }
-
-  export type UserUpdateWithoutPreferencesInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    email?: NullableStringFieldUpdateOperationsInput | string | null
-    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
-    accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    friends?: UserFriendUpdateManyWithoutUserNestedInput
-    friendOf?: UserFriendUpdateManyWithoutFriendNestedInput
-    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
-  }
-
-  export type UserUncheckedUpdateWithoutPreferencesInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    email?: NullableStringFieldUpdateOperationsInput | string | null
-    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
-    accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    friends?: UserFriendUncheckedUpdateManyWithoutUserNestedInput
-    friendOf?: UserFriendUncheckedUpdateManyWithoutFriendNestedInput
-    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PreferenceCategoryUpsertWithoutPreferencesInput = {
@@ -8106,41 +8063,47 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
-  export type UserCreateWithoutFriendsInput = {
-    id?: string
-    name?: string | null
-    email?: string | null
-    phoneNumber?: string | null
-    password?: string | null
-    avatarUrl?: string | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    accessToken?: string | null
-    accessTokenExpiry?: Date | string | null
-    preferences?: UserPreferenceCreateNestedManyWithoutUserInput
-    friendOf?: UserFriendCreateNestedManyWithoutFriendInput
-    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+  export type UserUpsertWithoutPreferencesInput = {
+    update: XOR<UserUpdateWithoutPreferencesInput, UserUncheckedUpdateWithoutPreferencesInput>
+    create: XOR<UserCreateWithoutPreferencesInput, UserUncheckedCreateWithoutPreferencesInput>
+    where?: UserWhereInput
   }
 
-  export type UserUncheckedCreateWithoutFriendsInput = {
-    id?: string
-    name?: string | null
-    email?: string | null
-    phoneNumber?: string | null
-    password?: string | null
-    avatarUrl?: string | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    accessToken?: string | null
-    accessTokenExpiry?: Date | string | null
-    preferences?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
-    friendOf?: UserFriendUncheckedCreateNestedManyWithoutFriendInput
-    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  export type UserUpdateToOneWithWhereWithoutPreferencesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutPreferencesInput, UserUncheckedUpdateWithoutPreferencesInput>
   }
 
-  export type UserCreateOrConnectWithoutFriendsInput = {
-    where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutFriendsInput, UserUncheckedCreateWithoutFriendsInput>
+  export type UserUpdateWithoutPreferencesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    friendOf?: UserFriendUpdateManyWithoutFriendNestedInput
+    friends?: UserFriendUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutPreferencesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    friendOf?: UserFriendUncheckedUpdateManyWithoutFriendNestedInput
+    friends?: UserFriendUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutFriendOfInput = {
@@ -8148,15 +8111,15 @@ export namespace Prisma {
     name?: string | null
     email?: string | null
     phoneNumber?: string | null
-    password?: string | null
     avatarUrl?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    password?: string | null
     accessToken?: string | null
     accessTokenExpiry?: Date | string | null
-    preferences?: UserPreferenceCreateNestedManyWithoutUserInput
-    friends?: UserFriendCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    friends?: UserFriendCreateNestedManyWithoutUserInput
+    preferences?: UserPreferenceCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFriendOfInput = {
@@ -8164,15 +8127,15 @@ export namespace Prisma {
     name?: string | null
     email?: string | null
     phoneNumber?: string | null
-    password?: string | null
     avatarUrl?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    password?: string | null
     accessToken?: string | null
     accessTokenExpiry?: Date | string | null
-    preferences?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
-    friends?: UserFriendUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    friends?: UserFriendUncheckedCreateNestedManyWithoutUserInput
+    preferences?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFriendOfInput = {
@@ -8180,47 +8143,41 @@ export namespace Prisma {
     create: XOR<UserCreateWithoutFriendOfInput, UserUncheckedCreateWithoutFriendOfInput>
   }
 
-  export type UserUpsertWithoutFriendsInput = {
-    update: XOR<UserUpdateWithoutFriendsInput, UserUncheckedUpdateWithoutFriendsInput>
+  export type UserCreateWithoutFriendsInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    phoneNumber?: string | null
+    avatarUrl?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    password?: string | null
+    accessToken?: string | null
+    accessTokenExpiry?: Date | string | null
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    friendOf?: UserFriendCreateNestedManyWithoutFriendInput
+    preferences?: UserPreferenceCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutFriendsInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    phoneNumber?: string | null
+    avatarUrl?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    password?: string | null
+    accessToken?: string | null
+    accessTokenExpiry?: Date | string | null
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    friendOf?: UserFriendUncheckedCreateNestedManyWithoutFriendInput
+    preferences?: UserPreferenceUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutFriendsInput = {
+    where: UserWhereUniqueInput
     create: XOR<UserCreateWithoutFriendsInput, UserUncheckedCreateWithoutFriendsInput>
-    where?: UserWhereInput
-  }
-
-  export type UserUpdateToOneWithWhereWithoutFriendsInput = {
-    where?: UserWhereInput
-    data: XOR<UserUpdateWithoutFriendsInput, UserUncheckedUpdateWithoutFriendsInput>
-  }
-
-  export type UserUpdateWithoutFriendsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    email?: NullableStringFieldUpdateOperationsInput | string | null
-    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
-    accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    preferences?: UserPreferenceUpdateManyWithoutUserNestedInput
-    friendOf?: UserFriendUpdateManyWithoutFriendNestedInput
-    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
-  }
-
-  export type UserUncheckedUpdateWithoutFriendsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    email?: NullableStringFieldUpdateOperationsInput | string | null
-    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
-    accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    preferences?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
-    friendOf?: UserFriendUncheckedUpdateManyWithoutFriendNestedInput
-    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutFriendOfInput = {
@@ -8239,15 +8196,15 @@ export namespace Prisma {
     name?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     accessToken?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    preferences?: UserPreferenceUpdateManyWithoutUserNestedInput
-    friends?: UserFriendUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    friends?: UserFriendUpdateManyWithoutUserNestedInput
+    preferences?: UserPreferenceUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFriendOfInput = {
@@ -8255,31 +8212,58 @@ export namespace Prisma {
     name?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
     accessToken?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    preferences?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
-    friends?: UserFriendUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    friends?: UserFriendUncheckedUpdateManyWithoutUserNestedInput
+    preferences?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   }
 
-  export type UserPreferenceCreateManyUserInput = {
-    id?: string
-    categoryId: string
-    score?: number
+  export type UserUpsertWithoutFriendsInput = {
+    update: XOR<UserUpdateWithoutFriendsInput, UserUncheckedUpdateWithoutFriendsInput>
+    create: XOR<UserCreateWithoutFriendsInput, UserUncheckedCreateWithoutFriendsInput>
+    where?: UserWhereInput
   }
 
-  export type UserFriendCreateManyUserInput = {
-    id?: string
-    friendId: string
+  export type UserUpdateToOneWithWhereWithoutFriendsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutFriendsInput, UserUncheckedUpdateWithoutFriendsInput>
   }
 
-  export type UserFriendCreateManyFriendInput = {
-    id?: string
-    userId: string
+  export type UserUpdateWithoutFriendsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    friendOf?: UserFriendUpdateManyWithoutFriendNestedInput
+    preferences?: UserPreferenceUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutFriendsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    accessTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    friendOf?: UserFriendUncheckedUpdateManyWithoutFriendNestedInput
+    preferences?: UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type RefreshTokenCreateManyUserInput = {
@@ -8290,52 +8274,20 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type UserPreferenceUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
-    category?: PreferenceCategoryUpdateOneRequiredWithoutPreferencesNestedInput
+  export type UserFriendCreateManyFriendInput = {
+    id?: string
+    userId: string
   }
 
-  export type UserPreferenceUncheckedUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    categoryId?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
+  export type UserFriendCreateManyUserInput = {
+    id?: string
+    friendId: string
   }
 
-  export type UserPreferenceUncheckedUpdateManyWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    categoryId?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
-  }
-
-  export type UserFriendUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    friend?: UserUpdateOneRequiredWithoutFriendOfNestedInput
-  }
-
-  export type UserFriendUncheckedUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    friendId?: StringFieldUpdateOperationsInput | string
-  }
-
-  export type UserFriendUncheckedUpdateManyWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    friendId?: StringFieldUpdateOperationsInput | string
-  }
-
-  export type UserFriendUpdateWithoutFriendInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    user?: UserUpdateOneRequiredWithoutFriendsNestedInput
-  }
-
-  export type UserFriendUncheckedUpdateWithoutFriendInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
-  }
-
-  export type UserFriendUncheckedUpdateManyWithoutFriendInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
+  export type UserPreferenceCreateManyUserInput = {
+    id?: string
+    categoryId: string
+    score?: number
   }
 
   export type RefreshTokenUpdateWithoutUserInput = {
@@ -8360,6 +8312,54 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserFriendUpdateWithoutFriendInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user?: UserUpdateOneRequiredWithoutFriendsNestedInput
+  }
+
+  export type UserFriendUncheckedUpdateWithoutFriendInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type UserFriendUncheckedUpdateManyWithoutFriendInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type UserFriendUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    friend?: UserUpdateOneRequiredWithoutFriendOfNestedInput
+  }
+
+  export type UserFriendUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    friendId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type UserFriendUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    friendId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type UserPreferenceUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
+    category?: PreferenceCategoryUpdateOneRequiredWithoutPreferencesNestedInput
+  }
+
+  export type UserPreferenceUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    categoryId?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type UserPreferenceUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    categoryId?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
   }
 
   export type UserPreferenceCreateManyCategoryInput = {

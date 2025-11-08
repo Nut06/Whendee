@@ -1,14 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-// schema.prisma
-
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/prisma/client"
+  provider      = "prisma-client-js"
+  output        = "../src/prisma/client"
+  binaryTargets = ["native", "darwin-arm64"]
 }
 
 datasource db {
@@ -21,16 +14,16 @@ model User {
   name              String?
   email             String?          @unique
   phoneNumber       String?          @unique
-  password          String?          @unique
   avatarUrl         String?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
+  password          String?          @unique
   accessToken       String?
   accessTokenExpiry DateTime?
-  preferences       UserPreference[]
-  friends           UserFriend[]     @relation("UserToFriends")
-  friendOf          UserFriend[]     @relation("FriendToUsers")
   refreshTokens     RefreshToken[]
+  friendOf          UserFriend[]     @relation("FriendToUsers")
+  friends           UserFriend[]     @relation("UserToFriends")
+  preferences       UserPreference[]
 }
 
 model RefreshToken {
@@ -44,22 +37,20 @@ model RefreshToken {
 }
 
 model PreferenceCategory {
-  id    String  @id @default(uuid())
-  key   String  @unique // e.g., "karaoke", "travel"
-  label String
-  icon  String?
-
+  id          String           @id @default(uuid())
+  key         String           @unique
+  label       String
+  icon        String?
   preferences UserPreference[]
 }
 
 model UserPreference {
-  id         String @id @default(uuid())
+  id         String             @id @default(uuid())
   userId     String
   categoryId String
-  score      Int    @default(5)
-
-  user     User               @relation(fields: [userId], references: [id])
-  category PreferenceCategory @relation(fields: [categoryId], references: [id])
+  score      Int                @default(5)
+  category   PreferenceCategory @relation(fields: [categoryId], references: [id])
+  user       User               @relation(fields: [userId], references: [id])
 
   @@unique([userId, categoryId])
 }
@@ -68,9 +59,8 @@ model UserFriend {
   id       String @id @default(uuid())
   userId   String
   friendId String
-
-  user   User @relation("UserToFriends", fields: [userId], references: [id])
-  friend User @relation("FriendToUsers", fields: [friendId], references: [id])
+  friend   User   @relation("FriendToUsers", fields: [friendId], references: [id])
+  user     User   @relation("UserToFriends", fields: [userId], references: [id])
 
   @@unique([userId, friendId])
 }

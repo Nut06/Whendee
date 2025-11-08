@@ -5,7 +5,7 @@ import { Feather } from '@expo/vector-icons'
 import { PrimaryButton } from '@/components/ui/Button';
 import InputField from '@/components/ui/InputField';
 import { LoginRequest } from '@/types/user.types';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '../stores/authStore';
 
 export default function Login() {
   
