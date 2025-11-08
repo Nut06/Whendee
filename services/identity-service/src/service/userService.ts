@@ -128,8 +128,17 @@ const userService = {
 			}
 			throw new AppError("Unable to add friend", INTERNAL_SERVER_ERROR, "ADD_FRIEND_FAILED");
 		}
-	}
-,
+	},
+	getFriends: async (userId: string): Promise<User[]> => {
+		if (!userId) {
+			throw new AppError("User id is required", BAD_REQUEST, "USER_ID_REQUIRED");
+		}
+		try {
+			return await UserRepo.listFriends(userId);
+		} catch (error) {
+			throw new AppError("Unable to fetch friends", INTERNAL_SERVER_ERROR, "FRIENDS_FETCH_FAILED");
+		}
+	},
 	getUserList: async (currentUserId: string, options: { page?: number; limit?: number; search?: string; orderBy?: 'createdAt' | 'updatedAt'; sort?: 'asc' | 'desc'; } = {}) => {
 		if (!currentUserId) {
 			throw new AppError('User id is required', BAD_REQUEST, 'USER_ID_REQUIRED');

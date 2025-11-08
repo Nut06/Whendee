@@ -1,63 +1,164 @@
-// app/(main)/notifications.tsx
-
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import { Stack, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { fetchNotifications, respondToNotification, Notification } from '@/lib/notificationApi';
+import { ensureEventMember } from '@/lib/eventApi';
+import { useAuthStore } from '../stores/authStore';
+import planStore from '../lib/planStore';
 
-const MOCK_NOTIFICATIONS = [
-  { id: '1', icon: 'people', title: 'Group Invitation Received!', details: 'You\'ve been invited to join [ชื่อกลุ่ม]. Tap to accept or decline.', time: '2 days ago' },
-  { id: '2', icon: 'hand-wave', title: 'You\'ve Joined the Group!', details: 'You are now a member of [ชื่อกลุ่ม]. Say hi 👋 to everyone!', time: '6 days ago' },
-  { id: '3', icon: 'person-add', title: 'New Friend Request', details: '[ชื่อคนส่งคำขอ] wants to be friends with you. Accept or ignore?', time: '9 days ago' },
-  { id: '4', icon: 'notifications', title: 'Upcoming Event in 2 Days', details: 'Your group Ex1 has an event coming up in 2 days. Get ready!', time: '13 days ago' },
-  { id: '5', icon: 'people', title: 'You\'re Now Friends!', details: 'You and [ชื่อเพื่อน] are now connected. Say hi 👋.', time: '4 days ago' },
-];
-
-const NotificationItem = ({ item }: { item: typeof MOCK_NOTIFICATIONS[0] }) => (
-  <TouchableOpacity style={styles.itemContainer} activeOpacity={0.7}>
-    <Ionicons 
-        name={item.icon as any} 
-        size={24} 
-        color="#007BFF" 
-        style={styles.itemIcon} 
-    />
-    <View style={styles.itemContent}>
-      <Text style={styles.itemTitle}>{item.title}</Text>
-      <Text style={styles.itemDetails}>{item.details}</Text>
+const NotificationItem = ({
+  item,
+  onAccept,
+  onDecline,
+}: {
+  item: Notification;
+  onAccept: () => void;
+  onDecline: () => void;
+}) => {
+  const isPending = item.status === 'PENDING';
+  const eventTitle =
+    item.payload?.eventTitle ?? item.payload?.title ?? item.message ?? '';
+  return (
+    <View style={styles.itemContainer}>
+      <Ionicons name="notifications-outline" size={24} color="#007BFF" style={styles.itemIcon} />
+      <View style={styles.itemContent}>
+        <Text style={styles.itemTitle}>{item.title}</Text>
+        {eventTitle ? (
+          <Text style={styles.itemDetails}>{eventTitle}</Text>
+        ) : null}
+        {isPending ? (
+          <View style={styles.actionsRow}>
+            <TouchableOpacity style={styles.acceptBtn} onPress={onAccept}>
+              <Text style={styles.actionText}>Accept</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.declineBtn} onPress={onDecline}>
+              <Text style={styles.actionText}>Decline</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <Text style={styles.statusLabel}>Status: {item.status}</Text>
+        )}
+      </View>
+      <Text style={styles.itemTime}>
+        {new Date(item.createdAt).toLocaleDateString()}
+      </Text>
     </View>
-    <Text style={styles.itemTime}>{item.time}</Text>
-  </TouchableOpacity>
-);
+  );
+};
 
 export default function NotificationsScreen() {
-    const navigation = useNavigation();
-    
-    return (
-        <SafeAreaView style={styles.safeArea}>
-            {/*ตั้งค่า Header ของ Stack Navigator ให้มีปุ่มย้อนกลับ */}
-            <Stack.Screen
-                options={{
-                    headerShown: true,
-                    title: "Notifications",
-                    headerLeft: () => (
-                        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 5 }}>
-                            <Ionicons name="arrow-back" size={24} color="#333" />
-                        </TouchableOpacity>
-                    ),
-                    headerTitleStyle: { fontWeight: '600' },
-                    headerShadowVisible: false,
-                }}
+  const navigation = useNavigation();
+  const user = useAuthStore((state) => state.user);
+  const currentUserId = user?.id ?? planStore.getCurrentUserId();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const list = await fetchNotifications();
+      setNotifications(list);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load notifications');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleDecision = async (item: Notification, action: 'ACCEPT' | 'DECLINE') => {
+    if (!currentUserId) {
+      Alert.alert('Missing user', 'Cannot respond without user information.');
+      return;
+    }
+    if (action === 'ACCEPT') {
+      const eventId = item.payload?.eventId ?? item.eventId;
+      if (!eventId) {
+        Alert.alert('Missing event', 'This notification has no event data.');
+        return;
+      }
+      try {
+        await ensureEventMember(eventId, currentUserId, 'ACCEPTED');
+      } catch (err) {
+        Alert.alert(
+          'Unable to join event',
+          err instanceof Error ? err.message : 'Unknown error occurred',
+        );
+        return;
+      }
+    }
+
+    try {
+      await respondToNotification(item.id, action);
+      load();
+    } catch (err) {
+      Alert.alert(
+        'Unable to update notification',
+        err instanceof Error ? err.message : 'Unknown error occurred',
+      );
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Notifications',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 5 }}>
+              <Ionicons name="arrow-back" size={24} color="#333" />
+            </TouchableOpacity>
+          ),
+          headerTitleStyle: { fontWeight: '600' },
+          headerShadowVisible: false,
+        }}
+      />
+      {loading && notifications.length === 0 ? (
+        <View style={styles.loadingState}>
+          <ActivityIndicator />
+        </View>
+      ) : error ? (
+        <View style={styles.loadingState}>
+          <Text style={{ color: '#dc2626' }}>{error}</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={notifications}
+          renderItem={({ item }) => (
+            <NotificationItem
+              item={item}
+              onAccept={() => handleDecision(item, 'ACCEPT')}
+              onDecline={() => handleDecision(item, 'DECLINE')}
             />
-            
-            <FlatList
-                data={MOCK_NOTIFICATIONS}
-                renderItem={({ item }) => <NotificationItem item={item} />}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContent}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-            />
-        </SafeAreaView>
-    );
+          )}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ListEmptyComponent={
+            <View style={styles.loadingState}>
+              <Text style={{ color: '#6b7280' }}>No notifications.</Text>
+            </View>
+          }
+        />
+      )}
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -106,5 +207,38 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#eee',
     marginHorizontal: 10,
-  }
+  },
+  loadingState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  acceptBtn: {
+    backgroundColor: '#22c55e',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  declineBtn: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  actionText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statusLabel: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#6b7280',
+  },
 });

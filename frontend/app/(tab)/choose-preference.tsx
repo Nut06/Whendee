@@ -1,10 +1,10 @@
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native'
-import { useRouter } from 'expo-router'
-import { useState } from 'react'
-import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { LinearGradient } from 'expo-linear-gradient'
-import { useAuthStore } from '../stores/authStore'
-import { userService } from '@/services/userService'
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useAuthStore } from '../stores/authStore';
+import { userService } from '../services/userService';
 
 // Preference options matching Figma design - WhenDee activities
 const PREFERENCES = [
@@ -27,54 +27,64 @@ const PREFERENCES = [
 ] as const;
 
 export default function ChoosePreference() {
-  const router = useRouter()
-  const [selectedPreferences, setSelectedPreferences] = useState<string[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const updateUser = useAuthStore((state) => state.updateUser)
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+  const updateUser = useAuthStore((state) => state.updateUser);
+  const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const hasExistingPreferences = (user?.preferences?.length ?? 0) > 0;
+
+  useEffect(() => {
+    if (hasExistingPreferences) {
+      router.replace('/(main)/home');
+    }
+  }, [hasExistingPreferences, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    const current = user.preferences?.map((pref) => pref.category.key) ?? [];
+    if (current.length) {
+      setSelectedPreferences(current);
+    }
+  }, [user]);
 
   const togglePreference = (id: string) => {
-    setSelectedPreferences(prev => 
-      prev.includes(id)
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-    )
-  }
-
-  const handleSkip = () => {
-    if (selectedPreferences.length === 0) {
-      Alert.alert('No Preferences Selected', 'Please select at least one preference before skipping.');
-    }
-    router.replace('/home');
-  }
+    setSelectedPreferences((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
 
   const handleNext = async () => {
-    if (selectedPreferences.length < 5 || isSubmitting) {
-      return
+    if (isSubmitting) return;
+    if (selectedPreferences.length < 5) {
+      Alert.alert('Pick more favorites', 'กรุณาเลือกอย่างน้อย 5 กิจกรรมก่อนดำเนินการต่อ');
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
       const payload = selectedPreferences.map((id) => {
-        const meta = PREFERENCES.find((pref) => pref.id === id)
+        const meta = PREFERENCES.find((pref) => pref.id === id);
         return {
           key: id,
           label: meta?.label,
           icon: meta?.icon ?? null,
-        }
-      })
+        };
+      });
 
-      const updatedUser = await userService.setUserPreference(payload)
-      await updateUser(updatedUser)
-      router.replace('/home')
+      const updatedUser = await userService.setUserPreference(payload);
+      await updateUser(updatedUser);
+      router.replace('/(main)/home');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to save your preferences right now.'
-      Alert.alert('Save failed', message)
+      const message = error instanceof Error ? error.message : 'Unable to save your preferences right now.';
+      Alert.alert('Save failed', message);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  const canProceed = selectedPreferences.length >= 5
+  const canProceed = selectedPreferences.length >= 5;
 
   return (
         <LinearGradient
@@ -98,17 +108,10 @@ export default function ChoosePreference() {
               </Text>
             </View>
 
-          <View className='flex flex-row justify-end'>
-              <TouchableOpacity
-                onPress={handleSkip}
-                className="px-5 py-2 mt-6 rounded-full bg-white/30"
-                activeOpacity={0.7}
-              >
-                <Text className="text-base font-semibold text-white">{
-                  selectedPreferences.length >= 5 ? 'Send Selections' : 'Skip'
-                }
-                </Text>
-              </TouchableOpacity>
+          <View className="flex-row justify-end px-4 mt-4">
+            <Text className="text-sm font-semibold text-white">
+              เลือกอย่างน้อย 5 กิจกรรมเพื่อดำเนินการต่อ
+            </Text>
           </View>
 
             {/* Preferences Grid */}
@@ -158,18 +161,18 @@ export default function ChoosePreference() {
               </Text>
               
               {/* Continue hint */}
-              {canProceed && (
-                <TouchableOpacity 
-                  onPress={handleNext}
-                  className="px-8 py-3 bg-white rounded-full"
-                  activeOpacity={0.8}
-                  disabled={isSubmitting}
+              <TouchableOpacity
+                onPress={handleNext}
+                className={`px-8 py-3 rounded-full ${canProceed ? 'bg-white' : 'bg-white/50'}`}
+                activeOpacity={canProceed ? 0.8 : 1}
+                disabled={!canProceed || isSubmitting}
+              >
+                <Text
+                  className={`text-base font-semibold ${canProceed ? 'text-purple-600' : 'text-purple-300'}`}
                 >
-                  <Text className="text-base font-semibold text-purple-600">
-                    {isSubmitting ? 'Saving...' : 'Continue'}
-                  </Text>
-                </TouchableOpacity>
-              )}
+                  {isSubmitting ? 'Saving...' : 'Continue'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>

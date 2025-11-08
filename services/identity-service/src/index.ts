@@ -4,6 +4,7 @@ import cors, { CorsOptions } from 'cors';
 import { OK } from '@/types/http';
 import { authRouter } from './router/authRoute';
 import { userRouter } from './router/userRoute';
+import { notificationRouter } from './router/notificationRoute';
 import { redisClient } from './utils/redis';
 import passport from '@/utils/passport';
 
@@ -58,6 +59,7 @@ app.listen(PORT, () => {
 
 app.use('/auth', authRouter);
 app.use('/user', userRouter);
+app.use('/notification', notificationRouter);
 
 app.get('/', (req: Request, res: Response) => {
   res.status(OK).json({message:"index Identity Service is running"});

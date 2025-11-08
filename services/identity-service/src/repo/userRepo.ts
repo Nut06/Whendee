@@ -143,6 +143,25 @@ const UserRepo = {
         // preserve input order, omit not-found ids
         return unique.map((id) => byId.get(id)).filter((v): v is User => Boolean(v));
     },
+    listFriends: async (userId: string): Promise<User[]> => {
+        if (!userId) {
+            return [];
+        }
+
+        const records = await prisma.userFriend.findMany({
+            where: { userId },
+            select: {
+                friend: {
+                    select: userSelect,
+                },
+            },
+        });
+
+        return records
+            .map((record) => record.friend)
+            .filter(Boolean)
+            .map(mapUser);
+    },
     createUser: async (data: CreateUserInput): Promise<User> => {
         const record = await prisma.user.create({
             data,

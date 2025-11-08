@@ -1,4 +1,5 @@
 import { identityApi } from "../app/utils/api";
+import type { ApiResponse } from "../app/utils/api";
 
 export type FriendProfile = {
   id: string;
@@ -8,11 +9,15 @@ export type FriendProfile = {
   avatarUrl?: string | null;
 };
 
-type FriendListResponse = {
-  data: FriendProfile[];
-};
+type FriendListResponse = ApiResponse<{ friends: FriendProfile[] }>;
+type UserListResponse = ApiResponse<{ users: FriendProfile[] }>;
 
-export async function fetchFriends(userId: string) {
-  const response = await identityApi.get<FriendListResponse>(`/users/${userId}/friends`);
-  return response.data;
+export async function fetchFriends() {
+  const response = await identityApi.get<FriendListResponse>("/user/friends");
+  return response.data.data.friends;
+}
+
+export async function fetchUserDirectory() {
+  const response = await identityApi.get<UserListResponse>("/user/list");
+  return response.data.data.users;
 }

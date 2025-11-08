@@ -1,14 +1,17 @@
 import { prisma } from './prisma.js';
 import { HttpError } from '../middleware/http-error.js';
+import { notifyEventInvite } from './notification.service.js';
 
 export async function addMemberToEvent(params: {
   eventId: string;
   userId: string;
   status?: 'INVITED' | 'ACCEPTED' | 'DECLINED';
+  inviterId?: string;
+  inviterName?: string;
 }) {
   const event = await prisma.event.findUnique({
     where: { id: params.eventId },
-    select: { id: true },
+    select: { id: true, title: true },
   });
 
   if (!event) {
@@ -16,7 +19,7 @@ export async function addMemberToEvent(params: {
   }
 
   try {
-    return await prisma.eventMember.upsert({
+    const member = await prisma.eventMember.upsert({
       where: {
         eventId_userId: {
           eventId: params.eventId,
@@ -41,6 +44,27 @@ export async function addMemberToEvent(params: {
         joinedAt: true,
       },
     });
+    if (
+      (params.status ?? 'ACCEPTED') === 'INVITED' &&
+      params.inviterId &&
+      event?.title
+    ) {
+      // Fire and forget - notification is sent asynchronously
+      // Errors are logged but don't block the member addition
+      notifyEventInvite({
+        targetUserId: params.userId,
+        eventId: params.eventId,
+        eventTitle: event.title,
+        inviterId: params.inviterId,
+        inviterName: params.inviterName,
+      }).catch((error) => {
+        console.error(
+          '[Member Service] Failed to send notification (non-blocking)',
+          error,
+        );
+      });
+    }
+    return member;
   } catch (error) {
     throw error;
   }

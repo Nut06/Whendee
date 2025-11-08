@@ -4,8 +4,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import planStore, { type Plan } from "../lib/planStore";
-import CustomHeader from "@/components/customHeader";
+import CustomHeader from "../components/customHeader";
 import { fetchEvents } from "@/lib/eventApi";
+import { useAuthStore } from "../stores/authStore";
 
 function AvatarStack({ count = 5 }: { count?: number }) {
   const src = require("../../assets/images/react-logo.png");
@@ -260,6 +261,7 @@ function PlanCard({ plan }: { plan: Plan }) {
 export default function PlanScreen() {
   const insets = useSafeAreaInsets();
   const [plans, setPlans] = useState<Plan[]>(planStore.getAll());
+  const user = useAuthStore((state) => state.user);
   const WEEKDAYS = [
     "Sunday",
     "Monday",
@@ -291,6 +293,8 @@ export default function PlanScreen() {
     const dow = WEEKDAYS[d.getDay()];
     return `${day} ${month}’ ${yr} • ${dow}`;
   }, []);
+  const headerName = user?.name && user.name.trim().length ? user.name : undefined;
+  const headerAvatar = user?.avatarUrl && user.avatarUrl.trim().length ? user.avatarUrl : undefined;
 
   useEffect(() => {
     const unsub = planStore.subscribe(() => setPlans([...planStore.getAll()]));
@@ -338,7 +342,7 @@ export default function PlanScreen() {
       }}
     >
       {/* Header */}
-      <CustomHeader dateLabel={headerDate} />
+      <CustomHeader name={headerName} dateLabel={headerDate} profilePic={headerAvatar} />
 
       {/* Search bar */}
       <View className="bg-white border border-gray-100 rounded-full px-4 py-2 flex-row items-center shadow-sm mb-4">

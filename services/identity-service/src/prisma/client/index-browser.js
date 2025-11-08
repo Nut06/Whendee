@@ -164,9 +164,30 @@ exports.Prisma.UserFriendScalarFieldEnum = {
   friendId: 'friendId'
 };
 
+exports.Prisma.NotificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  title: 'title',
+  message: 'message',
+  eventId: 'eventId',
+  inviterId: 'inviterId',
+  payload: 'payload',
+  status: 'status',
+  readAt: 'readAt',
+  resolvedAt: 'resolvedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -179,13 +200,29 @@ exports.Prisma.NullsOrder = {
   last: 'last'
 };
 
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+exports.NotificationType = exports.$Enums.NotificationType = {
+  EVENT_INVITE: 'EVENT_INVITE'
+};
+
+exports.NotificationStatus = exports.$Enums.NotificationStatus = {
+  PENDING: 'PENDING',
+  READ: 'READ',
+  ACCEPTED: 'ACCEPTED',
+  DECLINED: 'DECLINED'
+};
 
 exports.Prisma.ModelName = {
   User: 'User',
   RefreshToken: 'RefreshToken',
   PreferenceCategory: 'PreferenceCategory',
   UserPreference: 'UserPreference',
-  UserFriend: 'UserFriend'
+  UserFriend: 'UserFriend',
+  Notification: 'Notification'
 };
 
 /**

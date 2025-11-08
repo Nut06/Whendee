@@ -126,7 +126,7 @@ export const loginlocal = async (req: Request, res: Response) => passport.authen
     }
 
     const resdata:LoginResponse = genLoginResponse(token);
-    return res.json(resdata).status(OK);
+    return res.status(OK).json(resdata);
   })(req, res);
 
 export const verifyOtp = async (req: Request, res: Response):Promise<Response> => {

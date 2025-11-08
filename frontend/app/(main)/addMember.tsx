@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import planStore from "../lib/planStore";
 import { ensureEventMember } from "@/lib/eventApi";
 import { fetchFriends, type FriendProfile } from "@/lib/identityApi";
+import { useAuthStore } from "../stores/authStore";
 
 type Props = {
   onCancel?: () => void;
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export default function AddMembers({ onCancel, onSave }: Props) {
+  const authUser = useAuthStore((state) => state.user);
   const router = useRouter();
   const { meetingId } = useLocalSearchParams<{ meetingId?: string }>();
   const normalizedMeetingId = (Array.isArray(meetingId) ? meetingId[0] : meetingId) ?? "";
@@ -22,7 +24,6 @@ export default function AddMembers({ onCancel, onSave }: Props) {
   const [search, setSearch] = useState("");
   const [isLoadingFriends, setIsLoadingFriends] = useState(false);
   const [friendsError, setFriendsError] = useState<string | null>(null);
-  const currentUserId = planStore.getCurrentUserId();
   const [, forceRefresh] = useState(0);
 
   useEffect(() => {
@@ -32,15 +33,14 @@ export default function AddMembers({ onCancel, onSave }: Props) {
 
   const plan = normalizedMeetingId ? planStore.getByMeetingId(normalizedMeetingId) : undefined;
   useEffect(() => {
-    if (!currentUserId) return;
     let cancelled = false;
     const load = async () => {
       try {
         setIsLoadingFriends(true);
         setFriendsError(null);
-        const response = await fetchFriends(currentUserId);
+        const response = await fetchFriends();
         if (!cancelled) {
-          setFriends(response.data ?? []);
+          setFriends(response ?? []);
         }
       } catch (error) {
         if (!cancelled) {
@@ -55,7 +55,7 @@ export default function AddMembers({ onCancel, onSave }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [currentUserId]);
+  }, []);
 
   useEffect(() => {
     if (!plan?.members) return;
@@ -91,6 +91,8 @@ export default function AddMembers({ onCancel, onSave }: Props) {
   };
 
   const handleInvite = async (userId: string, name: string) => {
+    const inviterId = authUser?.id ?? planStore.getCurrentUserId();
+    const inviterName = authUser?.name ?? undefined;
     if (!normalizedMeetingId || !backendEventId) {
       Alert.alert("Missing event", "Please schedule this meeting before inviting friends.");
       return;
@@ -98,7 +100,13 @@ export default function AddMembers({ onCancel, onSave }: Props) {
 
     try {
       setStatuses((prev) => ({ ...prev, [userId]: "loading" }));
-      const response = await ensureEventMember(backendEventId, userId, "INVITED");
+      const response = await ensureEventMember(
+        backendEventId,
+        userId,
+        "INVITED",
+        inviterId,
+        inviterName,
+      );
       if (response.data) {
         planStore.upsertMember(normalizedMeetingId, response.data);
       }

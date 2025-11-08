@@ -1,24 +1,33 @@
-import { View, Image, Text, TouchableOpacity, Alert } from 'react-native'
-import { useState } from 'react'
-import { useRouter } from 'expo-router'
-import { Feather } from '@expo/vector-icons'
-import { PrimaryButton } from '@/components/ui/Button';
-import InputField from '@/components/ui/InputField';
-import { LoginRequest } from '@/types/user.types';
+import { View, Image, Text, TouchableOpacity, Alert } from 'react-native';
+import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+import { PrimaryButton } from '../components/ui/Button';
+import InputField from '../components/ui/InputField';
+import { LoginRequest } from '../types/user.types';
 import { useAuthStore } from '../stores/authStore';
 
 export default function Login() {
-  
   const router = useRouter();
   const [userInput, setUserInput] = useState<LoginRequest>({ email: '', password: '' });
   const { loginWithCredentials, loginGoogle, loginLine } = useAuthStore();
-  
   const [loading, setIsLoading] = useState<boolean>(false);
+
+  const routeAfterLogin = () => {
+    const currentUser = useAuthStore.getState().user;
+    const hasPreferences = (currentUser?.preferences?.length ?? 0) > 0;
+    if (hasPreferences) {
+      router.replace('/(main)/home');
+      return;
+    }
+    router.replace('/(tab)/choose-preference');
+  };
+
   const handleLogin = async () => {
     try {
       setIsLoading(true);
       await loginWithCredentials(userInput);
-      router.replace('/(tab)/home');
+      routeAfterLogin();
     } catch (err: any) {
       const message = typeof err?.message === 'string' ? err.message : 'Unable to log in. Please try again.';
       Alert.alert('Login failed', message);
@@ -31,7 +40,7 @@ export default function Login() {
     try {
       setIsLoading(true);
       await loginGoogle();
-      router.replace('/(tab)/choose-preference');
+      routeAfterLogin();
     } catch (err: any) {
       const message = typeof err?.message === 'string' ? err.message : 'Google login failed.';
       Alert.alert('Login failed', message);
@@ -44,7 +53,7 @@ export default function Login() {
     try {
       setIsLoading(true);
       await loginLine();
-      router.replace('/(tab)/home');
+      routeAfterLogin();
     } catch (err: any) {
       const message = typeof err?.message === 'string' ? err.message : 'LINE login failed.';
       Alert.alert('Login failed', message);
@@ -54,7 +63,7 @@ export default function Login() {
   };
 
   return (
-        <View className="flex-1">
+    <View className="flex-1">
         <View className="mx-5 mt-6 overflow-hidden bg-white shadow-lg rounded-3xl">
           {/* Header */}
           <View className="relative mb-2">

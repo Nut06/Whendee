@@ -1,63 +1,109 @@
-import { View, Text, TextInput, FlatList, TouchableOpacity, Image, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
+import type { FriendProfile } from "@/lib/identityApi";
 
-const alreadyOnWhendee = [
-  { id: "1", name: "John", avatar: "https://i.pravatar.cc/150?img=1" },
-  { id: "2", name: "Ron", avatar: "https://i.pravatar.cc/150?img=2" },
-  { id: "3", name: "Amy", avatar: "https://i.pravatar.cc/150?img=3" },
-  { id: "4", name: "Bill Gates", avatar: "https://i.pravatar.cc/150?img=4" },
-];
+type Props = {
+  friends: FriendProfile[];
+  alreadyOn: FriendProfile[];
+  invites?: FriendProfile[];
+  loadingFriends?: boolean;
+  friendError?: string | null;
+};
 
-const inviteToWhendee = [
-  { id: "5", name: "John", avatar: "https://i.pravatar.cc/150?img=5" },
-  { id: "6", name: "Ron", avatar: "https://i.pravatar.cc/150?img=6" },
-  { id: "7", name: "Amy", avatar: "https://i.pravatar.cc/150?img=7" },
-  { id: "8", name: "Bill Gates", avatar: "https://i.pravatar.cc/150?img=8" },
-];
-
-export default function FriendsInvite() {
+export default function FriendsInvite({
+  friends,
+  alreadyOn,
+  invites = [],
+  loadingFriends = false,
+  friendError = null,
+}: Props) {
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>All Contacts</Text>
+        <Text style={styles.title}>Friends</Text>
       </View>
 
       {/* Search */}
       <TextInput style={styles.search} placeholder="Search" />
 
-      {/* Already On Whendee */}
-      <Text style={styles.sectionTitle}>Already On WhenDee</Text>
-      <FlatList
-        data={alreadyOnWhendee}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.listItem}>
-            <Image source={{ uri: item.avatar }} style={styles.avatar} />
-            <Text style={styles.name}>{item.name}</Text>
-            <TouchableOpacity style={styles.addButton}>
-              <Text style={styles.addText}>Add</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      />
+      <Text style={styles.sectionTitle}>Friends</Text>
+      {loadingFriends ? (
+        <View style={styles.loadingRow}>
+          <ActivityIndicator color="#2563eb" />
+          <Text style={styles.loadingText}>Loading friends…</Text>
+        </View>
+      ) : friendError ? (
+        <Text style={styles.errorText}>{friendError}</Text>
+      ) : friends.length === 0 ? (
+        <Text style={styles.emptyText}>No friends yet.</Text>
+      ) : (
+        <FlatList
+          scrollEnabled={false}
+          data={friends}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.listItem}>
+              <Image
+                source={{ uri: item.avatarUrl ?? "https://i.pravatar.cc/150?img=10" }}
+                style={styles.avatar}
+              />
+              <Text style={styles.name}>{item.name ?? "Unknown friend"}</Text>
+            </View>
+          )}
+        />
+      )}
 
-      <Text style={styles.viewMore}>View More</Text>
+      {/* Already On Whendee */}
+      {alreadyOn.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>Already On WhenDee</Text>
+          <FlatList
+            scrollEnabled={false}
+            data={alreadyOn}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.listItem}>
+                <Image source={{ uri: item.avatarUrl! }} style={styles.avatar} />
+                <Text style={styles.name}>{item.name}</Text>
+                <TouchableOpacity style={styles.addButton}>
+                  <Text style={styles.addText}>Add</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+          <Text style={styles.viewMore}>View More</Text>
+        </>
+      )}
 
       {/* Invite To Whendee */}
-      <Text style={styles.sectionTitle}>Invite to WhenDee</Text>
-      <FlatList
-        data={inviteToWhendee}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.listItem}>
-            <Image source={{ uri: item.avatar }} style={styles.avatar} />
-            <Text style={styles.name}>{item.name}</Text>
-            <TouchableOpacity style={styles.inviteButton}>
-              <Text style={styles.inviteText}>Invite</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      />
+      {invites.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>Invite to WhenDee</Text>
+          <FlatList
+            scrollEnabled={false}
+            data={invites}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.listItem}>
+                <Image source={{ uri: item.avatarUrl! }} style={styles.avatar} />
+                <Text style={styles.name}>{item.name}</Text>
+                <TouchableOpacity style={styles.inviteButton}>
+                  <Text style={styles.inviteText}>Invite</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+        </>
+      )}
     </View>
   );
 }
@@ -85,6 +131,23 @@ const styles = StyleSheet.create({
   },
   avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
   name: { flex: 1, fontSize: 16 },
+  loadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  loadingText: {
+    marginLeft: 8,
+    color: "#4b5563",
+  },
+  errorText: {
+    color: "#dc2626",
+    marginBottom: 8,
+  },
+  emptyText: {
+    color: "#94a3b8",
+    marginBottom: 8,
+  },
   addButton: {
     backgroundColor: "#f0f0f0",
     paddingHorizontal: 16,

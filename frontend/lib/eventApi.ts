@@ -78,10 +78,12 @@ export async function ensureEventMember(
   eventId: string,
   userId: string,
   status: "INVITED" | "ACCEPTED" | "DECLINED" = "ACCEPTED",
+  inviterId?: string,
+  inviterName?: string,
 ) {
   return request<AddMemberResponse>(`/events/${eventId}/members`, {
     method: "POST",
-    body: JSON.stringify({ userId, status }),
+    body: JSON.stringify({ userId, status, inviterId, inviterName }),
   });
 }
 

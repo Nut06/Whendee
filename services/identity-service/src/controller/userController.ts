@@ -75,6 +75,30 @@ export const addFriend = async (req: Request, res: Response) => {
 	}
 };
 
+export const getFriends = async (req: Request, res: Response) => {
+	try {
+		const userId = await resolveUserId(req);
+		const friends = await userService.getFriends(userId);
+		return res.status(OK).json({
+			success: true,
+			message: "Friends retrieved successfully",
+			data: { friends },
+		});
+	} catch (error) {
+		if (error instanceof AppError) {
+			return res.status(error.status).json({
+				success: false,
+				message: error.message,
+				code: error.code,
+			});
+		}
+		return res.status(INTERNAL_SERVER_ERROR).json({
+			success: false,
+			message: "Failed to retrieve friends",
+		});
+	}
+};
+
 export const getPreferences = async (req: Request, res: Response) => {
 	try {
 		const userId = await resolveUserId(req);

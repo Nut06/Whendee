@@ -284,7 +284,21 @@ export default function ScheduleMeetingScreen() {
         {/* Invites Members */}
         <View style={{ backgroundColor: "#fff", borderRadius: 12, borderWidth: 1, borderColor: "#eef1f5", overflow: "hidden", marginBottom: 12 }}>
           <Text style={{ fontSize: 12, color: "#6b7280", paddingHorizontal: 12, paddingTop: 8, paddingBottom: 6 }}>INVITES MEMBERS</Text>
-          <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12, paddingVertical: 12 }}>
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: "/(main)/addMember",
+                params: { meetingId: ensuredMeetingId },
+              })
+            }
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 12,
+              paddingVertical: 12,
+            }}
+          >
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <Ionicons name="person-add-outline" size={18} color="#6b7280" />
               <Text style={{ marginLeft: 10, color: "#111827" }}>Add Members</Text>

@@ -19,6 +19,8 @@ export async function addEventMemberHandler(
       eventId,
       userId: body.userId,
       status: body.status,
+      inviterId: body.inviterId,
+      inviterName: body.inviterName,
     });
 
     return res.status(201).json({
