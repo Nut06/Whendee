@@ -1,0 +1,104 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id               String        @id @default(cuid())
+  title            String
+  eventDescription String
+  location         String?
+  repeat           String?
+  budget           Int?
+  alertMinutes     Int?
+  scheduledAt      DateTime?
+  meetingLink      String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  polls            Poll[]
+  members          EventMember[]
+  freeDates        EventFreeDate[]
+}
+
+model Poll {
+  id             String        @id @default(cuid())
+  eventId        String        @unique
+  status         PollStatus    @default(OPEN)
+  closesAt       DateTime?
+  winnerOptionId String?       @unique
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  event    Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  options  PollOption[]
+  votes    PollVote[]
+  winner   PollOption?  @relation("PollWinner", fields: [winnerOptionId], references: [id])
+}
+
+model PollOption {
+  id        String   @id @default(cuid())
+  pollId    String
+  label     String
+  tally     Int      @default(0)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  winnerOf  Poll?    @relation("PollWinner")
+  votes     PollVote[]
+}
+
+model PollVote {
+  id        String   @id @default(cuid())
+  pollId    String
+  optionId  String
+  voterId   String
+  createdAt DateTime @default(now())
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, voterId])
+}
+
+model EventMember {
+  id        String             @id @default(cuid())
+  eventId   String
+  userId    String
+  status    EventMemberStatus  @default(ACCEPTED)
+  invitedAt DateTime           @default(now())
+  joinedAt  DateTime?
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+}
+
+model EventFreeDate {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  dateKey   DateTime
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId, dateKey])
+}
+
+enum PollStatus {
+  OPEN
+  CLOSED
+}
+
+enum EventMemberStatus {
+  INVITED
+  ACCEPTED
+  DECLINED
+}

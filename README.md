@@ -1,58 +1,48 @@
-
-````markdown
 # Whendee
 
-This project is a part of ISE (Innovative System Engineering) coursework class of 2025 🎓
+โปรเจ็กต์กลุ่มรายวิชา ISE 2025 🎓 ใช้โครงสร้าง monorepo (pnpm + Turborepo) รวมทั้ง frontend (Expo) และ backend services
 
 ---
 
 ## 📦 Prerequisites
 
-ก่อนเริ่มทำงานให้เตรียมเครื่องมือดังนี้:
+เตรียมสภาพแวดล้อมก่อนเริ่มงาน
 
-- **Node.js** เวอร์ชัน 20 ขึ้นไป  
-  ```bash
-  node -v
-````
-
-* **pnpm** สำหรับจัดการ dependency
-
-  ```bash
-  npm i -g pnpm
-  ```
-* **Expo CLI** สำหรับรัน mobile app
-
-  ```bash
-  npm i -g expo-cli
-  ```
-* **Docker + Docker Compose** สำหรับรัน PostgreSQL (ฐานข้อมูล) และ pgAdmin (ไว้ดู DB)
-* **Git** สำหรับจัดการ source code
+- **Node.js 20+** (แนะนำติดตั้งผ่าน `nvm` และตรวจด้วย `node -v`)
+- **pnpm 9+** – เปิด corepack แล้ว `corepack prepare pnpm@latest --activate`
+- **Expo CLI** – `pnpm add -g expo-cli` (หรือ `npm i -g expo-cli`)
+- **Docker + Docker Compose** – สำหรับฐานข้อมูล/บริการประกอบ
+- **Git**
 
 ---
 
-## 🚀 การเริ่มต้นโปรเจกต์
-
-### 1. Clone โปรเจกต์
+## 🚀 Quick Start
 
 ```bash
-git clone <GitHub-link>
+git clone <repo-url>
 cd Whendee
-```
-
-### 2. อัปเดต branch หลัก
-
-```bash
 git checkout main
 git pull
+git checkout -b feature/<ชื่อฟีเจอร์>
+pnpm install
 ```
 
-### 3. สร้าง branch งานของตัวเอง
+---
+
+## 😈 Backend Setup
+
+### 1. สร้าง Environment Variables
+
+ภายใน `services/<service>/.env.example` มีค่าเริ่มต้นให้ พร้อมพ้อยท์ไปที่ Postgres บนเครื่อง
 
 ```bash
-git checkout -b feature/<ชื่อฟีเจอร์หรืองาน>
+cp services/identity-service/.env.example services/identity-service/.env
+cp services/event-service/.env.example services/event-service/.env
+cp services/comm-service/.env.example services/comm-service/.env
+cp frontend/.env.example frontend/.env
 ```
-
-### 4. รันฐานข้อมูล
+โดยค่าเริ่มต้น environment จะพอยท์ไปที่ Postgres ภายในเครื่อง (`localhost:5432`) และตั้งค่า `PORT` ให้ตรงกับ service นั้น ๆ หากต้องการปรับให้แก้ในไฟล์ `.env` ของ service นั้น ๆ ส่วนฝั่ง frontend (Expo) สามารถตั้งค่า base URL ของ API ได้ที่ `frontend/.env`
+### 2. รันฐานข้อมูล (Docker)
 
 ```bash
 cd infra/compose
@@ -60,97 +50,97 @@ docker compose up -d
 cd ../../
 ```
 
----
+### 3. รัน Backend Services
 
-## 🎨📱 สำหรับทีม Frontend (จิง, โฟร์ท)
+เปิดเทอร์มินัลแยกกันเพื่อความง่าย
 
-1. เข้าโฟลเดอร์ frontend:
+```bash
+pnpm --filter identity-service dev      # http://localhost:3002
+pnpm --filter event-service dev         # http://localhost:3001
+pnpm --filter comm-service dev          # http://localhost:3000
+```
 
-   ```bash
-   cd apps/frontend
-   ```
+> `dev` script ใช้ ts-node + nodemon จึงรันแบบ live reload
 
-2. ติดตั้ง dependencies:
+### เจ้าของบริการ
 
-   ```bash
-   npm install
-   ```
+- **นัท** → `services/identity-service`
+- **น้องเหนือ** → `services/comm-service`
+- **ปูน** → `services/event-service`
 
-3. สร้างไฟล์ `.env` ที่ `apps/mobile-app/.env`
-   โดยดูตัวแปรอ้างอิงจาก `apps/mobile-app/.env.test`
+เมื่อ schema Prisma เปลี่ยนให้รัน
 
-4. รันแอป:
-
-   ```bash
-   npx expo start
-   ```
-
-   (option สำหรับรันเพื่อ clear Expo cache)
-   ```bash
-   npx expo start -c
-   ```
+```bash
+pnpm --filter <service> prisma:migrate
+pnpm --filter <service> prisma:generate
+```
 
 ---
 
-## 😈🌐 สำหรับทีม Backend (นัท, น้องเหนือ, ปูน)
+## 🎨 Frontend (Expo)
 
-### 🗂 Service Responsibility
-
-* **นัท** → `identity-service`
-* **น้องเหนือ** → `comm-service`
-* **ปูน** → `event-service`
-
-### 1. สร้างไฟล์ `.env`
-
-สร้างใน `services/{service-name}/.env`
-โดยดูตัวแปรจาก reference file:
-`services/{service-name}/.env.test`
-
-### 2. เข้าโฟลเดอร์ service ของตัวเอง
-
-ตัวอย่างเช่น นัท (identity service):
+งานทั้งหมดอยู่ใน `frontend/`
 
 ```bash
-cd services/identity-service
+cd frontend
+npm install            # ครั้งแรก
+npm start              # = npx expo start
 ```
 
-### 3. Prisma migrate & generate
+คำสั่ง Dev Server:
 
-```bash
-npm prisma migrate dev --name init
-npm prisma generate
-```
+- กด `i` เปิด iOS simulator
+- กด `a` เปิด Android emulator
+- กด `w` เปิดเว็บ
+- หรือสแกน QR ผ่าน Expo Go
 
-### 4. รัน service
+สคริปต์ที่ใช้บ่อย
 
-```bash
-npm dev
-```
+- `npm run ios`, `npm run android`, `npm run web`
+- `npm run lint`
+- `npx expo start -c` (ล้าง cache ถ้า Expo งอแง)
+
+> ภายใต้แท็บ Home, Friends, Calendar, Settings มีไฟล์ใน `frontend/app/(main)/` ที่ใช้ file-based routing (Expo Router)
+
+---
+
+## 🧰 Monorepo Tips
+
+- `pnpm dev` – ให้ Turbo รัน `dev` script ทุกแพ็กเกจพร้อมกัน (จะมี log ปนกัน)
+- `pnpm --filter <pkg> <command>` – รันเฉพาะแพ็กเกจ เช่น `pnpm --filter identity-service prisma:migrate`
+- `pnpm build`, `pnpm lint` – placeholder ให้ตั้งเพิ่มตามความต้องการ
 
 ---
 
 ## 🧯 Troubleshooting
 
-* **ต่อ DB ไม่ได้**
-
+- **ต่อฐานข้อมูลไม่ได้**  
+  ตรวจ log Docker  
   ```bash
-  docker ps   # ต้องเห็น container postgres
-  ```
+  docker ps | grep postgres
+  docker compose logs postgres
+  ```  
+  ถ้าพอร์ต 5432 ถูกใช้ ปรับใน `infra/compose/docker-compose.yml`
 
-  ถ้าพอร์ตชน → แก้ `docker-compose.yml` หรือหยุดโปรแกรมที่ใช้พอร์ต 5432
+- **Prisma client error / schema mismatch**  
+  รัน `pnpm --filter <service> prisma:migrate` และ `pnpm --filter <service> prisma:generate`
 
-* **Prisma error: “client not initialized”**
+- **Expo cache ค้าง**  
+  `pnpm --filter frontend exec expo start -c`
 
-  ```bash
-  npm prisma generate
-  ```
+- **ต้องล้าง node_modules บาง service**  
+  `pnpm --filter <service> install`
 
-* **Mismatch schema**
+---
 
-  ```bash
-  npm prisma migrate dev
-  ```
+## 🗂 Directory Overview
 
-  → รันทุกครั้งหลัง `git pull` เพื่อ sync schema
-
+```
+frontend/                     # Expo app (ทีมจิง-โฟร์ท)
+infra/compose/docker-compose.yml
+services/
+  identity-service/           # นัท
+  event-service/              # ปูน
+  comm-service/               # น้องเหนือ
+pnpm-workspace.yaml           # รายการแพ็กเกจทั้งหมด
 ```

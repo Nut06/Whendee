@@ -1,5 +1,6 @@
 # Node modules (ทุก app/service)
 **/node_modules/
+**/.pnpm-store/
 
 # Logs
 logs
@@ -19,19 +20,36 @@ Thumbs.db
 *.env.development
 *.env.test
 *.env.production
+.env*.local
 
 # Prisma
 **/prisma/dev.db
 **/prisma/dev.db-journal
+services/identity-service/src/prisma/
 
 # Build outputs
 dist/
 build/
 .cache/
 .expo/
-
-# Expo specific
 .expo-shared/
+web-build/
+expo-env.d.ts
+
+# Metro
+.metro-health-check*
+
+# Native / platform specific
+/ios
+/android
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
 
 # TypeScript build (ถ้ามี)
 *.tsbuildinfo
@@ -39,5 +57,11 @@ build/
 # Coverage
 coverage/
 
-# Docker
+# Docker volumes
 infra/compose/pgdata/
+
+# Tooling
+.vscode/
+
+# Expo sample folder
+app-example
