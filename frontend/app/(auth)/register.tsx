@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Image, Alert } from 'react-nat
 import { Feather } from '@expo/vector-icons'
 import { useState } from 'react'
 import { useRouter } from 'expo-router'
-import InputField from '../components/ui/InputField'
+import InputField from '@/components/ui/InputField'
 import { RegisterRequest } from '@/types/user.types'
 import { useAuthStore } from '@/stores/authStore'
 import { useOtpStore } from '@/stores/otpStore'

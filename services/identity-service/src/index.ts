@@ -57,7 +57,7 @@ app.listen(PORT, () => {
 });
 
 app.use('/auth', authRouter);
-app.use('/users', userRouter);
+app.use('/user', userRouter);
 
 app.get('/', (req: Request, res: Response) => {
   res.status(OK).json({message:"index Identity Service is running"});

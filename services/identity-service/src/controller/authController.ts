@@ -5,6 +5,8 @@ import passport from 'passport';
 import '@/utils/passport';
 import { AppError } from '@/types/appError';
 import authService from '@/service/authService';
+import { resolveUserId } from '@/utils/authRequest';
+import UserRepo from '@/repo/userRepo';
 
 export const requestOtp = async (req: Request, res: Response) => {
   const {email, password, fullname, phone}:OTPRequest = req.body;
@@ -194,21 +196,62 @@ export const refreshToken = async (req: Request, res: Response) => {
 }
 
 
-export const lineLogin = async (req: Request, res: Response) => {
-  return passport.authenticate('line', { session: false })(req, res);
-}
+// ===== LINE OAUTH (stateless similar to Google) =====
+export const lineLogin = async (req: Request, res: Response, next: NextFunction) => {
+  const rawRedirect = req.query.redirectUri;
+  const redirectTarget = parseRedirectTarget(rawRedirect) ?? fallbackRedirectTarget;
+  console.log('[LINE][Controller] lineLogin', {
+    rawRedirect,
+    redirectTarget,
+    allowedSchemes: process.env.GOOGLE_OAUTH_ALLOWED_SCHEMES,
+  });
+  return passport.authenticate('line', {
+    session: false,
+    state: encodeState(redirectTarget),
+  })(req, res, next);
+};
 
-export const lineCallback = async (req: Request, res: Response) => {
-  return await passport.authenticate('line', { session: false }, (err:any, token:AuthToken, info?:any) => {
+export const lineCallback = async (req: Request, res: Response, next: NextFunction) => {
+  const redirectUri = decodeState(req.query.state) ?? fallbackRedirectTarget;
+  console.log('[LINE][Controller] lineCallback start', {
+    rawState: req.query.state,
+    decodedRedirect: redirectUri,
+  });
+
+  const sendRedirect = (params: Record<string, string>) => {
+    const location = buildRedirectWithParams(redirectUri, params);
+    console.log('[LINE][Controller] Redirecting to client', {
+      locationLength: location.length,
+      params,
+    });
+    return res.redirect(location);
+  };
+
+  return passport.authenticate('line', { session: false }, (err: any, token: AuthToken, info?: any) => {
     if (err) {
-      return res.status(BAD_REQUEST).json({ message: err.message || 'Line login failed' });
+      console.log('[LINE][Controller] lineCallback error', { message: err.message });
+      return sendRedirect({ success: 'false', error: err.message || 'Line login failed' });
     }
     if (!token) {
-      return res.status(BAD_REQUEST).json({ message: 'Invalid credentials' });
+      console.log('[LINE][Controller] lineCallback missing token');
+      return sendRedirect({ success: 'false', error: 'Invalid credentials' });
     }
-    return res.status(OK).json(genLoginResponse(token, 'Line login successful'));
-  })(req, res);
-}
+    console.log('[LINE][Controller] lineCallback success', {
+      accessTokenPreview: token.accessToken?.slice(0, 12) + '...',
+      hasRefresh: Boolean(token.refreshToken),
+      accessExp: token.accessTokenExpiresAt?.toISOString?.() ?? null,
+      refreshExp: token.refreshTokenExpiresAt?.toISOString?.() ?? null,
+    });
+    const params: Record<string, string> = {
+      success: 'true',
+      access: token.accessToken,
+      refresh: token.refreshToken,
+    };
+    if (token.accessTokenExpiresAt) params.access_expires = token.accessTokenExpiresAt.toISOString();
+    if (token.refreshTokenExpiresAt) params.refresh_expires = token.refreshTokenExpiresAt.toISOString();
+    return sendRedirect(params);
+  })(req, res, next);
+};
 
 export const googleLogin = async (req: Request, res: Response, next: NextFunction) => {
   const redirectTarget = parseRedirectTarget(req.query.redirectUri) ?? fallbackRedirectTarget;
@@ -261,14 +304,13 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
 };
 
 export const getUser = async (req: Request, res: Response) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(BAD_REQUEST).json({ message: 'Access token is required' });
-  }
   try {
-    const user = await authService.getUserFromToken(token);
+    const userId = await resolveUserId(req);
+    // In dev override (no token), resolveUserId returns id; fetch user directly
+    const user = await UserRepo.findUserById(userId);
+    if (!user) {
+      return res.status(BAD_REQUEST).json({ message: 'Get user failed' });
+    }
     return res.status(OK).json({ success: true, data: { user } });
   } catch (error) {
     return res.status(BAD_REQUEST).json({ message: 'Get user failed' });

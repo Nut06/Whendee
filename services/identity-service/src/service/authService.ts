@@ -1,3 +1,4 @@
+import { getPreferences } from '@/controller/userController';
 import Bcrypt from "@/utils/bcrypt";
 import { OTPSession, OTPRequest, User, AuthToken } from "@/types/user";
 import UserRepo from "@/repo/userRepo";
@@ -183,13 +184,21 @@ const authService = {
     },
 
     loginWithLine: async (profile: any): Promise<AuthToken> => {
+        console.log('[LINE][Service] loginWithLine start', {
+            provider: profile?.provider,
+            profileId: profile?.id,
+            hasEmails: Array.isArray(profile?.emails) && profile.emails.length > 0,
+            displayName: profile?.displayName,
+        });
         const email = profile?.emails?.[0]?.value;
         if (!email) {
+            console.log('[LINE][Service] Missing email in profile');
             throw new AppError('Email not provided by LINE', BAD_REQUEST, 'LINE_LOGIN_FAILED');
         }
 
         const displayName = profile.displayName || undefined;
         let user = await UserRepo.findUserbyEmail(email);
+        console.log('[LINE][Service] User lookup by email', { email, found: Boolean(user) });
 
         if (!user) {
             const randomPassword = crypto.randomBytes(16).toString('hex');
@@ -198,13 +207,23 @@ const authService = {
                 name: displayName,
                 password: await Bcrypt.hash(randomPassword),
             });
+            console.log('[LINE][Service] Created new user from LINE', { userId: user?.id, email });
         }
 
         if (!user) {
+            console.log('[LINE][Service] Failed to resolve or create user');
             throw new AppError('LINE login failed', INTERNAL_SERVER_ERROR, 'LINE_LOGIN_FAILED');
         }
 
-        return buildSessionForUser(user.id);
+        const tokens = await buildSessionForUser(user.id);
+        console.log('[LINE][Service] Built session tokens', {
+            userId: user.id,
+            hasAccess: Boolean(tokens?.accessToken),
+            hasRefresh: Boolean(tokens?.refreshToken),
+            accessExp: tokens?.accessTokenExpiresAt?.toISOString?.() ?? null,
+            refreshExp: tokens?.refreshTokenExpiresAt?.toISOString?.() ?? null,
+        });
+        return tokens;
     },
 
     resendOtp: async({phone, session, ip, userAgent}

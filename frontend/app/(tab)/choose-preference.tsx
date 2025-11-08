@@ -3,8 +3,8 @@ import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
-import { useAuthStore } from '../stores/authStore'
-import { userService } from '../services/userService'
+import { useAuthStore } from '@/stores/authStore'
+import { userService } from '@/services/userService'
 
 // Preference options matching Figma design - WhenDee activities
 const PREFERENCES = [

@@ -5,7 +5,7 @@ import MapView, { Marker, MapPressEvent, Region } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { eventApi } from "../lib/api";
+import { eventApi } from "@/lib/api";
 
 // ------ UI helpers (เล็ก ๆ ให้เหมือนดีไซน์) ------
 function PillInfo({ text }: { text: string }) {

@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { commApi } from "../lib/api";
+import { commApi } from "@/lib/api";
 
 type InviteTarget = {
   friendId: string;

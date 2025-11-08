@@ -7,6 +7,7 @@ export type User = {
     avatarUrl?: string;
     createdAt?: Date;
     updatedAt?: Date;
+    friends?: User[];
     preferences?: UserPreference[];
 };
 

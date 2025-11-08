@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { eventApi } from "../lib/api";
+import { eventApi } from "@/lib/api";
 
 type OptionField = { id: string; value: string };
 

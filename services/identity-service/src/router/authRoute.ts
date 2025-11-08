@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requestOtp, loginlocal, verifyOtp, resendOtp, lineLogin, googleLogin, lineCallback, googleCallback, refreshToken, getUser } from "@/controller/authController";
 
-export const authRouter = Router();
+export const authRouter: Router = Router();
 
 authRouter.post('/login', loginlocal);
 
@@ -17,7 +17,7 @@ authRouter.get('/google', googleLogin);
 
 authRouter.get('/google/callback', googleCallback);
 
-authRouter.post('/line', lineCallback);
+authRouter.get('/line', lineLogin);
 
 authRouter.get('/line/callback', lineCallback);
 

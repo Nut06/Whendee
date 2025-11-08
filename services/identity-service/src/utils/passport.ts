@@ -50,9 +50,20 @@ const lineStrategy = new LineStrategy(
   },
   async (accessToken: string, refreshToken: string, profile: any, done: Function) => {
     try {
+      console.log('[LINE][Passport] Callback invoked', {
+        provider: profile?.provider,
+        profileId: profile?.id,
+        displayName: profile?.displayName,
+        hasEmails: Array.isArray(profile?.emails) && profile.emails.length > 0,
+      });
       const token: AuthToken = await authService.loginWithLine(profile);
+      console.log('[LINE][Passport] loginWithLine succeeded');
       return done(null, token);
-    } catch (error) {
+    } catch (error: any) {
+      console.log('[LINE][Passport] loginWithLine failed', {
+        message: error?.message,
+        code: error?.code,
+      });
       return done(error);
     }
   }
@@ -60,5 +71,11 @@ const lineStrategy = new LineStrategy(
 
 passport.use('google', googleStarategy);
 passport.use('line', lineStrategy);
+
+console.log('[LINE][Passport] Strategy registered', {
+  hasChannelId: Boolean(process.env.LINE_CHANNEL_ID),
+  hasChannelSecret: Boolean(process.env.LINE_CHANNEL_SECRET),
+  callbackURL: process.env.LINE_CALLBACK_URL || '/auth/line/callback',
+});
 
 export default passport;

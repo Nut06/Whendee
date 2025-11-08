@@ -1,5 +1,6 @@
 import { PreferenceCategory, User, UserPreference } from "@/types/user";
 import prisma from "@/utils/prisma";
+import { get } from "http";
 
 const userSelect = {
     id: true,
@@ -10,6 +11,11 @@ const userSelect = {
     avatarUrl: true,
     createdAt: true,
     updatedAt: true,
+    friends: {
+        include: {
+            user: true,
+        },
+    },
     preferences: {
         include: {
             category: true,
@@ -64,12 +70,130 @@ type PreferencePayload = {
 };
 
 const UserRepo = {
+    listUsers: async (options: {
+        page?: number;
+        limit?: number;
+        search?: string;
+        excludeUserId?: string;
+        orderBy?: 'createdAt' | 'updatedAt';
+        sort?: 'asc' | 'desc';
+    } = {}): Promise<{ users: User[]; total: number; page: number; limit: number; totalPages: number }> => {
+        const page = Number.isFinite(options.page as number) && (options.page as number) > 0 ? Math.trunc(options.page as number) : 1;
+        const rawLimit = Number.isFinite(options.limit as number) && (options.limit as number) > 0 ? Math.trunc(options.limit as number) : 20;
+        const limit = Math.min(Math.max(rawLimit, 1), 100);
+        const search = (options.search ?? '').trim();
+        const orderBy = options.orderBy ?? 'createdAt';
+        const sort = options.sort ?? 'desc';
+
+        const where: any = {};
+        if (options.excludeUserId) {
+            where.id = { not: options.excludeUserId };
+        }
+        if (search) {
+            where.OR = [
+                { name: { contains: search, mode: 'insensitive' as const } },
+                { email: { contains: search, mode: 'insensitive' as const } },
+                { phoneNumber: { contains: search, mode: 'insensitive' as const } },
+            ];
+        }
+
+        const [records, total] = await Promise.all([
+            prisma.user.findMany({
+                where,
+                select: userSelect,
+                orderBy: { [orderBy]: sort },
+                skip: (page - 1) * limit,
+                take: limit,
+            }),
+            prisma.user.count({ where }),
+        ]);
+
+        const users = records.map(mapUser);
+        const totalPages = Math.max(Math.ceil(total / limit), 1);
+        return { users, total, page, limit, totalPages };
+    },
+
+    updateUserProfile: async (userId: string, updates: Partial<User>): Promise<void> => {
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                name: updates.name ?? undefined,
+                email: updates.email ?? undefined,
+                phoneNumber: updates.phoneNumber ?? undefined,
+                avatarUrl: updates.avatarUrl ?? undefined,
+            },
+        });
+    },
+    
+    findUsersByIds: async (ids: string[]): Promise<User[]> => {
+        const unique = Array.from(new Set(ids.filter((x) => typeof x === 'string' && x.trim().length > 0).map((x) => x.trim())));
+        if (unique.length === 0) return [];
+
+        const records = await prisma.user.findMany({
+            where: { id: { in: unique } },
+            select: userSelect,
+        });
+        const mapped = records.map(mapUser);
+        const byId = new Map(mapped.map((u) => [u.id, u] as const));
+        // preserve input order, omit not-found ids
+        return unique.map((id) => byId.get(id)).filter((v): v is User => Boolean(v));
+    },
     createUser: async (data: CreateUserInput): Promise<User> => {
         const record = await prisma.user.create({
             data,
             select: userSelect,
         });
         return mapUser(record);
+    },
+    getPreferences: async (userId: string): Promise<string[]> => {
+        const record = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                preferences: {
+                    include: {
+                        category: true,
+                    },
+                },
+            },
+        });
+        if (!record) {
+            return [];
+        }
+        return record.preferences.map((pref) => pref.category.key);
+    },
+
+    addFriend: async (userId: string, friendId: string): Promise<User> => {
+        if (userId === friendId) {
+            throw new Error("Cannot add yourself as a friend");
+        }
+
+        return prisma.$transaction(async (tx) => {
+            // Ensure both users exist
+            const [userA, userB] = await Promise.all([
+                tx.user.findUnique({ where: { id: userId } }),
+                tx.user.findUnique({ where: { id: friendId } }),
+            ]);
+
+            if (!userA || !userB) {
+                throw new Error("User or friend not found");
+            }
+
+            await tx.userFriend.upsert({
+                where: { userId_friendId: { userId, friendId } },
+                update: {},
+                create: { userId, friendId },
+            });
+
+            await tx.userFriend.upsert({
+                where: { userId_friendId: { userId: friendId, friendId: userId } },
+                update: {},
+                create: { userId: friendId, friendId: userId },
+            });
+
+            const record = await tx.user.findUnique({ where: { id: userId }, select: userSelect });
+            if (!record) throw new Error("User not found");
+            return mapUser(record);
+        });
     },
 
     findUserbyEmail: async (email: string): Promise<User | null> => {

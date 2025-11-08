@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { View, Text, ScrollView, Pressable, Image, RefreshControl, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useFocusEffect, useRouter } from "expo-router";
-import { eventApi } from "../lib/api";
+import { eventApi } from "@/lib/api";
 
 type EventSummary = {
   id: string;
@@ -300,11 +300,11 @@ export default function PlanScreen() {
       </View>
 
       {loading ? (
-        <View className="flex-1 items-center justify-center py-10">
+        <View className="items-center justify-center flex-1 py-10">
           <ActivityIndicator size="small" color="#2b7cff" />
         </View>
       ) : error ? (
-        <View className="bg-red-50 border border-red-200 rounded-xl px-3 py-3">
+        <View className="px-3 py-3 border border-red-200 bg-red-50 rounded-xl">
           <Text className="text-red-600 text-[13px]">{error}</Text>
           <Pressable className="mt-2" onPress={() => void loadEvents()}>
             <Text className="text-[13px] text-[#2b7cff] font-semibold">Tap to retry</Text>
